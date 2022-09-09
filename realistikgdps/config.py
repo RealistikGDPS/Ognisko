@@ -11,8 +11,9 @@ from typing import Any
 
 @dataclass
 class Config:
-    http_port: int = 2137
+    http_port: int = 8922
     http_url_prefix: str = "/gdpsdatabase"
+    http_host: str = "127.0.0.1"
     sql_host: str = "localhost"
     sql_user: str = "root"
     sql_db: str = "rosu"

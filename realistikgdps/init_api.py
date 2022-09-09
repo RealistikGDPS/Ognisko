@@ -13,7 +13,7 @@ from realistikgdps.config import config
 from realistikgdps.constants.responses import GenericResponse
 
 
-def init_api(app: FastAPI) -> None:
+def init_events(app: FastAPI) -> None:
     @app.on_event("startup")
     async def on_startup() -> None:
         logging.info("The server has started!")
@@ -45,10 +45,16 @@ def init_api(app: FastAPI) -> None:
 
 def init_api() -> FastAPI:
     app = FastAPI(
+        title="RealistikGDPS",
         # openapi_url=None,
         # docs_url=None,
     )
 
+    init_events(app)
+
     ...
 
     return app
+
+
+asgi_app = init_api()
