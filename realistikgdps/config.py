@@ -18,8 +18,12 @@ class Config:
     sql_user: str = "root"
     sql_db: str = "rosu"
     sql_pass: str = "password"
+    sql_port: int = 3306
     data_dir: str = ".data"
     srv_name: str = "RealistikGDPS"
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+    redis_db: int = 0
 
 
 def read_config_json() -> dict[str, Any]:
