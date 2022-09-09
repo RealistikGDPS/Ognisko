@@ -9,6 +9,7 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 
+import realistikgdps.state
 from realistikgdps.config import config
 from realistikgdps.constants.responses import GenericResponse
 
@@ -16,6 +17,8 @@ from realistikgdps.constants.responses import GenericResponse
 def init_events(app: FastAPI) -> None:
     @app.on_event("startup")
     async def on_startup() -> None:
+        await realistikgdps.state.services.database.connect()
+        await realistikgdps.state.services.redis.initialize()
         logging.info("The server has started!")
 
     @app.on_event("shutdown")
