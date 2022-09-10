@@ -1,7 +1,10 @@
+from __future__ import annotations
+
 from typing import Optional
 
-import realistikgdps.state.services
+import realistikgdps.state
 from realistikgdps.models.user import User
+
 
 async def from_db(user_id: int) -> Optional[User]:
     user_db = await realistikgdps.state.services.database.execute(
@@ -41,6 +44,7 @@ async def from_db(user_id: int) -> Optional[User]:
         creator_lb_ban=user_db["isCreatorBanned"] == 1,
     )
 
+
 async def into_db(user: User) -> int:
     return await realistikgdps.state.services.database.execute(
         "INSERT INTO users (extID, userName, stars, demons, color1, color2, "
@@ -73,3 +77,25 @@ async def into_db(user: User) -> int:
             "creator_lb_ban": user.creator_lb_ban,
         },
     )
+
+
+def from_cache(user_id: int) -> Optional[User]:
+    return realistikgdps.state.repositories.USER_REPO.get(user_id)
+
+
+def into_cache(user: User) -> None:
+    realistikgdps.state.repositories.USER_REPO[user.id] = user
+
+
+async def from_id(user_id: int) -> Optional[User]:
+    """Attempts to fetch the user first from cache, then from database by their
+    user ID."""
+
+    if user := from_cache(user_id):
+        return user
+
+    if user := await from_db(user_id):
+        into_cache(user)
+        return user
+
+    return None

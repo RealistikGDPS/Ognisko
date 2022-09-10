@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Optional
 from typing import Union
 
+
 @dataclass
 class User:
     id: int
@@ -15,7 +16,7 @@ class User:
     demons: int
     primary_colour: int
     secondary_colour: int
-    display_type: int # Which gamemode to display as main
+    display_type: int  # Which gamemode to display as main
     coins: int
     user_coins: int
     creator_points: int
@@ -44,5 +45,5 @@ class User:
     def account_id(self) -> Optional[int]:
         if self.registered:
             return int(self.ext_id)
-        
+
         return None
