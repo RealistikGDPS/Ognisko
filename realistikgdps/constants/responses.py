@@ -5,6 +5,6 @@ from enum import IntEnum
 from realistikgdps.mixins.enum_str import IntEnumStringMixin
 
 
-class GenericResponse(IntEnum, IntEnumStringMixin):
+class GenericResponse(IntEnumStringMixin, IntEnum):
     SUCCESS = 1
     FAIL = -1
