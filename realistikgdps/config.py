@@ -16,7 +16,7 @@ class Config:
     http_host: str = "127.0.0.1"
     sql_host: str = "localhost"
     sql_user: str = "root"
-    sql_db: str = "rosu"
+    sql_db: str = "rgdps"
     sql_pass: str = "password"
     sql_port: int = 3306
     data_dir: str = ".data"
