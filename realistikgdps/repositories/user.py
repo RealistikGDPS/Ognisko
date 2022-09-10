@@ -7,7 +7,7 @@ from realistikgdps.models.user import User
 
 
 async def from_db(user_id: int) -> Optional[User]:
-    user_db = await realistikgdps.state.services.database.execute(
+    user_db = await realistikgdps.state.services.database.fetch_one(
         "SELECT userID, extID, userName, stars, demons, color1, color2, "
         "iconType, coins, userCoins, accIcon, accShip, accBall, accBird, "
         "accDart, accRobot, accGlow, accSpider, creatorPoints, isBanned, "
@@ -80,11 +80,11 @@ async def into_db(user: User) -> int:
 
 
 def from_cache(user_id: int) -> Optional[User]:
-    return realistikgdps.state.repositories.USER_REPO.get(user_id)
+    return realistikgdps.state.repositories.user_repo.get(user_id)
 
 
 def into_cache(user: User) -> None:
-    realistikgdps.state.repositories.USER_REPO[user.id] = user
+    realistikgdps.state.repositories.user_repo[user.id] = user
 
 
 async def from_id(user_id: int) -> Optional[User]:
