@@ -9,9 +9,9 @@ from realistikgdps.constants.responses import GenericResponse
 
 
 async def register_post(
-    username: str = Form(..., alias="userName"),
+    username: str = Form(..., alias="userName", max_length=15),
     email: EmailStr = Form(...),
-    password: str = Form(...),
+    password: str = Form(..., max_length=20),
 ) -> str:
     await realistikgdps.usecases.user_accounts.register(
         name=username,
