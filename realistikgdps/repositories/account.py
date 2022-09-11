@@ -33,7 +33,7 @@ async def from_db(account_id: int) -> Optional[Account]:
     )
 
 
-async def into_db(account: Account) -> int:
+async def create(account: Account) -> int:
     return await realistikgdps.state.services.database.execute(
         "INSERT INTO accounts (userName, password, email, mS, frS, cS, "
         "youtubeurl, twitter, twitch, userID) VALUES (:name, :password, :email, :messages_blocked, "
@@ -102,3 +102,23 @@ async def update(account: Account) -> None:
             "account_id": account.id,
         },
     )
+
+
+async def from_name(name: str) -> Optional[Account]:
+    # Iterate over the cached accounts in case its in there
+    for account in realistikgdps.state.repositories.account_repo.values():
+        if account.name == name:
+            return account
+
+    # Query the database for their account ID.
+    account_id = await realistikgdps.state.services.database.fetch_val(
+        "SELECT accountID FROM accounts WHERE userName = :name LIMIT 1",  # TODO: Maybe use LIKE instead?
+        {
+            "name": name,
+        },
+    )
+
+    if account_id is None:
+        return None
+
+    return await from_id(account_id)

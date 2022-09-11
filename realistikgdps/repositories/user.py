@@ -45,7 +45,7 @@ async def from_db(user_id: int) -> Optional[User]:
     )
 
 
-async def into_db(user: User) -> int:
+async def create(user: User) -> int:
     return await realistikgdps.state.services.database.execute(
         "INSERT INTO users (extID, userName, stars, demons, color1, color2, "
         "iconType, coins, userCoins, accIcon, accShip, accBall, accBird, "
@@ -99,3 +99,23 @@ async def from_id(user_id: int) -> Optional[User]:
         return user
 
     return None
+
+
+async def user_from_name(name: str) -> Optional[User]:
+    # Iterate over the cached users in case its in there
+    for user in realistikgdps.state.repositories.user_repo.values():
+        if user.name == name:
+            return user
+
+    # Query the database for their user ID.
+    user_id = await realistikgdps.state.services.database.fetch_val(
+        "SELECT userID FROM users WHERE userName = :name LIMIT 1",  # TODO: Maybe use LIKE instead?
+        {
+            "name": name,
+        },
+    )
+
+    if user_id is None:
+        return None
+
+    return await from_id(user_id)
