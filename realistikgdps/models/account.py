@@ -7,6 +7,7 @@ from typing import Optional
 @dataclass
 class Account:
     id: int
+    user_id: int
     name: str
     password: str
     email: str
@@ -18,3 +19,6 @@ class Account:
     youtube_name: Optional[str]
     twitter_name: Optional[str]
     twitch_name: Optional[str]
+
+    def __str__(self) -> str:
+        return f"{self.name} ({self.id})"

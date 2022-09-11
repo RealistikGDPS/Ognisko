@@ -7,4 +7,4 @@ if TYPE_CHECKING:
     from realistikgdps.models.account import Account
 
 user_repo: dict[int, User] = {}
-ACCOUNT_REPO: dict[int, Account] = {}
+account_repo: dict[int, Account] = {}
