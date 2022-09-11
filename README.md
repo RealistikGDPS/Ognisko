@@ -13,3 +13,7 @@ While we aim to be as close to a drag-and-drop replacement as possible, there ar
 
 ## How to set up?
 TODO: Once the project is usabele.
+
+## Upgrading an existing server
+Assuming your server is based off [Cvolton's server implementation](https://github.com/Cvolton/GMDprivateServer), you will be required to run every single migration located
+in the `migrations` folder after `0001`.
