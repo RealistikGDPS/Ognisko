@@ -1,12 +1,13 @@
 from __future__ import annotations
 
-import logging
 import os
 from dataclasses import dataclass
 from dataclasses import field
 from json import dump
 from json import load
 from typing import Any
+
+from realistikgdps import logger
 
 
 @dataclass
@@ -21,6 +22,7 @@ class Config:
     sql_port: int = 3306
     data_dir: str = ".data"
     srv_name: str = "RealistikGDPS"
+    srv_log_level: str = "INFO"
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
@@ -63,8 +65,8 @@ def load_config() -> Config:
     config = Config(**config_dict)
 
     if missing_keys:
-        logging.info(f"Your config has been updated with {len(missing_keys)} new keys.")
-        logging.debug("Missing keys: " + ", ".join(missing_keys))
+        logger.info(f"Your config has been updated with {len(missing_keys)} new keys.")
+        logger.debug("Missing keys: " + ", ".join(missing_keys))
         write_config(config)
         raise SystemExit(0)
 

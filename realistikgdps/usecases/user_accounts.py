@@ -1,12 +1,12 @@
 # Usecases for users and accounts (as they usually heavily overlap).
 from __future__ import annotations
 
-import logging
 from typing import NamedTuple
 from typing import Optional
 
 import realistikgdps.repositories
 import realistikgdps.state
+from realistikgdps import logger
 from realistikgdps.models.account import Account
 from realistikgdps.models.user import User
 
@@ -25,9 +25,10 @@ async def from_id(account_id: int) -> Optional[UserAccount]:
     user = await realistikgdps.repositories.user.from_id(account.user_id)
 
     if user is None:
-        logging.warning(
+        logger.warning(
             f"The account {account} has no user associated with it. "
             "This should NEVER happen.",
+            account=account,
         )
         return None
 

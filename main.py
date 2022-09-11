@@ -7,12 +7,13 @@ import sys
 import uvicorn
 import uvloop
 
+from realistikgdps import logger
 from realistikgdps.config import config
 
 
 def main() -> int:
-    logging.basicConfig(
-        level=logging.INFO,
+    logger.init_logging(
+        log_level=config.srv_log_level,
     )
 
     uvicorn.run(
