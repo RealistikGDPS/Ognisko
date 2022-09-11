@@ -119,3 +119,38 @@ async def user_from_name(name: str) -> Optional[User]:
         return None
 
     return await from_id(user_id)
+
+
+async def update(user: User) -> None:
+    await realistikgdps.state.services.database.execute(
+        "UPDATE users SET extID = :ext_id, userName = :name, stars = :stars, "
+        "demons = :demons, color1 = :primary_colour, color2 = :secondary_colour, "
+        "iconType = :display_type, coins = :coins, userCoins = :user_coins, "
+        "accIcon = :icon, accShip = :ship, accBall = :ball, accBird = :ufo, "
+        "accDart = :wave, accRobot = :robot, accGlow = :glow, accSpider = :spider, "
+        "creatorPoints = :creator_points, isBanned = :player_lb_ban, "
+        "isCreatorBanned = :creator_lb_ban WHERE userID = :user_id",
+        {
+            "user_id": user.id,
+            "ext_id": user.ext_id,
+            "name": user.name,
+            "stars": user.stars,
+            "demons": user.demons,
+            "primary_colour": user.primary_colour,
+            "secondary_colour": user.secondary_colour,
+            "display_type": user.display_type,
+            "coins": user.coins,
+            "user_coins": user.user_coins,
+            "icon": user.icon,
+            "ship": user.ship,
+            "ball": user.ball,
+            "ufo": user.ufo,
+            "wave": user.wave,
+            "robot": user.robot,
+            "glow": user.glow,
+            "spider": user.spider,
+            "creator_points": user.creator_points,
+            "player_lb_ban": user.player_lb_ban,
+            "creator_lb_ban": user.creator_lb_ban,
+        },
+    )
