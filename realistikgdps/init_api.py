@@ -9,6 +9,7 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 
+import realistikgdps.api
 import realistikgdps.state
 from realistikgdps.config import config
 from realistikgdps.constants.responses import GenericResponse
@@ -23,7 +24,7 @@ def init_events(app: FastAPI) -> None:
 
     @app.on_event("shutdown")
     async def on_shutdown() -> None:
-        ...
+        logging.info("The server is shutting down...")
 
     @app.exception_handler(RequestValidationError)
     async def on_validation_error(
@@ -55,7 +56,7 @@ def init_api() -> FastAPI:
 
     init_events(app)
 
-    ...
+    app.include_router(realistikgdps.api.router)
 
     return app
 
