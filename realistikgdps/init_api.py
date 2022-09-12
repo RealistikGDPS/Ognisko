@@ -6,6 +6,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from starlette.middleware.base import RequestResponseEndpoint
 
 import realistikgdps.api
 import realistikgdps.state
@@ -44,6 +45,23 @@ def init_events(app: FastAPI) -> None:
             {"message": "Validation error!"},
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
+
+    @app.middleware("http")
+    async def http_middleware(
+        request: Request,
+        call_next: RequestResponseEndpoint,
+    ) -> Response:
+        # Verifying request header for client endpoints.
+        if str(request.url).startswith(config.http_url_prefix):
+            # GD sends an empty User-Agent header.
+            if request.headers.get("User-Agent") != "":
+                logger.info(
+                    "A user has sent a request to a client endpoint with a "
+                    "non-empty User-Agent header. This implies the usage of bots.",
+                )
+                return Response(str(GenericResponse.FAIL))
+
+        return await call_next(request)
 
 
 def init_api() -> FastAPI:

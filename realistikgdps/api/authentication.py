@@ -3,9 +3,12 @@ from __future__ import annotations
 from fastapi import Form
 from pydantic import EmailStr
 
+import realistikgdps.repositories
+import realistikgdps.usecases.hashes
 import realistikgdps.usecases.user_accounts
 from realistikgdps import logger
 from realistikgdps.constants.responses import GenericResponse
+from realistikgdps.constants.responses import LoginResponse
 
 
 async def register_post(
@@ -30,12 +33,18 @@ async def login_post(
     _: str = Form(..., alias="udid"),
 ) -> str:
 
-    account = await realistikgdps.usecases.user_accounts.account_from_name(username)
+    account = await realistikgdps.repositories.account.from_name(username)
     if account is None:
-        return str(GenericResponse.FAIL)
+        return str(LoginResponse.FAIL)
 
     # TODO: Privileges.
+
     # TODO: Password verification.
+    if not await realistikgdps.usecases.hashes.compare_bcrypt_async(
+        account.password,
+        password,
+    ):
+        return str(LoginResponse.FAIL)
 
     logger.info(f"{account} has logged in!")
 
