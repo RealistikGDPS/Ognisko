@@ -1,9 +1,10 @@
 bcrypt == 4.0.0
 databases[asyncmy] == 0.6.1
-email-validator==1.2.1
+email-validator == 1.2.1
 fastapi == 0.82.0
 httpx == 0.23.0
 redis == 4.3.4
 structlog==16.0.0
 uvicorn == 0.18.3
 uvloop == 0.16.0
+xor-cipher == 1.0.2
