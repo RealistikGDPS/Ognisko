@@ -35,7 +35,7 @@ def authenticate_dependency(
     param_function: Callable[..., Any],
     account_id_alias: str = "accountID",
     gjp_alias: str = "gjp",
-) -> Callable[[str, str], UserAccount]:
+) -> Callable[[int, str], Awaitable[UserAccount]]:
     async def wrapper(
         account_id: int = param_function(..., alias=account_id_alias),
         gjp: str = param_function(..., alias=gjp_alias),
