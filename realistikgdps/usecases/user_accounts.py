@@ -8,6 +8,7 @@ from typing import Optional
 import realistikgdps.repositories
 import realistikgdps.state
 from realistikgdps import logger
+from realistikgdps.constants.privacy import PrivacySetting
 from realistikgdps.models.account import Account
 from realistikgdps.models.user import User
 from realistikgdps.typing.types import GDSerialisable
@@ -44,9 +45,9 @@ async def register(name: str, password: str, email: str) -> UserAccount:
         name=name,
         password=password,
         email=email,
-        messages_blocked=False,
-        friend_req_blocked=False,
-        comment_history_hidden=False,
+        messages=PrivacySetting.PUBLIC,
+        friend_requests=PrivacySetting.PUBLIC,
+        comment_history=PrivacySetting.PUBLIC,
         youtube_name=None,
         twitter_name=None,
         twitch_name=None,
@@ -105,8 +106,8 @@ def create_gd_profile_object(user_account: UserAccount) -> GDSerialisable:
         15: 0,
         16: user_account.account.id,
         17: user_account.user.user_coins,
-        18: int(user_account.account.messages_blocked),
-        19: int(user_account.account.friend_req_blocked),
+        18: user_account.account.messages.value,
+        19: user_account.account.friend_requests.value,
         20: user_account.account.youtube_name or "",
         21: user_account.user.icon,
         22: user_account.user.ship,
@@ -124,5 +125,5 @@ def create_gd_profile_object(user_account: UserAccount) -> GDSerialisable:
         46: 0,  # TODO: Diamonds, which require save data parsing....
         48: user_account.user.explosion,
         49: 0,  # TODO: Badge level with privileges.
-        50: int(user_account.account.comment_history_hidden),
+        50: user_account.account.comment_history.value,
     }

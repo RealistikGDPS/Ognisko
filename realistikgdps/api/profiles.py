@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from fastapi import Depends
 from fastapi import Form
-from future import __annotations__
 
 import realistikgdps.usecases.user_accounts
 from realistikgdps import logger

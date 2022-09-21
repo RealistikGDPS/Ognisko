@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Optional
 
 import realistikgdps.state
+from realistikgdps.constants.privacy import PrivacySetting
 from realistikgdps.models.account import Account
 
 
@@ -23,9 +24,9 @@ async def from_db(account_id: int) -> Optional[Account]:
         name=acc_db["userName"],
         password=acc_db["password"],
         email=acc_db["email"],
-        messages_blocked=acc_db["mS"] == 1,
-        friend_req_blocked=acc_db["frS"] == 1,
-        comment_history_hidden=acc_db["cS"] == 1,
+        messages=PrivacySetting(acc_db["mS"]),
+        friend_requests=PrivacySetting(acc_db["frS"]),
+        comment_history=PrivacySetting(acc_db["cS"]),
         youtube_name=acc_db["youtubeurl"],
         twitter_name=acc_db["twitter"],
         twitch_name=acc_db["twitch"],
@@ -43,9 +44,9 @@ async def create(account: Account) -> int:
             "name": account.name,
             "password": account.password,
             "email": account.email,
-            "messages_blocked": account.messages_blocked,
-            "friend_req_blocked": account.friend_req_blocked,
-            "comment_history_hidden": account.comment_history_hidden,
+            "messages_blocked": account.messages.value,
+            "friend_req_blocked": account.friend_requests.value,
+            "comment_history_hidden": account.comment_history.value,
             "youtube_name": account.youtube_name,
             "twitter_name": account.twitter_name,
             "twitch_name": account.twitch_name,
@@ -92,9 +93,9 @@ async def update(account: Account) -> None:
             "name": account.name,
             "password": account.password,
             "email": account.email,
-            "messages_blocked": account.messages_blocked,
-            "friend_req_blocked": account.friend_req_blocked,
-            "comment_history_hidden": account.comment_history_hidden,
+            "messages_blocked": account.messages.value,
+            "friend_req_blocked": account.friend_requests.value,
+            "comment_history_hidden": account.comment_history.value,
             "youtube_name": account.youtube_name,
             "twitter_name": account.twitter_name,
             "twitch_name": account.twitch_name,

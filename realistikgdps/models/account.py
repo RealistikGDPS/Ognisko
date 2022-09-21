@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Optional
 
+from realistikgdps.constants.privacy import PrivacySetting
+
 
 @dataclass
 class Account:
@@ -12,9 +14,9 @@ class Account:
     password: str
     email: str
 
-    messages_blocked: bool  # This should be an enum asthis may also be friends only.
-    friend_req_blocked: bool  # This should be an enum asthis may also be friends only.
-    comment_history_hidden: bool  # This should be an enum asthis may also be friends only.
+    messages: PrivacySetting
+    friend_requests: PrivacySetting
+    comment_history: PrivacySetting
 
     youtube_name: Optional[str]
     twitter_name: Optional[str]
