@@ -4,6 +4,7 @@ from fastapi import APIRouter
 
 from . import authentication
 from . import misc
+from . import profiles
 from realistikgdps.config import config
 
 router = APIRouter(
@@ -19,4 +20,10 @@ router.add_api_route(
 router.add_api_route(
     "/",
     misc.main_get,
+)
+
+router.add_api_route(
+    "/getGJUserInfo20.php",
+    profiles.view_user_info,
+    methods=["POST"],
 )

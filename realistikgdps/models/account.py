@@ -12,9 +12,9 @@ class Account:
     password: str
     email: str
 
-    messages_blocked: bool
-    friend_req_blocked: bool
-    comment_history_hidden: bool
+    messages_blocked: bool  # This should be an enum asthis may also be friends only.
+    friend_req_blocked: bool  # This should be an enum asthis may also be friends only.
+    comment_history_hidden: bool  # This should be an enum asthis may also be friends only.
 
     youtube_name: Optional[str]
     twitter_name: Optional[str]

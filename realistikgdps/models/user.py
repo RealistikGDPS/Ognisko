@@ -30,6 +30,7 @@ class User:
     robot: int
     spider: int
     glow: bool
+    explosion: int
 
     # Privileges?
     player_lb_ban: bool

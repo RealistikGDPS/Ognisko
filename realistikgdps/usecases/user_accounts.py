@@ -1,6 +1,7 @@
 # Usecases for users and accounts (as they usually heavily overlap).
 from __future__ import annotations
 
+from typing import Any
 from typing import NamedTuple
 from typing import Optional
 
@@ -9,6 +10,7 @@ import realistikgdps.state
 from realistikgdps import logger
 from realistikgdps.models.account import Account
 from realistikgdps.models.user import User
+from realistikgdps.typing.types import GDSerialisable
 
 
 class UserAccount(NamedTuple):
@@ -74,6 +76,7 @@ async def register(name: str, password: str, email: str) -> UserAccount:
         glow=False,
         player_lb_ban=False,
         creator_lb_ban=False,
+        explosion=0,
     )
 
     user_id = await realistikgdps.repositories.user.create(user)
@@ -83,3 +86,43 @@ async def register(name: str, password: str, email: str) -> UserAccount:
     await realistikgdps.repositories.account.update(account)
 
     return UserAccount(user=user, account=account)
+
+
+def create_gd_profile_object(user_account: UserAccount) -> GDSerialisable:
+    return {
+        1: user_account.account.name,
+        2: user_account.user.id,
+        3: user_account.user.stars,
+        4: user_account.user.demons,
+        6: 0,  # TODO: Implement rank
+        7: user_account.account.id,
+        8: user_account.user.creator_points,
+        9: user_account.user.display_type,
+        10: user_account.user.primary_colour,
+        11: user_account.user.secondary_colour,
+        13: user_account.user.coins,
+        14: user_account.user.icon,
+        15: 0,
+        16: user_account.account.id,
+        17: user_account.user.user_coins,
+        18: int(user_account.account.messages_blocked),
+        19: int(user_account.account.friend_req_blocked),
+        20: user_account.account.youtube_name or "",
+        21: user_account.user.icon,
+        22: user_account.user.ship,
+        23: user_account.user.ball,
+        24: user_account.user.ufo,
+        25: user_account.user.wave,
+        26: user_account.user.robot,
+        28: int(user_account.user.glow),
+        29: 1,  # Is Registered
+        30: 0,  # TODO: Implement rank
+        31: 0,  # Friend state (should be handled on case basis)
+        43: user_account.user.spider,
+        44: user_account.account.twitter_name or "",
+        45: user_account.account.twitch_name or "",
+        46: 0,  # TODO: Diamonds, which require save data parsing....
+        48: user_account.user.explosion,
+        49: 0,  # TODO: Badge level with privileges.
+        50: int(user_account.account.comment_history_hidden),
+    }

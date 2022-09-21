@@ -4,12 +4,14 @@ from typing import Any
 from typing import Awaitable
 from typing import Callable
 
+from fastapi import Form
 from fastapi import HTTPException
 
 import realistikgdps.repositories.account
 import realistikgdps.usecases.hashes
 import realistikgdps.usecases.user_accounts
 from realistikgdps.constants.responses import GenericResponse
+from realistikgdps.models.account import Account
 from realistikgdps.usecases.user_accounts import UserAccount
 
 
@@ -32,13 +34,12 @@ async def authenticate_account_id_by_password(account_id: int, password: str) ->
 # TODO: add option to replicate https://github.com/RealistikDash/GDPyS/blob/9266cc57c3a4c5d1f51363aa3899ee3c09a23ee8/web/http.py#L338-L341
 # FastAPI dependency for seemless authentication.
 def authenticate_dependency(
-    param_function: Callable[..., Any],
     account_id_alias: str = "accountID",
     gjp_alias: str = "gjp",
 ) -> Callable[[int, str], Awaitable[UserAccount]]:
     async def wrapper(
-        account_id: int = param_function(..., alias=account_id_alias),
-        gjp: str = param_function(..., alias=gjp_alias),
+        account_id: int = Form(..., alias=account_id_alias),
+        gjp: str = Form(..., alias=gjp_alias),
     ) -> UserAccount:
         user = await realistikgdps.usecases.user_accounts.from_id(account_id)
 

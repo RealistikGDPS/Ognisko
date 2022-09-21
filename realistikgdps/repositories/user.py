@@ -11,7 +11,7 @@ async def from_db(user_id: int) -> Optional[User]:
         "SELECT userID, extID, userName, stars, demons, color1, color2, "
         "iconType, coins, userCoins, accIcon, accShip, accBall, accBird, "
         "accDart, accRobot, accGlow, accSpider, creatorPoints, isBanned, "
-        "isCreatorBanned FROM users WHERE userID = :user_id",
+        "isCreatorBanned, accExplosion FROM users WHERE userID = :user_id",
         {
             "user_id": user_id,
         },
@@ -42,6 +42,7 @@ async def from_db(user_id: int) -> Optional[User]:
         creator_points=user_db["creatorPoints"],
         player_lb_ban=user_db["isBanned"] == 1,
         creator_lb_ban=user_db["isCreatorBanned"] == 1,
+        explosion=user_db["accExplosion"],
     )
 
 
