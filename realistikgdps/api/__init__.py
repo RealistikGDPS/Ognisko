@@ -12,7 +12,7 @@ router = APIRouter(
 )
 
 router.add_api_route(
-    "/registerGJAccount.php",
+    "/accounts/registerGJAccount.php",
     authentication.register_post,
     methods=["POST"],
 )
@@ -25,5 +25,11 @@ router.add_api_route(
 router.add_api_route(
     "/getGJUserInfo20.php",
     profiles.view_user_info,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/accounts/loginGJAccount.php",
+    authentication.login_post,
     methods=["POST"],
 )
