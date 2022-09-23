@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from fastapi.responses import PlainTextResponse
 
 from . import authentication
 from . import misc
@@ -9,6 +10,8 @@ from realistikgdps.config import config
 
 router = APIRouter(
     prefix=config.http_url_prefix,
+    # Required or else GD wont understand the response.
+    default_response_class=PlainTextResponse,
 )
 
 router.add_api_route(

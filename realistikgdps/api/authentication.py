@@ -3,12 +3,11 @@ from __future__ import annotations
 from fastapi import Form
 from pydantic import EmailStr
 
-import realistikgdps.repositories
-import realistikgdps.usecases.hashes
-import realistikgdps.usecases.user_accounts
 from realistikgdps import logger
 from realistikgdps.constants.responses import GenericResponse
 from realistikgdps.constants.responses import LoginResponse
+from realistikgdps.constants.responses import RegisterResponse
+from realistikgdps.usecases import users
 
 
 async def register_post(
@@ -16,13 +15,17 @@ async def register_post(
     email: EmailStr = Form(...),
     password: str = Form(..., max_length=20),
 ) -> str:
-    user = await realistikgdps.usecases.user_accounts.register(
+    user = await users.register(
         name=username,
         password=password,
         email=email,
     )
 
-    logger.info(f"{user.account} has registered!")
+    if isinstance(user, RegisterResponse):
+        logger.info(f"Failed to register {username} due to {user!r}.")
+        return str(user)
+
+    logger.info(f"{user} has registered!")
 
     return str(GenericResponse.SUCCESS)
 
@@ -33,19 +36,11 @@ async def login_post(
     _: str = Form(..., alias="udid"),
 ) -> str:
 
-    account = await realistikgdps.repositories.account.from_name(username)
-    if account is None:
-        return str(LoginResponse.FAIL)
+    user = await users.authenticate(username, password)
+    if isinstance(user, LoginResponse):
+        logger.info(f"Failed to login {username} due to {user!r}.")
+        return str(user)
 
-    # TODO: Privileges.
+    logger.info(f"{user} has logged in!")
 
-    # TODO: Password verification.
-    if not await realistikgdps.usecases.hashes.compare_bcrypt_async(
-        account.password,
-        password,
-    ):
-        return str(LoginResponse.FAIL)
-
-    logger.info(f"{account} has logged in!")
-
-    return f"{account.id},{account.user_id}"
+    return f"{user.id},{user.id}"

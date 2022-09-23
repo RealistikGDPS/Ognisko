@@ -1,27 +1,35 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
-from typing import Union
+
+from realistikgdps.constants.privacy import PrivacySetting
 
 
 @dataclass
 class User:
     id: int
-    ext_id: str
-    name: str
+    username: str
+    email: str
+    password: str
+
+    message_privacy: PrivacySetting
+    friend_privacy: PrivacySetting
+    comment_privacy: PrivacySetting
+
+    youtube_name: Optional[str]
+    twitter_name: Optional[str]
+    twitch_name: Optional[str]
+
+    register_ts: datetime
 
     # Stats
     stars: int
     demons: int
     primary_colour: int
     secondary_colour: int
-    display_type: int  # Which gamemode to display as main
-    coins: int
-    user_coins: int
-    creator_points: int
-
-    # Display icons
+    display_type: int
     icon: int
     ship: int
     ball: int
@@ -29,22 +37,11 @@ class User:
     wave: int
     robot: int
     spider: int
-    glow: bool
     explosion: int
+    glow: bool
+    creator_points: int
+    coins: int
+    user_coins: int
 
-    # Privileges?
-    player_lb_ban: bool
-    creator_lb_ban: bool
-
-    @property
-    def registered(self) -> bool:
-        """Whether the user model corresponds to a registered account."""
-
-        return self.ext_id.isnumeric()
-
-    @property
-    def account_id(self) -> Optional[int]:
-        if self.registered:
-            return int(self.ext_id)
-
-        return None
+    def __str__(self) -> str:
+        return f"{self.username} ({self.id})"
