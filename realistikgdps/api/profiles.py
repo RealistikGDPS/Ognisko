@@ -4,9 +4,9 @@ from fastapi import Depends
 from fastapi import Form
 
 from realistikgdps import logger
+from realistikgdps.common import gd_obj
 from realistikgdps.constants.responses import GenericResponse
 from realistikgdps.models.user import User
-from realistikgdps.usecases import gd_obj
 from realistikgdps.usecases import users
 from realistikgdps.usecases.users import authenticate_dependency
 
