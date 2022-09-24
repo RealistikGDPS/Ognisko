@@ -6,10 +6,11 @@ import base64
 import bcrypt
 import xor_cipher
 
+from realistikgdps import state
 from realistikgdps.constants.xor import XorKeys
 
 
-def compare_bcrypt(hashed: str, plain: str) -> bool:
+def _compare_bcrypt(hashed: str, plain: str) -> bool:
     return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
@@ -17,19 +18,22 @@ def hash_bcypt(plain: str) -> str:
     return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
 
-async def compare_bcrypt_async(hashed: str, plain: str) -> bool:
-    """Compares a bcrypt hash with a plaintext password, running the comparison
-    in an asynchronous thread.
+async def _compare_bcrypt_async(hashed: str, plain: str) -> bool:
+    return await asyncio.to_thread(_compare_bcrypt, hashed, plain)
 
-    Args:
-        hashed (str): The bcrypt has of the password.
-        plain (str): The plaintext password to compare it to.
 
-    Returns:
-        bool: Whether the password matches the hash.
-    """
+async def compare_bcrypt(hashed: str, plain: str) -> bool:
+    """Compares a bcrypt hash with a plaintext password, managing caching."""
 
-    return await asyncio.to_thread(compare_bcrypt, hashed, plain)
+    pw_cache = state.repositories.password_cache.get(hashed)
+    if pw_cache is not None:
+        return pw_cache == plain
+
+    result = await _compare_bcrypt_async(hashed, plain)
+    if result:
+        state.repositories.password_cache[hashed] = plain
+
+    return result
 
 
 async def hash_bcypt_async(plain: str) -> str:

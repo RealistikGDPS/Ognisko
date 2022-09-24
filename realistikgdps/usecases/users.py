@@ -85,7 +85,7 @@ async def authenticate(
     if user is None:
         return ServiceError.AUTH_NOT_FOUND
 
-    if not await hashes.compare_bcrypt_async(user.password, password):
+    if not await hashes.compare_bcrypt(user.password, password):
         return ServiceError.AUTH_PASSWORD_MISMATCH
 
     # TODO: Privilege check
@@ -111,7 +111,7 @@ def authenticate_dependency(
                 detail=str(GenericResponse.FAIL),
             )
 
-        if not await hashes.compare_bcrypt_async(
+        if not await hashes.compare_bcrypt(
             user.password,
             hashes.decode_gjp(gjp),
         ):
