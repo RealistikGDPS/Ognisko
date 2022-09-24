@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from typing import Union
+from typing import Callable
+from typing import TypeVar
 
 from realistikgdps.constants.friends import FriendStatus
 from realistikgdps.models.user import User
@@ -11,7 +12,30 @@ def dumps(obj: GDSerialisable, sep: str = ":") -> str:
     return sep.join(str(key) + sep + str(value) for key, value in obj.items())
 
 
-def create_gd_profile(
+VT = TypeVar("VT")
+KT = TypeVar("KT")
+
+
+def loads(
+    data: str,
+    sep: str = ":",
+    key_cast: Callable[[str], KT] = int,
+    value_cast: Callable[[str], VT] = str,
+) -> dict[KT, VT]:
+
+    data_split = data.split(sep)
+
+    if len(data_split) % 2 != 0:
+        raise ValueError("Data does not have matching key/value pairs.")
+
+    data_iter = iter(data_split)
+
+    return {
+        key_cast(key): value_cast(value) for key, value in zip(data_iter, data_iter)
+    }
+
+
+def create_profile(
     user: User,
     friend_status: FriendStatus = FriendStatus.NONE,
 ) -> GDSerialisable:

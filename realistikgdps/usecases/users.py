@@ -17,7 +17,6 @@ from realistikgdps.constants.errors import ServiceError
 from realistikgdps.constants.friends import FriendStatus
 from realistikgdps.constants.privacy import PrivacySetting
 from realistikgdps.constants.responses import GenericResponse
-from realistikgdps.constants.responses import LoginResponse
 from realistikgdps.constants.responses import RegisterResponse
 from realistikgdps.models.user import User
 
