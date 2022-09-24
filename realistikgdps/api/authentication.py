@@ -4,8 +4,8 @@ from fastapi import Form
 from pydantic import EmailStr
 
 from realistikgdps import logger
+from realistikgdps.constants.errors import ServiceError
 from realistikgdps.constants.responses import GenericResponse
-from realistikgdps.constants.responses import LoginResponse
 from realistikgdps.constants.responses import RegisterResponse
 from realistikgdps.usecases import users
 
@@ -37,9 +37,9 @@ async def login_post(
 ) -> str:
 
     user = await users.authenticate(username, password)
-    if isinstance(user, LoginResponse):
+    if isinstance(user, ServiceError):
         logger.info(f"Failed to login {username} due to {user!r}.")
-        return str(user)
+        return str(GenericResponse.FAIL)
 
     logger.info(f"{user} has logged in!")
 

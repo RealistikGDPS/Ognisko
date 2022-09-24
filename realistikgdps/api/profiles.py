@@ -6,6 +6,7 @@ from fastapi import Form
 from realistikgdps import logger
 from realistikgdps import repositories
 from realistikgdps.common import gd_obj
+from realistikgdps.constants.errors import ServiceError
 from realistikgdps.constants.responses import GenericResponse
 from realistikgdps.models.user import User
 from realistikgdps.usecases import users
@@ -18,7 +19,7 @@ async def view_user_info(
 ) -> str:
     target = await users.get_user_perspective(target_id, user)
 
-    if isinstance(target, GenericResponse):
+    if isinstance(target, ServiceError):
         logger.info(f"Requested to view info of non-existent account {target_id}.")
         return str(GenericResponse.FAIL)
 

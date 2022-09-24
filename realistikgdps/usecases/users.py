@@ -12,6 +12,7 @@ from fastapi import HTTPException
 
 from realistikgdps import repositories
 from realistikgdps.common import hashes
+from realistikgdps.constants.errors import ServiceError
 from realistikgdps.constants.friends import FriendStatus
 from realistikgdps.constants.privacy import PrivacySetting
 from realistikgdps.constants.responses import GenericResponse
@@ -77,14 +78,14 @@ async def register(
 async def authenticate(
     username: str,
     password: str,
-) -> Union[User, LoginResponse]:
+) -> Union[User, ServiceError]:
     user = await repositories.user.from_name(username)
 
     if user is None:
-        return LoginResponse.FAIL
+        return ServiceError.AUTH_NOT_FOUND
 
     if not await hashes.compare_bcrypt_async(user.password, password):
-        return LoginResponse.FAIL
+        return ServiceError.AUTH_PASSWORD_MISMATCH
 
     # TODO: Privilege check
 
@@ -131,15 +132,16 @@ class UserPerspective(NamedTuple):
 async def get_user_perspective(
     user_id: int,
     perspective_user: User,
-) -> Union[UserPerspective, GenericResponse]:
+) -> Union[UserPerspective, ServiceError]:
     # TODO: Perform Blocked Check
     # TODO: Perform Privilege Check
     # TODO: Perform Friend Check
+    # TODO: Friend Request Check
 
     user = await repositories.user.from_id(user_id)
     if user is None:
         # TODO: Use something more concise.
-        return GenericResponse.FAIL
+        return ServiceError.PROFILE_USER_NOT_FOUND
 
     return UserPerspective(
         user=user,
