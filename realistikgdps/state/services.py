@@ -1,14 +1,15 @@
 from __future__ import annotations
 
-import databases
 import httpx
+from databases import DatabaseURL
 from redis import asyncio as aioredis
 
 from realistikgdps.config import config
+from realistikgdps.services.mysql import MySQLService
 
 http = httpx.AsyncClient()
-database = databases.Database(
-    databases.DatabaseURL(
+database = MySQLService(
+    DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
             username=config.sql_user,
             password=config.sql_pass,
