@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import Awaitable
 from typing import Callable
 from typing import NamedTuple
+from typing import Optional
 from typing import Union
 
 from fastapi import Form
@@ -147,3 +148,60 @@ async def get_user_perspective(
         user=user,
         friend_status=FriendStatus.NONE,
     )
+
+
+async def update_stats(
+    user: User,
+    stars: Optional[int] = None,
+    demons: Optional[int] = None,
+    display_icon: Optional[int] = None,
+    diamonds: Optional[int] = None,
+    primary_colour: Optional[int] = None,
+    secondary_colour: Optional[int] = None,
+    icon: Optional[int] = None,
+    ship: Optional[int] = None,
+    ball: Optional[int] = None,
+    ufo: Optional[int] = None,
+    wave: Optional[int] = None,
+    robot: Optional[int] = None,
+    spider: Optional[int] = None,
+    glow: Optional[bool] = None,
+    explosion: Optional[int] = None,
+    coins: Optional[int] = None,
+    user_coins: Optional[int] = None,
+    message_privacy: Optional[PrivacySetting] = None,
+    friend_privacy: Optional[PrivacySetting] = None,
+    comment_privacy: Optional[PrivacySetting] = None,
+    youtube_name: Optional[str] = None,
+    twitter_name: Optional[str] = None,
+    twitch_name: Optional[str] = None,
+) -> Optional[ServiceError]:
+    # TODO: Validation
+    # TODO: Anticheat checks on the user's gains
+    # TODO: Perform Privilege Check
+    # TODO: Rank calculations
+    user.stars = stars or user.stars
+    user.demons = demons or user.demons
+    user.display_type = display_icon or user.display_type
+    user.diamonds = diamonds or user.diamonds
+    user.primary_colour = primary_colour or user.primary_colour
+    user.secondary_colour = secondary_colour or user.secondary_colour
+    user.icon = icon or user.icon
+    user.ship = ship or user.ship
+    user.ball = ball or user.ball
+    user.ufo = ufo or user.ufo
+    user.wave = wave or user.wave
+    user.robot = robot or user.robot
+    user.spider = spider or user.spider
+    user.glow = glow or user.glow
+    user.explosion = explosion or user.explosion
+    user.coins = coins or user.coins
+    user.user_coins = user_coins or user.user_coins
+    user.message_privacy = message_privacy or user.message_privacy
+    user.friend_privacy = friend_privacy or user.friend_privacy
+    user.comment_privacy = comment_privacy or user.comment_privacy
+    user.youtube_name = youtube_name or user.youtube_name
+    user.twitter_name = twitter_name or user.twitter_name
+    user.twitch_name = twitch_name or user.twitch_name
+
+    await repositories.user.update(user)  # TODO: Partial update

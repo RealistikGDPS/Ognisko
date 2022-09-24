@@ -4,7 +4,6 @@ from fastapi import Depends
 from fastapi import Form
 
 from realistikgdps import logger
-from realistikgdps import repositories
 from realistikgdps.common import gd_obj
 from realistikgdps.constants.errors import ServiceError
 from realistikgdps.constants.responses import GenericResponse
@@ -20,7 +19,10 @@ async def view_user_info(
     target = await users.get_user_perspective(target_id, user)
 
     if isinstance(target, ServiceError):
-        logger.info(f"Requested to view info of non-existent account {target_id}.")
+        logger.info(
+            f"Requested to view info of non-existent account {target_id} "
+            f"with error {target!r}.",
+        )
         return str(GenericResponse.FAIL)
 
     logger.info(f"Successfully viewed the profile of {target.user}.")
@@ -51,26 +53,30 @@ async def update_user_info(
     user_coins: int = Form(..., alias="userCoins"),
 ) -> str:
 
-    # TODO: Make into a usecase.
-    user.stars = stars
-    user.demons = demons
-    user.display_type = display_icon
-    user.diamonds = diamonds
-    user.primary_colour = primary_colour
-    user.secondary_colour = secondary_colour
-    user.icon = icon
-    user.ship = ship
-    user.ball = ball
-    user.ufo = ufo
-    user.wave = wave
-    user.robot = robot
-    user.spider = spider
-    user.glow = glow
-    user.explosion = explosion
-    user.coins = coins
-    user.user_coins = user_coins
+    res = await users.update_stats(
+        user,
+        stars=stars,
+        demons=demons,
+        display_icon=display_icon,
+        diamonds=diamonds,
+        primary_colour=primary_colour,
+        secondary_colour=secondary_colour,
+        icon=icon,
+        ship=ship,
+        ball=ball,
+        ufo=ufo,
+        wave=wave,
+        robot=robot,
+        spider=spider,
+        glow=glow,
+        explosion=explosion,
+        coins=coins,
+        user_coins=user_coins,
+    )
 
-    await repositories.user.update(user)
+    if isinstance(res, ServiceError):
+        logger.info(f"Failed to update profile of {user} with error {res!r}.")
+        return str(GenericResponse.FAIL)
 
     logger.info(f"Successfully updated the profile of {user}.")
 
