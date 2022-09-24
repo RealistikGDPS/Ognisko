@@ -42,6 +42,7 @@ class User:
     creator_points: int
     coins: int
     user_coins: int
+    diamonds: int
 
     def __str__(self) -> str:
         return f"{self.username} ({self.id})"

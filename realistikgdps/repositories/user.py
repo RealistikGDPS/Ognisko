@@ -13,7 +13,7 @@ async def from_db(user_id: int) -> Optional[User]:
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
-        "user_coins FROM users WHERE id = :id",
+        "user_coins, diamonds FROM users WHERE id = :id",
         {"id": user_id},
     )
 
@@ -49,6 +49,7 @@ async def from_db(user_id: int) -> Optional[User]:
         creator_points=user_db["creator_points"],
         coins=user_db["coins"],
         user_coins=user_db["user_coins"],
+        diamonds=user_db["diamonds"],
     )
 
 
@@ -68,11 +69,11 @@ async def create(user: User) -> int:
         "friend_privacy, comment_privacy, twitter_name, youtube_name, twitch_name, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, "
         "ship, ball, ufo, wave, robot, spider, explosion, glow, creator_points, "
-        "coins, user_coins) VALUES (:username, :email, :password, :message_privacy, "
+        "coins, user_coins, diamonds) VALUES (:username, :email, :password, :message_privacy, "
         ":friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
         ":twitch_name, :stars, :demons, :primary_colour, "
         ":secondary_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
-        ":spider, :explosion, :glow, :creator_points, :coins, :user_coins)",
+        ":spider, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds)",
         {
             "username": user.username,
             "email": user.email,
@@ -100,6 +101,7 @@ async def create(user: User) -> int:
             "creator_points": user.creator_points,
             "coins": user.coins,
             "user_coins": user.user_coins,
+            "diamonds": user.diamonds,
         },
     )
 
@@ -128,8 +130,8 @@ async def update(user: User) -> None:
         "secondary_colour = :secondary_colour, display_type = :display_type, "
         "icon = :icon, ship = :ship, ball = :ball, ufo = :ufo, wave = :wave, "
         "robot = :robot, spider = :spider, explosion = :explosion, glow = :glow, "
-        "creator_points = :creator_points, coins = :coins, user_coins = :user_coins "
-        "WHERE id = :id",
+        "creator_points = :creator_points, coins = :coins, user_coins = :user_coins, "
+        "diamonds = :diamonds WHERE id = :id",
         {
             "username": user.username,
             "email": user.email,
@@ -158,6 +160,7 @@ async def update(user: User) -> None:
             "coins": user.coins,
             "user_coins": user.user_coins,
             "id": user.id,
+            "diamonds": user.diamonds,
         },
     )
 

@@ -11,13 +11,13 @@ from fastapi import Form
 from fastapi import HTTPException
 
 from realistikgdps import repositories
+from realistikgdps.common import hashes
 from realistikgdps.constants.friends import FriendStatus
 from realistikgdps.constants.privacy import PrivacySetting
 from realistikgdps.constants.responses import GenericResponse
 from realistikgdps.constants.responses import LoginResponse
 from realistikgdps.constants.responses import RegisterResponse
 from realistikgdps.models.user import User
-from realistikgdps.usecases import hashes
 
 
 async def register(
@@ -66,6 +66,7 @@ async def register(
         twitter_name=None,
         twitch_name=None,
         register_ts=datetime.now(),
+        diamonds=0,
     )
 
     user_id = await repositories.user.create(user)

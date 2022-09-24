@@ -36,3 +36,9 @@ router.add_api_route(
     authentication.login_post,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/updateGJUserScore22.php",
+    profiles.update_user_info,
+    methods=["POST"],
+)
