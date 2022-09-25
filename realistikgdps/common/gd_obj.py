@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import Callable
 from typing import TypeVar
+from typing import Union
 
 from realistikgdps.constants.friends import FriendStatus
 from realistikgdps.models.user import User
-from realistikgdps.typing.types import GDSerialisable
+
+GDSerialisable = dict[Union[int, str], Union[int, str]]
 
 
 def dumps(obj: GDSerialisable, sep: str = ":") -> str:
