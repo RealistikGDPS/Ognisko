@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import Optional
 
-import realistikgdps.state
 from realistikgdps.constants.privacy import PrivacySetting
 from realistikgdps.models.user import User
+from realistikgdps.state import services
 
 
 async def from_db(user_id: int) -> Optional[User]:
-    user_db = await realistikgdps.state.services.database.fetch_one(
+    user_db = await services.database.fetch_one(
         "SELECT id, username, email, password, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
@@ -64,7 +64,7 @@ async def create(user: User) -> int:
         int: The ID of the newly inserted user.
     """
 
-    user_id = await realistikgdps.state.services.database.execute(
+    user_id = await services.database.execute(
         "INSERT INTO users (username, email, password, message_privacy, "
         "friend_privacy, comment_privacy, twitter_name, youtube_name, twitch_name, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, "
@@ -121,7 +121,7 @@ async def from_id(user_id: int) -> Optional[User]:
 
 
 async def update(user: User) -> None:
-    await realistikgdps.state.services.database.execute(
+    await services.database.execute(
         "UPDATE users SET username = :username, email = :email, password = :password, "
         "message_privacy = :message_privacy, friend_privacy = :friend_privacy, "
         "comment_privacy = :comment_privacy, twitter_name = :twitter_name, "
@@ -166,7 +166,7 @@ async def update(user: User) -> None:
 
 
 async def check_email_exists(email: str) -> bool:
-    return await realistikgdps.state.services.database.fetch_val(
+    return await services.database.fetch_val(
         "SELECT EXISTS(SELECT 1 FROM users WHERE email = :email)",
         {
             "email": email,
@@ -175,7 +175,7 @@ async def check_email_exists(email: str) -> bool:
 
 
 async def check_username_exists(username: str) -> bool:
-    return await realistikgdps.state.services.database.fetch_val(
+    return await services.database.fetch_val(
         "SELECT EXISTS(SELECT 1 FROM users WHERE username = :username)",
         {
             "username": username,
@@ -184,7 +184,7 @@ async def check_username_exists(username: str) -> bool:
 
 
 async def from_name(username: str) -> Optional[User]:
-    user_id = await realistikgdps.state.services.database.fetch_val(
+    user_id = await services.database.fetch_val(
         "SELECT id FROM users WHERE username = :username",
         {
             "username": username,
