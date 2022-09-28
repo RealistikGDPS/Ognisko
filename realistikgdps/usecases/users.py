@@ -131,7 +131,7 @@ class UserPerspective(NamedTuple):
 
 async def get_user_perspective(
     user_id: int,
-    perspective_user: User,
+    perspective: User,
 ) -> Union[UserPerspective, ServiceError]:
     # TODO: Perform Blocked Check
     # TODO: Perform Privilege Check

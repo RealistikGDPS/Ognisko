@@ -42,3 +42,15 @@ router.add_api_route(
     profiles.update_user_info,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/uploadGJAccComment20.php",
+    profiles.post_profile_comment,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/getGJAccountComments20.php",
+    profiles.view_profile_comments,
+    methods=["POST"],
+)

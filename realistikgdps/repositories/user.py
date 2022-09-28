@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from realistikgdps import state  # TODO: Weird considering the services import.
 from realistikgdps.constants.privacy import PrivacySetting
 from realistikgdps.models.user import User
 from realistikgdps.state import services
@@ -109,13 +110,13 @@ async def create(user: User) -> int:
 
 
 async def from_id(user_id: int) -> Optional[User]:
-    cache_user = realistikgdps.state.repositories.user_repo.get(user_id)
+    cache_user = state.repositories.user_repo.get(user_id)
     if cache_user is not None:
         return cache_user
 
     user = await from_db(user_id)
     if user is not None:
-        realistikgdps.state.repositories.user_repo[user_id] = user
+        state.repositories.user_repo[user_id] = user
 
     return user
 

@@ -9,3 +9,4 @@ class ServiceError(str, Enum):
     PROFILE_USER_BLOCKED = "profile.user_blocked"
     PROFILE_USER_NOT_FOUND = "profile.user_not_found"
     PROFILE_BLOCKED_BY_USER = "profile.blocked_by_user"
+    COMMENTS_INVALID_CONTENT = "comments.invalid_content"

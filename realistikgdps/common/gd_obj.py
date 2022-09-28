@@ -1,11 +1,13 @@
 from __future__ import annotations
 
+import base64
 from typing import Callable
 from typing import TypeVar
 from typing import Union
 
 from realistikgdps.constants.friends import FriendStatus
 from realistikgdps.models.user import User
+from realistikgdps.models.user_comment import UserComment
 
 GDSerialisable = dict[Union[int, str], Union[int, str]]
 
@@ -77,4 +79,14 @@ def create_profile(
         48: user.explosion,
         49: 0,  # TODO: Badge level with privileges.
         50: user.comment_privacy.value,
+    }
+
+
+def create_user_comment(comment: UserComment) -> GDSerialisable:
+    return {
+        2: base64.b64encode(comment.content.encode()).decode(),
+        4: comment.likes,
+        6: comment.id,
+        9: "long",  # TODO: Timestamp text system.
+        12: "0,0,0",  # TODO: Colour system (privilege bound)
     }
