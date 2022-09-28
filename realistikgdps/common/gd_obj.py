@@ -5,6 +5,7 @@ from typing import Callable
 from typing import TypeVar
 from typing import Union
 
+from realistikgdps.common.time import into_str_ts
 from realistikgdps.constants.friends import FriendStatus
 from realistikgdps.models.user import User
 from realistikgdps.models.user_comment import UserComment
@@ -87,6 +88,6 @@ def create_user_comment(comment: UserComment) -> GDSerialisable:
         2: base64.b64encode(comment.content.encode()).decode(),
         4: comment.likes,
         6: comment.id,
-        9: "long",  # TODO: Timestamp text system.
+        9: into_str_ts(comment.post_ts),
         12: "0,0,0",  # TODO: Colour system (privilege bound)
     }
