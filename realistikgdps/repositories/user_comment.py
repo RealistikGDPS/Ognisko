@@ -6,7 +6,7 @@ from realistikgdps.models.user_comment import UserComment
 from realistikgdps.state import services
 
 
-async def from_db(comment_id: int) -> Optional[UserComment]:
+async def from_id(comment_id: int) -> Optional[UserComment]:
     comment_db = await services.database.fetch_one(
         "SELECT id, user_id, content, likes, post_ts, deleted "
         "FROM user_comments WHERE id = :id",

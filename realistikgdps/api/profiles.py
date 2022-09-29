@@ -86,7 +86,7 @@ async def update_user_info(
     return str(user.id)
 
 
-async def view_profile_comments(
+async def view_user_comments(
     target_id: int = Form(
         ...,
         alias="accountID",
@@ -111,7 +111,7 @@ async def view_profile_comments(
     return response
 
 
-async def post_profile_comment(
+async def post_user_comment(
     user: User = Depends(authenticate_dependency()),
     content_b64: str = Form(..., alias="comment"),
 ) -> str:

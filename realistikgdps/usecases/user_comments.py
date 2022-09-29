@@ -6,6 +6,7 @@ from typing import Union
 
 from realistikgdps import repositories
 from realistikgdps.constants.errors import ServiceError
+from realistikgdps.constants.likes import LikeType
 from realistikgdps.models.user import User
 from realistikgdps.models.user_comment import UserComment
 
@@ -59,5 +60,32 @@ async def create(
         deleted=False,
     )
     comment.id = await repositories.user_comment.create(comment)
+
+    return comment
+
+
+async def like(
+    user: User,
+    comment_id: int,
+    value: int = 1,
+) -> Union[UserComment, ServiceError]:
+    # TODO: Privilege checks
+    comment = await repositories.user_comment.from_id(comment_id)
+
+    if comment is None:
+        return ServiceError.LIKES_INVALID_TARGET
+
+    if comment.user_id == user.id:
+        return ServiceError.LIKES_OWN_TARGET
+
+    if await repositories.like.exists_by_target_and_user(
+        LikeType.USER_COMMENT,
+        comment_id,
+        user.id,
+    ):
+        return ServiceError.LIKES_ALREADY_LIKED
+
+    comment.likes += value
+    await repositories.user_comment.update(comment)
 
     return comment

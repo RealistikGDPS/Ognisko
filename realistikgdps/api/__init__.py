@@ -45,12 +45,12 @@ router.add_api_route(
 
 router.add_api_route(
     "/uploadGJAccComment20.php",
-    profiles.post_profile_comment,
+    profiles.post_user_comment,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/getGJAccountComments20.php",
-    profiles.view_profile_comments,
+    profiles.view_user_comments,
     methods=["POST"],
 )
