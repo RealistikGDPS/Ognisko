@@ -75,3 +75,16 @@ async def sum_by_target(
         return 0
 
     return like_db["sum"]
+
+
+async def update_value(
+    like_id: int,
+    value: int,
+) -> None:
+    await services.database.execute(
+        "UPDATE likes SET value = :value WHERE id = :id",
+        {
+            "id": like_id,
+            "value": value,
+        },
+    )
