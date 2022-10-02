@@ -67,8 +67,8 @@ def init_events(app: FastAPI) -> None:
 def init_api() -> FastAPI:
     app = FastAPI(
         title="RealistikGDPS",
-        # openapi_url=None,
-        # docs_url=None,
+        openapi_url=None,
+        docs_url=None,
     )
 
     init_events(app)

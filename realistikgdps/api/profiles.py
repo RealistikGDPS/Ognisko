@@ -8,6 +8,7 @@ from fastapi import Form
 from realistikgdps import logger
 from realistikgdps.common import gd_obj
 from realistikgdps.constants.errors import ServiceError
+from realistikgdps.constants.likes import LikeType
 from realistikgdps.constants.responses import GenericResponse
 from realistikgdps.models.user import User
 from realistikgdps.usecases import user_comments
@@ -126,3 +127,14 @@ async def post_user_comment(
 
     logger.info(f"{user} successfully posted a profile comment.")
     return str(GenericResponse.SUCCESS)
+
+
+# TODO: MOVE
+# async def like_target(
+#    target_type: LikeType = Form(..., alias="type"),
+#    target_id: int = Form(..., alias="itemID"),
+#    is_positive: bool = Form(..., alias="like"),
+# ) -> str:
+#
+#    if target_type is LikeType.USER_COMMENT:
+#        result = await user_comments.like(user, is_positive)
