@@ -138,3 +138,26 @@ async def post_user_comment(
 #
 #    if target_type is LikeType.USER_COMMENT:
 #        result = await user_comments.like(user, is_positive)
+
+
+async def update_settings(
+    user: User = Depends(authenticate_dependency()),
+    youtube_name: str = Form(..., alias="yt"),
+    twitter_name: str = Form(..., alias="twitter"),
+    twitch_name: str = Form(..., alias="twitch"),
+) -> str:
+    result = await users.update_stats(
+        user,
+        youtube_name=youtube_name,
+        twitter_name=twitter_name,
+        twitch_name=twitch_name,
+    )
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            f"Failed to update settings of {user} with error {result!r}.",
+        )
+        return str(GenericResponse.FAIL)
+
+    logger.info(f"Successfully updated settings of {user}.")
+    return str(GenericResponse.SUCCESS)

@@ -54,3 +54,10 @@ router.add_api_route(
     profiles.view_user_comments,
     methods=["POST"],
 )
+
+# It may be possible to reuse `profiles.update_user_info`
+router.add_api_route(
+    "/updateGJAccSettings20.php",
+    profiles.update_settings,
+    methods=["POST"],
+)
