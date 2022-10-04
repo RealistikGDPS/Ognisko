@@ -5,4 +5,5 @@ from . import friends
 from . import likes
 from . import privacy
 from . import responses
+from . import songs
 from . import xor
