@@ -8,7 +8,7 @@ from realistikgdps.models.song import Song
 from realistikgdps.state import services
 
 
-async def from_id(song_id: int) -> Optional[Song]:
+async def from_db(song_id: int) -> Optional[Song]:
     song_db = await services.database.fetch_one(
         "SELECT id, name, author_id, author, author_youtube, size, "
         "download_url, source, blocked FROM songs WHERE id = :song_id",
@@ -60,6 +60,10 @@ async def from_boomlings(song_id: int) -> Optional[Song]:
             "secret": "Wmfd2893gb7",
             "songID": song_id,
         },
+        timeout=2,
+        headers={
+            "User-Agent": "",
+        },
     )
 
     # Endpoint always returns a 200 HTTP code, result to checking the format.
@@ -82,3 +86,17 @@ async def from_boomlings(song_id: int) -> Optional[Song]:
         source=SongSource.BOOMLINGS,
         blocked=False,
     )
+
+
+async def from_id(song_id: int) -> Optional[Song]:
+    # TODO: Implement song LRU Caching
+    song_db = await from_db(song_id)
+    if song_db is not None:
+        return song_db
+
+    song_boomlings = await from_boomlings(song_id)
+    if song_boomlings is not None:
+        await create(song_boomlings)
+        return song_boomlings
+
+    return None
