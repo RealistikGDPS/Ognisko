@@ -4,6 +4,6 @@ from enum import IntEnum
 
 
 class SongSource(IntEnum):
-    GAME_API = 0
+    BOOMLINGS = 0
     NEWGROUNDS = 1
     CUSTOM = 2

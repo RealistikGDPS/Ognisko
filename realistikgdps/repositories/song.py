@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
+from realistikgdps.common import gd_obj
 from realistikgdps.constants.songs import SongSource
 from realistikgdps.models.song import Song
 from realistikgdps.state import services
@@ -48,4 +49,36 @@ async def create(song: Song) -> int:
             "source": song.source.value,
             "blocked": song.blocked,
         },
+    )
+
+
+async def from_boomlings(song_id: int) -> Optional[Song]:
+    # May raise an exception in case of network issue.
+    song_api = await services.http.post(
+        "http://boomlings.com/database/getGJSongInfo.php",
+        data={
+            "secret": "Wmfd2893gb7",
+            "songID": song_id,
+        },
+    )
+
+    # Endpoint always returns a 200 HTTP code, result to checking the format.
+    if "~|~" not in song_api.text:
+        return None
+
+    song_data = gd_obj.loads(
+        data=song_api.text,
+        sep="~|~",
+    )
+
+    return Song(
+        id=int(song_data[1]),
+        name=song_data[2],
+        author_id=int(song_data[3]),
+        author=song_data[4],
+        author_youtube=song_data[7] or None,
+        size=float(song_data[5]),
+        download_url=song_data[10],
+        source=SongSource.BOOMLINGS,
+        blocked=False,
     )
