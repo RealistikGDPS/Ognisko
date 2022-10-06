@@ -7,10 +7,11 @@ from typing import Union
 
 from realistikgdps.common.time import into_str_ts
 from realistikgdps.constants.friends import FriendStatus
+from realistikgdps.models.song import Song
 from realistikgdps.models.user import User
 from realistikgdps.models.user_comment import UserComment
 
-GDSerialisable = dict[Union[int, str], Union[int, str]]
+GDSerialisable = dict[Union[int, str], Union[int, str, float]]
 
 
 def dumps(obj: GDSerialisable, sep: str = ":") -> str:
@@ -90,4 +91,16 @@ def create_user_comment(comment: UserComment) -> GDSerialisable:
         6: comment.id,
         9: into_str_ts(comment.post_ts),
         12: "0,0,0",  # TODO: Colour system (privilege bound)
+    }
+
+
+def create_song(song: Song) -> GDSerialisable:
+    return {
+        1: song.id,
+        2: song.name,
+        3: song.author_id,
+        4: song.author,
+        5: song.size,
+        7: song.author_youtube or "",
+        10: song.download_url,
     }

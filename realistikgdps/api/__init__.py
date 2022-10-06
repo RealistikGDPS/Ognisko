@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
 from . import authentication
+from . import levels
 from . import misc
 from . import profiles
 from realistikgdps.config import config
@@ -59,5 +60,11 @@ router.add_api_route(
 router.add_api_route(
     "/updateGJAccSettings20.php",
     profiles.update_settings,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/getGJSongInfo.php",
+    levels.get_song_info,
     methods=["POST"],
 )

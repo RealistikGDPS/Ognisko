@@ -75,6 +75,7 @@ async def from_boomlings(song_id: int) -> Optional[Song]:
         sep="~|~",
     )
 
+    # TODO: maybe make a gd_obj.load_song
     return Song(
         id=int(song_data[1]),
         name=song_data[2],

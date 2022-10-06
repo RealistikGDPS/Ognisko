@@ -17,3 +17,6 @@ class Song:
     download_url: str
     source: SongSource
     blocked: bool
+
+    def __str__(self) -> str:
+        return f"{self.author} - {self.name} ({self.id})"
