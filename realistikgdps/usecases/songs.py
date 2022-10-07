@@ -8,7 +8,7 @@ from realistikgdps.constants.errors import ServiceError
 from realistikgdps.models.song import Song
 
 
-async def get(song_id) -> Union[Song, ServiceError]:
+async def get(song_id: int) -> Union[Song, ServiceError]:
     song = await repositories.song.from_id(song_id)
     if song is None:
         # This could mean req fail too

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import urllib.parse
 from typing import Optional
 
 from realistikgdps.common import gd_obj
@@ -8,10 +9,13 @@ from realistikgdps.models.song import Song
 from realistikgdps.state import services
 
 
-async def from_db(song_id: int) -> Optional[Song]:
+async def from_db(song_id: int, allow_blocked: bool = False) -> Optional[Song]:
     song_db = await services.database.fetch_one(
         "SELECT id, name, author_id, author, author_youtube, size, "
-        "download_url, source, blocked FROM songs WHERE id = :song_id",
+        "download_url, source, blocked FROM songs WHERE id = :song_id"
+        + " AND blocked = 0"
+        if not allow_blocked
+        else "",
         {
             "song_id": song_id,
         },
@@ -36,9 +40,9 @@ async def from_db(song_id: int) -> Optional[Song]:
 async def create(song: Song) -> int:
     return await services.database.execute(
         "INSERT INTO songs (name, author_id, author, author_youtube, size, "
-        "download_url, source, blocked) VALUES "
+        "download_url, source, blocked, id) VALUES "
         "(:name, :author_id, :author, :author_youtube, :size, "
-        ":download_url, :source, :blocked)",
+        ":download_url, :source, :blocked, :id)",
         {
             "name": song.name,
             "author_id": song.author_id,
@@ -48,6 +52,7 @@ async def create(song: Song) -> int:
             "download_url": song.download_url,
             "source": song.source.value,
             "blocked": song.blocked,
+            "id": song.id,
         },
     )
 
@@ -55,7 +60,7 @@ async def create(song: Song) -> int:
 async def from_boomlings(song_id: int) -> Optional[Song]:
     # May raise an exception in case of network issue.
     song_api = await services.http.post(
-        "http://boomlings.com/database/getGJSongInfo.php",
+        "http://www.boomlings.com/database/getGJSongInfo.php",
         data={
             "secret": "Wmfd2893gb7",
             "songID": song_id,
@@ -67,11 +72,12 @@ async def from_boomlings(song_id: int) -> Optional[Song]:
     )
 
     # Endpoint always returns a 200 HTTP code, result to checking the format.
-    if "~|~" not in song_api.text:
+    response_data = song_api.content.decode()
+    if "~|~" not in response_data:
         return None
 
     song_data = gd_obj.loads(
-        data=song_api.text,
+        data=response_data,
         sep="~|~",
     )
 
@@ -89,9 +95,9 @@ async def from_boomlings(song_id: int) -> Optional[Song]:
     )
 
 
-async def from_id(song_id: int) -> Optional[Song]:
+async def from_id(song_id: int, allow_blocked: bool = False) -> Optional[Song]:
     # TODO: Implement song LRU Caching
-    song_db = await from_db(song_id)
+    song_db = await from_db(song_id, allow_blocked)
     if song_db is not None:
         return song_db
 
