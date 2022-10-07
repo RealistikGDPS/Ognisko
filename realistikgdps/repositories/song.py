@@ -89,7 +89,7 @@ async def from_boomlings(song_id: int) -> Optional[Song]:
         author=song_data[4],
         author_youtube=song_data[7] or None,
         size=float(song_data[5]),
-        download_url=song_data[10],
+        download_url=urllib.parse.unquote(song_data[10]),
         source=SongSource.BOOMLINGS,
         blocked=False,
     )
