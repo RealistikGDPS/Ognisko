@@ -17,8 +17,8 @@ class Level:
     name: str
     user_id: int
     description: str
-    song_id: Optional[int]  # Used for custom songs
-    track_id: Optional[int]  # Used for official songs
+    custom_song_id: Optional[int]
+    official_track_id: Optional[int]
     version: int
     length: LevelLength
     two_player: bool
@@ -40,7 +40,7 @@ class Level:
     requested_stars: int
     feature_order: int
     search_flags: LevelSearchFlags
-    ldm: bool
+    low_detail_mode: bool
     object_count: int
     copy_password: int
     building_time: int
