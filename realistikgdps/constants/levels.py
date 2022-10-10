@@ -6,7 +6,7 @@ from enum import IntEnum
 from enum import IntFlag
 
 
-class LevelStatus(IntFlag):
+class LevelSearchFlags(IntFlag):
     NORMAL = 0
     EPIC = 1 << 0
     AWARDED = 1 << 1
@@ -36,3 +36,11 @@ class LevelDemonDifficulty(IntEnum):
     MEDIUM = 4
     INSANE = 5
     EXTREME = 6
+
+
+class LevelPublicity(IntEnum):
+    PUBLIC = 0
+    # Levels only accessible through direct ID.
+    GLOBAL_UNLISTED = 1
+    FRIENDS_UNLISTED = 2
+    # TODO: Maybe a listed friends version

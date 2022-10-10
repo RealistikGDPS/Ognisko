@@ -7,7 +7,8 @@ from typing import Optional
 from realistikgdps.constants.levels import LevelDemonDifficulty
 from realistikgdps.constants.levels import LevelDifficulty
 from realistikgdps.constants.levels import LevelLength
-from realistikgdps.constants.levels import LevelStatus
+from realistikgdps.constants.levels import LevelPublicity
+from realistikgdps.constants.levels import LevelSearchFlags
 
 
 @dataclass
@@ -21,9 +22,8 @@ class Level:
     version: int
     length: LevelLength
     two_player: bool
-    unlisted: bool
-    extra_str: str  # Officially called this. Used to help with rendering.
-    # verification_replay: str
+    publicity: LevelPublicity
+    render_str: str  # Officially called extra string
     game_version: int
     binary_version: int
     upload_ts: datetime
@@ -39,9 +39,11 @@ class Level:
     coins_verified: bool
     requested_stars: int
     feature_order: int
-    status: LevelStatus
+    search_flags: LevelSearchFlags
     ldm: bool
     object_count: int
     copy_password: int
     building_time: int
     update_locked: bool
+
+    # verification_replay: str
