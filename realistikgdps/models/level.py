@@ -4,6 +4,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
+from realistikgdps.constants.levels import LevelDemonDifficulty
+from realistikgdps.constants.levels import LevelDifficulty
+from realistikgdps.constants.levels import LevelLength
+from realistikgdps.constants.levels import LevelStatus
+
 
 @dataclass
 class Level:
@@ -14,7 +19,7 @@ class Level:
     song_id: Optional[int]  # Used for custom songs
     track_id: Optional[int]  # Used for official songs
     version: int
-    length: int  # TODO: Enum
+    length: LevelLength
     two_player: bool
     unlisted: bool
     extra_str: str  # Officially called this. Used to help with rendering.
@@ -28,13 +33,13 @@ class Level:
     downloads: int
     likes: int
     stars: int
-    difficulty: int  # TODO: Enum
-    demon_difficulty: Optional[int]  # TODO: Enum
+    difficulty: LevelDifficulty
+    demon_difficulty: Optional[LevelDemonDifficulty]
     coins: int
     coins_verified: bool
     requested_stars: int
     feature_order: int
-    # TODO: Level ranking status (epic, features, magic, awarded)
+    status: LevelStatus
     ldm: bool
     object_count: int
     copy_password: int
