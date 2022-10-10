@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
-from realistikgdps.mixins.enum_str import IntEnumStringMixin
+from realistikgdps.common.mixins import IntEnumStringMixin
 
 
 class GenericResponse(IntEnumStringMixin, IntEnum):
