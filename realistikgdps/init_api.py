@@ -18,6 +18,7 @@ from realistikgdps.constants.responses import GenericResponse
 def init_events(app: FastAPI) -> None:
     @app.on_event("startup")
     async def on_startup() -> None:
+        # TODO: Check data directories.
         await realistikgdps.state.services.database.connect()
         await realistikgdps.state.services.redis.initialize()
         logger.info("The server has started!")

@@ -20,12 +20,13 @@ class Config:
     sql_db: str = "rgdps"
     sql_pass: str = "password"
     sql_port: int = 3306
-    data_dir: str = ".data"
     srv_name: str = "RealistikGDPS"
     srv_log_level: str = "INFO"
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
+    data_levels: str = "data/levels"
+    data_saves: str = "data/saves"
 
 
 def read_config_json() -> dict[str, Any]:

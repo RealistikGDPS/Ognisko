@@ -15,3 +15,4 @@ class ServiceError(str, Enum):
     LIKES_OWN_TARGET = "likes.own_target"
     LIKES_INVALID_TARGET = "likes.invalid_target"
     SONGS_NOT_FOUND = "songs.not_found"
+    SAVE_DATA_NOT_FOUND = "save_data.not_found"

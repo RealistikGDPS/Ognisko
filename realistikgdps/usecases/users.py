@@ -96,11 +96,11 @@ async def authenticate(
 # FastAPI dependency for seemless authentication.
 def authenticate_dependency(
     account_id_alias: str = "accountID",
-    gjp_alias: str = "gjp",
+    password_alias: str = "gjp",
 ) -> Callable[[int, str], Awaitable[User]]:
     async def wrapper(
         account_id: int = Form(..., alias=account_id_alias),
-        gjp: str = Form(..., alias=gjp_alias),
+        gjp: str = Form(..., alias=password_alias),
     ) -> User:
         user = await repositories.user.from_id(account_id)
 
@@ -113,6 +113,36 @@ def authenticate_dependency(
         if not await hashes.compare_bcrypt(
             user.password,
             hashes.decode_gjp(gjp),
+        ):
+            raise HTTPException(
+                status_code=200,
+                detail=str(GenericResponse.FAIL),
+            )
+
+        return user
+
+    return wrapper
+
+
+def password_authenticate_dependency(
+    username_alias: str = "userName",
+    password_alias: str = "password",
+) -> Callable[[str, str], Awaitable[User]]:
+    async def wrapper(
+        username: str = Form(..., alias=username_alias),
+        password: str = Form(..., alias=password_alias),
+    ) -> User:
+        user = await repositories.user.from_name(username)
+
+        if user is None:
+            raise HTTPException(
+                status_code=200,
+                detail=str(GenericResponse.FAIL),
+            )
+
+        if not await hashes.compare_bcrypt(
+            user.password,
+            password,
         ):
             raise HTTPException(
                 status_code=200,
@@ -213,3 +243,28 @@ async def update_stats(
 
     await repositories.user.update(updated_user)  # TODO: Partial update
     return updated_user
+
+
+def get_user_save_data(user: User) -> Union[str, ServiceError]:
+    """NOTE: This only returns the path to the file as save data can reasonably
+    exceed 200MB.
+    """
+
+    path = repositories.user.get_data_directory(user.id)
+
+    if path is None:
+        return ServiceError.SAVE_DATA_NOT_FOUND
+
+    return path
+
+
+def save_user_save_data(
+    user: User,
+    data: str,
+) -> Union[None, ServiceError]:
+    # TODO: Privilege Check
+    # TODO: Validation
+
+    repositories.user.write_save_data(user.id, data)
+
+    return None

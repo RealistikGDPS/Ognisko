@@ -7,6 +7,7 @@ from . import authentication
 from . import levels
 from . import misc
 from . import profiles
+from . import save_data
 from realistikgdps.config import config
 
 router = APIRouter(
@@ -66,5 +67,24 @@ router.add_api_route(
 router.add_api_route(
     "/getGJSongInfo.php",
     levels.get_song_info,
+    methods=["POST"],
+)
+
+# Geometry Dash forces these 2 to be prefixed with /database
+router.add_api_route(
+    "/database/accounts/syncGJAccountNew.php",
+    save_data.load_save_data,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/database/accounts/backupGJAccountNew.php",
+    save_data.save_user_save_data,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/getAccountURL.php",
+    save_data.get_save_endpoint,
     methods=["POST"],
 )
