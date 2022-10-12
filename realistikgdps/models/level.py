@@ -18,7 +18,7 @@ class Level:
     user_id: int
     description: str
     custom_song_id: Optional[int]
-    official_track_id: Optional[int]
+    official_song_id: Optional[int]
     version: int
     length: LevelLength
     two_player: bool
@@ -45,5 +45,6 @@ class Level:
     copy_password: int
     building_time: int
     update_locked: bool
+    deleted: bool
 
     # verification_replay: str
