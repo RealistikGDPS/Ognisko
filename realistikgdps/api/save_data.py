@@ -10,14 +10,14 @@ from realistikgdps.config import config
 from realistikgdps.constants.errors import ServiceError
 from realistikgdps.constants.responses import GenericResponse
 from realistikgdps.models.user import User
-from realistikgdps.usecases import users
+from realistikgdps.usecases import save_data
 from realistikgdps.usecases.users import password_authenticate_dependency
 
 
 async def load_save_data(
     user: User = Depends(password_authenticate_dependency()),
 ):
-    data_path = users.get_user_save_data(user)
+    data_path = save_data.get(user)
 
     if isinstance(data_path, ServiceError):
         logger.info(f"Failed to fetch save data with error {data_path!r}.")
@@ -29,10 +29,10 @@ async def load_save_data(
 
 async def save_user_save_data(
     user: User = Depends(password_authenticate_dependency()),
-    save_data: str = Form(..., alias="saveData"),  # Pain.
+    data: str = Form(..., alias="saveData"),  # Pain.
 ) -> str:
 
-    res = users.save_user_save_data(user, save_data)
+    res = save_data.save(user, data)
 
     if isinstance(res, ServiceError):
         logger.info(f"Failed to write save data with error {res!r}.")

@@ -243,28 +243,3 @@ async def update_stats(
 
     await repositories.user.update(updated_user)  # TODO: Partial update
     return updated_user
-
-
-def get_user_save_data(user: User) -> Union[str, ServiceError]:
-    """NOTE: This only returns the path to the file as save data can reasonably
-    exceed 200MB.
-    """
-
-    path = repositories.user.get_data_directory(user.id)
-
-    if path is None:
-        return ServiceError.SAVE_DATA_NOT_FOUND
-
-    return path
-
-
-def save_user_save_data(
-    user: User,
-    data: str,
-) -> Union[None, ServiceError]:
-    # TODO: Privilege Check
-    # TODO: Validation
-
-    repositories.user.write_save_data(user.id, data)
-
-    return None

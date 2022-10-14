@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from typing import Optional
 
 from realistikgdps import state  # TODO: Weird considering the services import.
@@ -198,21 +197,3 @@ async def from_name(username: str) -> Optional[User]:
         return None
 
     return await from_id(user_id)
-
-
-# These may qualify as their own resource, but they're quite a small feature,
-# meaning that for example, they won't have their own model.
-def get_data_directory(user_id: int) -> Optional[str]:
-    directory = f"{config.data_saves}/{user_id}"
-
-    if not os.path.exists(directory):
-        return None
-
-    return directory
-
-
-def write_save_data(user_id: int, data: str) -> None:
-    directory = f"{config.data_saves}/{user_id}"
-
-    with open(directory, "w") as file:
-        file.write(data)
