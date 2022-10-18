@@ -16,6 +16,7 @@ def from_level_id_as_path(level_id: int) -> Optional[str]:
 
 
 def from_level_id(level_id: int) -> Optional[str]:
+    """NOTE: These can get quite large, usually ~10MB but some can exceed 100MB."""
     path = from_level_id_as_path(level_id)
 
     if path is None:

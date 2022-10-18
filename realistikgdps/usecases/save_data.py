@@ -34,9 +34,16 @@ def get(user: User) -> Union[str, ServiceError]:
 def save(
     user: User,
     data: str,
+    game_version: int,
+    binary_version: int,
 ) -> Union[None, ServiceError]:
     # TODO: Privilege Check
     # TODO: Validation
+
+    # the 'a' are a placeholder for mappack strings and completed levels.
+    # Unfortunately, afaik, they are only achievable through save data parsing
+    # which I currently don't want to do.
+    data += f";{game_version};{binary_version};a;a"
 
     repositories.save_data.create(user.id, data)
 

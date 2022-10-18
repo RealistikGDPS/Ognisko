@@ -17,7 +17,7 @@ from realistikgdps.usecases.users import password_authenticate_dependency
 async def load_save_data(
     user: User = Depends(password_authenticate_dependency()),
 ):
-    data_path = save_data.get(user)
+    data_path = save_data.get_as_path(user)
 
     if isinstance(data_path, ServiceError):
         logger.info(f"Failed to fetch save data with error {data_path!r}.")
@@ -28,11 +28,13 @@ async def load_save_data(
 
 
 async def save_user_save_data(
+    req: Request,
     user: User = Depends(password_authenticate_dependency()),
     data: str = Form(..., alias="saveData"),  # Pain.
+    game_version: int = Form(..., alias="gameVersion"),
+    binary_version: int = Form(..., alias="binaryVersion"),
 ) -> str:
-
-    res = save_data.save(user, data)
+    res = save_data.save(user, data, game_version, binary_version)
 
     if isinstance(res, ServiceError):
         logger.info(f"Failed to write save data with error {res!r}.")
