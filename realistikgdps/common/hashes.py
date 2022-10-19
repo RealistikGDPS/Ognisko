@@ -60,7 +60,7 @@ def decode_gjp(gjp: str) -> str:
         str: The plaintext password.
     """
 
-    return xor_cipher.xor_cyclic(
+    return xor_cipher.xor_cyclic_unsafe(
         content=base64.b64decode(gjp.encode()),
         key=XorKeys.GJP,
     ).decode()

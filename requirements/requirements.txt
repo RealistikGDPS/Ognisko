@@ -7,4 +7,4 @@ redis == 4.3.4
 structlog==16.0.0
 uvicorn == 0.18.3
 uvloop == 0.16.0
-xor-cipher == 1.0.2
+xor-cipher == 1.0.3
