@@ -116,3 +116,55 @@ async def create(level: Level) -> int:
             "deleted": level.deleted,
         },
     )
+
+
+async def update(level: Level) -> int:
+    return await services.database.execute(
+        "UPDATE levels SET name = :name, user_id = :user_id, description = :description, "
+        "custom_song_id = :custom_song_id, official_song_id = :official_song_id, "
+        "version = :version, length = :length, two_player = :two_player, "
+        "publicity = :publicity, render_str = :render_str, game_version = :game_version, "
+        "binary_version = :binary_version, upload_ts = :upload_ts, original_id = :original_id, "
+        "downloads = :downloads, likes = :likes, stars = :stars, difficulty = :difficulty, "
+        "demon_difficulty = :demon_difficulty, coins = :coins, coins_verified = :coins_verified, "
+        "requested_stars = :requested_stars, feature_order = :feature_order, "
+        "search_flags = :search_flags, low_detail_mode = :low_detail_mode, "
+        "object_count = :object_count, copy_password = :copy_password, "
+        "building_time = :building_time, update_locked = :update_locked, "
+        "deleted = :deleted WHERE id = :id",
+        {
+            "id": level.id,
+            "name": level.name,
+            "user_id": level.user_id,
+            "description": level.description,
+            "custom_song_id": level.custom_song_id,
+            "official_song_id": level.official_song_id,
+            "version": level.version,
+            "length": level.length.value,
+            "two_player": level.two_player,
+            "publicity": level.publicity.value,
+            "render_str": level.render_str,
+            "game_version": level.game_version,
+            "binary_version": level.binary_version,
+            "upload_ts": level.upload_ts,
+            "original_id": level.original_id,
+            "downloads": level.downloads,
+            "likes": level.likes,
+            "stars": level.stars,
+            "difficulty": level.difficulty.value,
+            "demon_difficulty": level.demon_difficulty.value
+            if level.demon_difficulty is not None
+            else None,
+            "coins": level.coins,
+            "coins_verified": level.coins_verified,
+            "requested_stars": level.requested_stars,
+            "feature_order": level.feature_order,
+            "search_flags": level.search_flags.value,
+            "low_detail_mode": level.low_detail_mode,
+            "object_count": level.object_count,
+            "copy_password": level.copy_password,
+            "building_time": level.building_time,
+            "update_locked": level.update_locked,
+            "deleted": level.deleted,
+        },
+    )
