@@ -14,7 +14,7 @@ class LevelSearchFlags(IntFlag):
 
 
 class LevelDifficulty(IntEnum):
-    AUTO = 0
+    NA = 0
     EASY = 10
     NORMAL = 20
     HARD = 30
