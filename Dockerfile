@@ -2,7 +2,6 @@ FROM python:3.9
 
 ENV PYTHONUNBUFFERED=1
 ENV USE_ENV_CONFIG=1
-ENV HTTP_PORT=80
 
 WORKDIR /app
 
@@ -11,14 +10,15 @@ ENV CYTHONISE = 1
 RUN apt-get update && apt-get install -y git
 RUN git clone https://github.com/RealistikDash/xor_cipher
 RUN pip install cython
-RUN cd xor_cipher && python3 setup.py build_ext --inplace && pip install .
+RUN cd xor_cipher && python3 setup.py build_ext --inplace && pip install . && cd ..
 
 # Python Dependencies
 COPY requirements/requirements.txt .
 RUN pip install -r requirements.txt
 
 # Copy the application
-COPY realistikgdps/ /app/realistikgdps/
+COPY realistikgdps /app/
+COPY main.py /app/
 
 # Run the application
-CMD ["python", "realistikgdps/main.py"]
+CMD ["python", "/app/main.py"]
