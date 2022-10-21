@@ -33,3 +33,8 @@ services:
       - SQL_PASS=root
       - SQL_HOST=mysql
       - REDIS_HOST=redis
+      - DATA_LEVELS=/data/levels
+      - DATA_SAVES=/data/saves
+    volumes:
+      - ./data/levels:/data/levels
+      - ./data/saves:/data/saves
