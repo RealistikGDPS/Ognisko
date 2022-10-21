@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from typing import Any
+from typing import TypeVar
 
 from pydantic.typing import CallableGenerator
 
@@ -13,7 +14,7 @@ class Base64String(str):
 
     @classmethod
     def encode(cls, data: str) -> Base64String:
-        return cls(base64.b64encode(data.encode()).decode())
+        return Base64String(base64.b64encode(data.encode()).decode())
 
     @classmethod
     def validate(cls, value: Any) -> Base64String:
@@ -24,6 +25,6 @@ class Base64String(str):
             value = value.encode()
 
         try:
-            return cls(base64.b64decode(value).decode())
+            return Base64String(base64.b64decode(value).decode())
         except Exception as e:
             raise ValueError(f"Input is not valid base64") from e
