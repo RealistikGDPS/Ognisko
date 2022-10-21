@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from realistikgdps.typing.mixin import HasIntValue
+from realistikgdps.common.protocols import HasIntValue
 
 
 class IntEnumStringMixin:
