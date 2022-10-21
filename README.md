@@ -8,5 +8,7 @@ It is written in asynchronous, modern Python and is meant as a replacement for o
 ## How to set up?
 TODO: Once the project is usable.
 
+You may use environment variables (no `.env` file support yet) for config by setting the `USE_ENV_CONFIG` variable to "1".
+
 ## Upgrading an existing server
 Assuming your server is based off [Cvolton's server implementation](https://github.com/Cvolton/GMDprivateServer), there will be a migration utility created in the near future.

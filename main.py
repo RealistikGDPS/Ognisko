@@ -14,7 +14,7 @@ from realistikgdps.config import config
 def main() -> int:
     uvloop.install()
     logger.init_logging(
-        log_level=config.srv_log_level,
+        log_level=config.log_level,
     )
 
     uvicorn.run(

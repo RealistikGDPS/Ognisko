@@ -6,6 +6,7 @@ from dataclasses import field
 from json import dump
 from json import load
 from typing import Any
+from typing import get_type_hints
 
 from realistikgdps import logger
 
@@ -21,7 +22,7 @@ class Config:
     sql_pass: str = "password"
     sql_port: int = 3306
     srv_name: str = "RealistikGDPS"
-    srv_log_level: str = "INFO"
+    log_level: str = "INFO"
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
@@ -39,7 +40,7 @@ def write_config(config: Config):
         dump(config.__dict__, f, indent=4)
 
 
-def load_config() -> Config:
+def load_json_config() -> Config:
     """Loads the config from the file, handling config updates.
 
     Note:
@@ -61,8 +62,7 @@ def load_config() -> Config:
         if key not in Config.__annotations__:
             del config_dict[key]
 
-    # Create config regardless, populating it with missing keys and removing
-    # unnecessary keys.
+    # Create config regardless, populating it with missing keys.
     config = Config(**config_dict)
 
     if missing_keys:
@@ -72,6 +72,22 @@ def load_config() -> Config:
         raise SystemExit(0)
 
     return config
+
+
+def load_env_config() -> Config:
+    conf = Config()
+
+    for key, cast in get_type_hints(conf).items():
+        if (env_value := os.environ.get(key.upper())) is not None:
+            setattr(conf, key, cast(env_value))
+
+    return conf
+
+
+def load_config() -> Config:
+    if os.environ.get("USE_ENV_CONFIG") == "1":
+        return load_env_config()
+    return load_json_config()
 
 
 config = load_config()

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from . import level
+from . import levels
 from . import likes
 from . import save_data
 from . import songs

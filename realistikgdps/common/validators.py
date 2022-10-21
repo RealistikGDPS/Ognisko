@@ -2,13 +2,12 @@ from __future__ import annotations
 
 import base64
 from typing import Any
-
-from pydantic.typing import CallableGenerator
+from typing import Generator
 
 # Learning source: https://github.com/pydantic/pydantic/issues/692#issuecomment-515565389
 class Base64String(str):
     @classmethod
-    def __get_validators__(cls) -> CallableGenerator:
+    def __get_validators__(cls) -> Generator:
         yield cls.validate
 
     @classmethod
