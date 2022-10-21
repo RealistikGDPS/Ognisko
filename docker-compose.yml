@@ -29,4 +29,7 @@ services:
     restart: always
     environment:
       - HTTP_PORT=80
+      - HTTP_HOST=0.0.0.0
       - SQL_PASS=root
+      - SQL_HOST=mysql
+      - REDIS_HOST=redis
