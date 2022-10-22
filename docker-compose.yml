@@ -3,6 +3,7 @@ services:
     image: mysql
     environment:
       MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: rgdps
     ports:
       - "3306:3306"
     volumes:
@@ -30,11 +31,16 @@ services:
     environment:
       - HTTP_PORT=80
       - HTTP_HOST=0.0.0.0
+      - SQL_USER=root
       - SQL_PASS=root
       - SQL_HOST=mysql
+      - SQL_DB=rgdps
+      - SQL_PORT=3306
       - REDIS_HOST=redis
       - DATA_LEVELS=/data/levels
       - DATA_SAVES=/data/saves
     volumes:
       - ./data/levels:/data/levels
       - ./data/saves:/data/saves
+      # Migrations
+      - ./database/migrations:/app/database/migrations

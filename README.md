@@ -6,7 +6,11 @@ This is a modern Python implementation of the Geometry Dash server protocol mean
 It is written in asynchronous, modern Python and is meant as a replacement for our current [PHP based infrastructure](https://github.com/Cvolton/GMDprivateServer).
 
 ## How to set up?
-TODO: Once the project is usable.
+- Ensure Docker and Make are installed on your system.
+- Run `make build` to build the RealistikGDPS image.
+- Run `make run` to run everything.
+
+TODO: Non-docker setup instructions.
 
 You may use environment variables (no `.env` file support yet) for config by setting the `USE_ENV_CONFIG` variable to "1".
 
