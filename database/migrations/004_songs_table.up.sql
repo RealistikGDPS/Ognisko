@@ -3,7 +3,7 @@ CREATE TABLE `songs` (
     `name` VARCHAR(32) NOT NULL,
     `author_id` INT(11) NOT NULL,
     `author` VARCHAR(32) NOT NULL,
-    `author_youtube` VARCHAR(25) NOT NULL,
+    `author_youtube` VARCHAR(25) NULL,
     `size` FLOAT NOT NULL,
     `download_url` VARCHAR(256) NOT NULL,
     `source` TINYINT(2) NOT NULL,

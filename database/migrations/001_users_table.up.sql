@@ -7,7 +7,7 @@ CREATE TABLE `users` (
   `friend_privacy` tinyint(1) NOT NULL,
   `comment_privacy` tinyint(1) NOT NULL,
   `twitter_name` varchar(15) DEFAULT NULL,
-  `youtube_name` int(25) DEFAULT NULL,
+  `youtube_name` VARCHAR(25) DEFAULT NULL,
   `twitch_name` varchar(25) DEFAULT NULL,
   `register_ts` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `stars` int(10) UNSIGNED NOT NULL,
@@ -26,7 +26,8 @@ CREATE TABLE `users` (
   `glow` tinyint(1) NOT NULL,
   `creator_points` smallint(5) UNSIGNED NOT NULL,
   `coins` int(10) UNSIGNED NOT NULL,
-  `user_coins` int(10) UNSIGNED NOT NULL
+  `user_coins` int(10) UNSIGNED NOT NULL,
+  `diamonds` int(10) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 ALTER TABLE `users`
