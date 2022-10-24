@@ -27,9 +27,6 @@ RUN apt update && apt install default-mysql-client -y
 COPY requirements/requirements.txt .
 RUN pip install -r requirements.txt
 
-# Extra Dependencies (dependencies I usually didn't need but Docker somehow needs)
-RUN pip install python-multipart cryptography
-
 # Copy the application
 COPY realistikgdps /app/realistikgdps
 COPY main.py /app/
