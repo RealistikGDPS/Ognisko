@@ -17,7 +17,7 @@ services:
     restart: always
     command: redis-server
     ports:
-      - 6379:6379
+      - "6379:6379"
 
   realistikgdps:
     image: realistikgdps:latest
