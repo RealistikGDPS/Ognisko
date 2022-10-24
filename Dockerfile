@@ -19,13 +19,13 @@ RUN git clone https://github.com/RealistikDash/xor_cipher
 RUN pip install cython
 RUN cd xor_cipher && python3 setup.py build_ext --inplace && pip install . && cd ..
 
-# Move scripts to /app
-COPY scripts /app/scripts
-RUN apt update && apt install default-mysql-client -y
-
 # Python Dependencies
 COPY requirements/requirements.txt .
 RUN pip install -r requirements.txt
+
+# Move scripts to /app
+RUN apt update && apt install default-mysql-client -y
+COPY scripts /app/scripts
 
 # Copy the application
 COPY realistikgdps /app/realistikgdps
