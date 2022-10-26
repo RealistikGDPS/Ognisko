@@ -5,17 +5,25 @@ import logging
 import sys
 
 import uvicorn
-import uvloop
 
 from realistikgdps import logger
 from realistikgdps.config import config
 
 
 def main() -> int:
-    uvloop.install()
     logger.init_logging(
         log_level=config.log_level,
     )
+
+    # Uvloop does not work on windows. TODO: Maybe check for unix instead (would
+    # require the same to be reflected in requirements)
+    try:
+        import uvloop
+
+        uvloop.install()
+    except ImportError:
+        if sys.platform != "win32":
+            logger.warning("Uvloop has not been installed! This is a performance loss.")
 
     uvicorn.run(
         "realistikgdps.init_api:asgi_app",
