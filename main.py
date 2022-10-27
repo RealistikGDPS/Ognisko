@@ -6,8 +6,8 @@ import sys
 
 import uvicorn
 
-from realistikgdps import logger
-from realistikgdps.config import config
+from rgdps import logger
+from rgdps.config import config
 
 
 def main() -> int:
@@ -21,7 +21,7 @@ def main() -> int:
         import uvloop
 
         uvloop.install()
-    except ImportError:
+    except ModuleNotFoundError:
         if sys.platform != "win32":
             logger.warning("Uvloop has not been installed! This is a performance loss.")
 
