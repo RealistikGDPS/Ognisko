@@ -111,13 +111,13 @@ async def create(user: User) -> int:
 
 
 async def from_id(user_id: int) -> Optional[User]:
-    cache_user = state.repositories.user_repo.get(user_id)
+    cache_user = await state.repositories.user_repo.get(user_id)
     if cache_user is not None:
         return cache_user
 
     user = await from_db(user_id)
     if user is not None:
-        state.repositories.user_repo[user_id] = user
+        await state.repositories.user_repo.set(user_id, user)
 
     return user
 

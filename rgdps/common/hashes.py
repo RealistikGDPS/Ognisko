@@ -25,13 +25,14 @@ async def _compare_bcrypt_async(hashed: str, plain: str) -> bool:
 async def compare_bcrypt(hashed: str, plain: str) -> bool:
     """Compares a bcrypt hash with a plaintext password, managing caching."""
 
-    pw_cache = state.repositories.password_cache.get(hashed)
+    # TODO: Move cache logic
+    pw_cache = await state.repositories.password_cache.get(hashed)
     if pw_cache is not None:
         return pw_cache == plain
 
     result = await _compare_bcrypt_async(hashed, plain)
     if result:
-        state.repositories.password_cache[hashed] = plain
+        await state.repositories.password_cache.set(hashed, plain)
 
     return result
 

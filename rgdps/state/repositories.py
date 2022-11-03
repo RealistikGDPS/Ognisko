@@ -1,6 +1,7 @@
 from __future__ import annotations
 
+from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.models.user import User
 
-user_repo: dict[int, User] = {}
-password_cache: dict[str, str] = {}  # hash: known_password
+user_repo = SimpleAsyncMemoryCache[User]()
+password_cache = SimpleAsyncMemoryCache[str]()
