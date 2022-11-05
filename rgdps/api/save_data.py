@@ -11,7 +11,7 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import GenericResponse
 from rgdps.models.user import User
 from rgdps.usecases import save_data
-from rgdps.usecases.users import password_authenticate_dependency
+from rgdps.usecases.auth import password_authenticate_dependency
 
 
 async def load_save_data(

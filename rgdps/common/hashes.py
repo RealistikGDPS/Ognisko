@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import hashlib
 
 import bcrypt
 import xor_cipher
@@ -18,13 +19,12 @@ def hash_bcypt(plain: str) -> str:
     return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
 
-async def _compare_bcrypt_async(hashed: str, plain: str) -> bool:
+async def compare_bcrypt(hashed: str, plain: str) -> bool:
     return await asyncio.to_thread(_compare_bcrypt, hashed, plain)
 
 
+"""
 async def compare_bcrypt(hashed: str, plain: str) -> bool:
-    """Compares a bcrypt hash with a plaintext password, managing caching."""
-
     # TODO: Move cache logic
     pw_cache = await state.repositories.password_cache.get(hashed)
     if pw_cache is not None:
@@ -35,6 +35,7 @@ async def compare_bcrypt(hashed: str, plain: str) -> bool:
         await state.repositories.password_cache.set(hashed, plain)
 
     return result
+"""
 
 
 async def hash_bcypt_async(plain: str) -> str:
@@ -65,3 +66,7 @@ def decode_gjp(gjp: str) -> str:
         content=base64.b64decode(gjp.encode()),
         key=XorKeys.GJP,
     ).decode()
+
+
+def hash_md5(plain: str) -> str:
+    return hashlib.md5(plain.encode()).hexdigest()

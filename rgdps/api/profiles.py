@@ -13,7 +13,7 @@ from rgdps.constants.responses import GenericResponse
 from rgdps.models.user import User
 from rgdps.usecases import user_comments
 from rgdps.usecases import users
-from rgdps.usecases.users import authenticate_dependency
+from rgdps.usecases.auth import authenticate_dependency
 
 
 async def view_user_info(

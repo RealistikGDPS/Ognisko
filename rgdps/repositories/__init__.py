@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from . import auth
 from . import level
 from . import level_data
 from . import like
