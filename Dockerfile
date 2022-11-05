@@ -28,7 +28,7 @@ RUN apt update && apt install default-mysql-client -y
 COPY scripts /app/scripts
 
 # Copy the application
-COPY realistikgdps /app/realistikgdps
+COPY rgdps /app/rgdps
 COPY main.py /app/
 
 # Run the application

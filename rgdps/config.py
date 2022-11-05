@@ -22,6 +22,7 @@ class Config:
     sql_pass: str = "password"
     sql_port: int = 3306
     srv_name: str = "RealistikGDPS"
+    srv_stateless: bool = False
     log_level: str = "INFO"
     redis_host: str = "localhost"
     redis_port: int = 6379

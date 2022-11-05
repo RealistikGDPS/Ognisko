@@ -19,8 +19,19 @@ def init_events(app: FastAPI) -> None:
     @app.on_event("startup")
     async def on_startup() -> None:
         # TODO: Check data directories.
+
+        # Database connection
         await rgdps.state.services.database.connect()
         await rgdps.state.services.redis.initialize()
+
+        # Cache initialisation
+        if config.srv_stateless:
+            rgdps.state.repositories.setup_stateless(
+                rgdps.state.services.redis,
+            )
+        else:
+            rgdps.state.repositories.setup_stateful()
+
         logger.info("The server has started!")
 
     @app.on_event("shutdown")

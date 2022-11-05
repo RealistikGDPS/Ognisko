@@ -26,7 +26,7 @@ def main() -> int:
             logger.warning("Uvloop has not been installed! This is a performance loss.")
 
     uvicorn.run(
-        "realistikgdps.init_api:asgi_app",
+        "rgdps.init_api:asgi_app",
         log_level=logging.WARNING,
         server_header=False,
         date_header=False,

@@ -3,10 +3,9 @@ from __future__ import annotations
 import pickle
 from typing import Callable
 from typing import Optional
-from typing import Type
 from typing import TypeVar
 
-from realistikgdps.state import services
+from redis.asyncio import Redis
 
 from .base import AsyncCacheBase
 from .base import KeyType
@@ -33,10 +32,12 @@ class SimpleRedisCache(AsyncCacheBase[T]):
         "_key_prefix",
         "_deserialise",
         "_serialise",
+        "_redis",
     )
 
     def __init__(
         self,
+        redis: Redis,
         key_prefix: str,
         deserialise: DESERIALISE_FUNCTION = deserialise_object,
         serialise: SERIALISE_FUNCTION = serialise_object,
@@ -44,18 +45,19 @@ class SimpleRedisCache(AsyncCacheBase[T]):
         self._key_prefix = key_prefix
         self._deserialise = deserialise
         self._serialise = serialise
+        self._redis = redis
 
     def __create_key(self, key: KeyType) -> str:
         return f"{self._key_prefix}:{key}"
 
     async def set(self, key: KeyType, value: T) -> None:
-        await services.redis.set(self.__create_key(key), self._serialise(value))
+        await self._redis.set(self.__create_key(key), self._serialise(value))
 
     async def get(self, key: KeyType) -> Optional[T]:
-        data = await services.redis.get(self.__create_key(key))
+        data = await self._redis.get(self.__create_key(key))
         if data is None:
             return None
         return self._deserialise(data)
 
     async def delete(self, key: KeyType) -> None:
-        await services.redis.delete(self.__create_key(key))
+        await self._redis.delete(self.__create_key(key))
