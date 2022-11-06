@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from copy import copy
 from typing import Optional
 from typing import TypeVar
 
@@ -31,7 +32,14 @@ class SimpleMemoryCache(CacheBase[T]):
         self._cache: dict[str, T] = {}
 
     def get(self, key: KeyType) -> Optional[T]:
-        return self._cache.get(_ensure_key_type(key))
+        # We are returning a copy to reflect the behaviour of the database
+        # based caches.
+        obj_db = self._cache.get(_ensure_key_type(key))
+
+        if obj_db is None:
+            return None
+
+        return copy(obj_db)
 
     def set(self, key: KeyType, value: T) -> None:
         self._cache[_ensure_key_type(key)] = value
@@ -56,7 +64,10 @@ class LRUMemoryCache(CacheBase[T]):
         if value is not None:
             del self._cache[key_str]
             self._cache[key_str] = value
-        return value
+
+        # We are returning a copy to reflect the behaviour of the database
+        # based caches.
+        return copy(value)
 
     def set(self, key: KeyType, value: T) -> None:
         while len(self._cache) >= self._capacity:
