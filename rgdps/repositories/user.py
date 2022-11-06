@@ -166,6 +166,8 @@ async def update(user: User) -> None:
         },
     )
 
+    await state.repositories.user_repo.set(user.id, user)
+
 
 async def check_email_exists(email: str) -> bool:
     return await services.database.fetch_val(
