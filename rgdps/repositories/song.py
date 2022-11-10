@@ -24,17 +24,7 @@ async def from_db(song_id: int, allow_blocked: bool = False) -> Optional[Song]:
     if song_db is None:
         return None
 
-    return Song(
-        id=song_db["id"],
-        name=song_db["name"],
-        author_id=song_db["author_id"],
-        author=song_db["author"],
-        author_youtube=song_db["author_youtube"],
-        size=song_db["size"],
-        download_url=song_db["download_url"],
-        source=SongSource(song_db["source"]),
-        blocked=song_db["blocked"],
-    )
+    return Song.from_mapping(song_db)
 
 
 async def create(song: Song) -> int:
@@ -43,17 +33,7 @@ async def create(song: Song) -> int:
         "download_url, source, blocked, id) VALUES "
         "(:name, :author_id, :author, :author_youtube, :size, "
         ":download_url, :source, :blocked, :id)",
-        {
-            "name": song.name,
-            "author_id": song.author_id,
-            "author": song.author,
-            "author_youtube": song.author_youtube,
-            "size": song.size,
-            "download_url": song.download_url,
-            "source": song.source.value,
-            "blocked": song.blocked,
-            "id": song.id,
-        },
+        song.as_dict(),
     )
 
 

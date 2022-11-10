@@ -22,37 +22,7 @@ async def from_db(user_id: int) -> Optional[User]:
     if user_db is None:
         return None
 
-    return User(
-        id=user_db["id"],
-        username=user_db["username"],
-        email=user_db["email"],
-        password=user_db["password"],
-        message_privacy=PrivacySetting(user_db["message_privacy"]),
-        friend_privacy=PrivacySetting(user_db["friend_privacy"]),
-        comment_privacy=PrivacySetting(user_db["comment_privacy"]),
-        youtube_name=user_db["youtube_name"],
-        twitter_name=user_db["twitter_name"],
-        twitch_name=user_db["twitch_name"],
-        register_ts=user_db["register_ts"],
-        stars=user_db["stars"],
-        demons=user_db["demons"],
-        primary_colour=user_db["primary_colour"],
-        secondary_colour=user_db["secondary_colour"],
-        display_type=user_db["display_type"],
-        icon=user_db["icon"],
-        ship=user_db["ship"],
-        ball=user_db["ball"],
-        ufo=user_db["ufo"],
-        wave=user_db["wave"],
-        robot=user_db["robot"],
-        spider=user_db["spider"],
-        explosion=user_db["explosion"],
-        glow=user_db["glow"],
-        creator_points=user_db["creator_points"],
-        coins=user_db["coins"],
-        user_coins=user_db["user_coins"],
-        diamonds=user_db["diamonds"],
-    )
+    return User.from_mapping(user_db)
 
 
 async def create(user: User) -> int:
@@ -76,35 +46,7 @@ async def create(user: User) -> int:
         ":twitch_name, :stars, :demons, :primary_colour, "
         ":secondary_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
         ":spider, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds)",
-        {
-            "username": user.username,
-            "email": user.email,
-            "password": user.password,
-            "message_privacy": user.message_privacy.value,
-            "friend_privacy": user.friend_privacy.value,
-            "comment_privacy": user.comment_privacy.value,
-            "twitter_name": user.twitter_name,
-            "youtube_name": user.youtube_name,
-            "twitch_name": user.twitch_name,
-            "stars": user.stars,
-            "demons": user.demons,
-            "primary_colour": user.primary_colour,
-            "secondary_colour": user.secondary_colour,
-            "display_type": user.display_type,
-            "icon": user.icon,
-            "ship": user.ship,
-            "ball": user.ball,
-            "ufo": user.ufo,
-            "wave": user.wave,
-            "robot": user.robot,
-            "spider": user.spider,
-            "explosion": user.explosion,
-            "glow": user.glow,
-            "creator_points": user.creator_points,
-            "coins": user.coins,
-            "user_coins": user.user_coins,
-            "diamonds": user.diamonds,
-        },
+        user.as_dict(),
     )
 
     return user_id
@@ -134,36 +76,7 @@ async def update(user: User) -> None:
         "robot = :robot, spider = :spider, explosion = :explosion, glow = :glow, "
         "creator_points = :creator_points, coins = :coins, user_coins = :user_coins, "
         "diamonds = :diamonds WHERE id = :id",
-        {
-            "username": user.username,
-            "email": user.email,
-            "password": user.password,
-            "message_privacy": user.message_privacy.value,
-            "friend_privacy": user.friend_privacy.value,
-            "comment_privacy": user.comment_privacy.value,
-            "twitter_name": user.twitter_name,
-            "youtube_name": user.youtube_name,
-            "twitch_name": user.twitch_name,
-            "stars": user.stars,
-            "demons": user.demons,
-            "primary_colour": user.primary_colour,
-            "secondary_colour": user.secondary_colour,
-            "display_type": user.display_type,
-            "icon": user.icon,
-            "ship": user.ship,
-            "ball": user.ball,
-            "ufo": user.ufo,
-            "wave": user.wave,
-            "robot": user.robot,
-            "spider": user.spider,
-            "explosion": user.explosion,
-            "glow": user.glow,
-            "creator_points": user.creator_points,
-            "coins": user.coins,
-            "user_coins": user.user_coins,
-            "id": user.id,
-            "diamonds": user.diamonds,
-        },
+        user.as_dict(),
     )
 
     await state.repositories.user_repo.set(user.id, user)

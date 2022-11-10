@@ -18,25 +18,14 @@ async def from_id(id: int) -> Optional[Like]:
     if like_db is None:
         return None
 
-    return Like(
-        id=id,
-        target_type=LikeType(like_db["target_type"]),
-        target_id=like_db["target_id"],
-        user_id=like_db["user_id"],
-        value=like_db["value"],
-    )
+    return Like.from_mapping(like_db)
 
 
 async def create(like: Like) -> int:
     return await services.database.execute(
         "INSERT INTO likes (target_type, target_id, user_id, value) VALUES "
         "(:target_type, :target_id, :user_id, :value)",
-        {
-            "target_type": like.target_type.value,
-            "target_id": like.target_id,
-            "user_id": like.user_id,
-            "value": like.value,
-        },
+        like.as_dict(),
     )
 
 
