@@ -24,7 +24,7 @@ COPY requirements/requirements.txt .
 RUN pip install -r requirements.txt
 
 # Move scripts to /app
-RUN apt update && apt install default-mysql-client -y
+RUN apt update && apt install default-mysql-client curl -y
 COPY scripts /app/scripts
 
 # Copy the application
