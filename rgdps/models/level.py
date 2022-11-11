@@ -93,6 +93,7 @@ class Level:
 
     def as_dict(self) -> dict[str, Any]:
         return {
+            "id": self.id,
             "name": self.name,
             "user_id": self.user_id,
             "description": self.description,
