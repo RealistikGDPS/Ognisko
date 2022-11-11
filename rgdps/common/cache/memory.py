@@ -4,8 +4,8 @@ from copy import copy
 from typing import Optional
 from typing import TypeVar
 
-from .base import AsyncCacheBase
-from .base import CacheBase
+from .base import AbstractAsyncCache
+from .base import AbstractCache
 from .base import KeyType
 
 __all__ = (
@@ -25,7 +25,7 @@ def _ensure_key_type(key: KeyType) -> str:
     return str(key)
 
 
-class SimpleMemoryCache(CacheBase[T]):
+class SimpleMemoryCache(AbstractCache[T]):
     __slots__ = ("_cache",)
 
     def __init__(self) -> None:
@@ -51,7 +51,7 @@ class SimpleMemoryCache(CacheBase[T]):
             pass
 
 
-class LRUMemoryCache(CacheBase[T]):
+class LRUMemoryCache(AbstractCache[T]):
     __slots__ = ("_cache", "_max_size")
 
     def __init__(self, capacity: int) -> None:
@@ -84,7 +84,7 @@ class LRUMemoryCache(CacheBase[T]):
 
 
 # Async variants
-class SimpleAsyncMemoryCache(AsyncCacheBase[T]):
+class SimpleAsyncMemoryCache(AbstractAsyncCache[T]):
     __slots__ = ("_cache",)
 
     def __init__(self) -> None:
@@ -103,7 +103,7 @@ class SimpleAsyncMemoryCache(AsyncCacheBase[T]):
             pass
 
 
-class LRUAsyncMemoryCache(AsyncCacheBase[T]):
+class LRUAsyncMemoryCache(AbstractAsyncCache[T]):
     __slots__ = ("_cache", "_max_size")
 
     def __init__(self, capacity: int) -> None:

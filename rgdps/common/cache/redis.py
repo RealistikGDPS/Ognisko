@@ -7,7 +7,7 @@ from typing import TypeVar
 
 from redis.asyncio import Redis
 
-from .base import AsyncCacheBase
+from .base import AbstractAsyncCache
 from .base import KeyType
 
 
@@ -27,7 +27,7 @@ def deserialise_object(data: bytes) -> object:
     return pickle.loads(data)
 
 
-class SimpleRedisCache(AsyncCacheBase[T]):
+class SimpleRedisCache(AbstractAsyncCache[T]):
     __slots__ = (
         "_key_prefix",
         "_deserialise",

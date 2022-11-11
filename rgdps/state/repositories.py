@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from redis.asyncio import Redis
 
-from rgdps.common.cache.base import AsyncCacheBase
+from rgdps.common.cache.base import AbstractAsyncCache
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.cache.redis import SimpleRedisCache
 from rgdps.models.user import User
 
-user_repo: AsyncCacheBase[User]
-password_cache: AsyncCacheBase[str]
+user_repo: AbstractAsyncCache[User]
+password_cache: AbstractAsyncCache[str]
 
 
 def setup_stateful() -> None:

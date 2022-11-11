@@ -8,8 +8,8 @@ from typing import TypeVar
 from typing import Union
 
 __all__ = (
-    "AsyncCacheBase",
-    "CacheBase",
+    "AbstractAsyncCache",
+    "AbstractCache",
     "KeyType",
 )
 
@@ -17,7 +17,7 @@ T = TypeVar("T")
 KeyType = Union[str, int]
 
 
-class CacheBase(ABC, Generic[T]):
+class AbstractCache(ABC, Generic[T]):
     @abstractmethod
     def get(self, key: KeyType) -> Optional[T]:
         ...
@@ -31,7 +31,7 @@ class CacheBase(ABC, Generic[T]):
         ...
 
 
-class AsyncCacheBase(ABC, Generic[T]):
+class AbstractAsyncCache(ABC, Generic[T]):
     @abstractmethod
     async def get(self, key: KeyType) -> Optional[T]:
         ...
