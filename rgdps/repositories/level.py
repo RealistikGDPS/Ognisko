@@ -32,6 +32,10 @@ async def from_id(level_id: int) -> Optional[Level]:
 
 
 async def create(level: Level) -> int:
+    return await create_sql(level)
+
+
+async def create_sql(level: Level) -> int:
     return await services.database.execute(
         "INSERT INTO levels (name, user_id, description, custom_song_id, "
         "official_song_id, version, length, two_player, publicity, render_str, "
@@ -50,6 +54,10 @@ async def create(level: Level) -> int:
 
 
 async def update(level: Level) -> int:
+    return await update_sql(level)
+
+
+async def update_sql(level: Level) -> int:
     return await services.database.execute(
         "UPDATE levels SET name = :name, user_id = :user_id, description = :description, "
         "custom_song_id = :custom_song_id, official_song_id = :official_song_id, "
