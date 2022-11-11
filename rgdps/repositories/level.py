@@ -32,7 +32,9 @@ async def from_id(level_id: int) -> Optional[Level]:
 
 
 async def create(level: Level) -> int:
-    return await create_sql(level)
+    level_id = await create_sql(level)
+    await create_meili(level, level_id)
+    return level_id
 
 
 async def create_sql(level: Level) -> int:
@@ -53,8 +55,26 @@ async def create_sql(level: Level) -> int:
     )
 
 
+async def create_meili(level: Level, level_id: int) -> None:
+    # This is a bit hacky as we do not have the level ID in the level object yet.
+    level_dict = level.as_dict(include_id=False)
+    level_dict["id"] = level_id
+
+    index = services.meili.index("levels")
+    await index.add_documents([level_dict])
+
+
 async def update(level: Level) -> int:
-    return await update_sql(level)
+    # In case sql fails, we do not want to update meili.
+    level_id = await update_sql(level)
+    await update_meili(level)
+    return level_id
+
+
+async def update_meili(level: Level) -> None:
+    index = services.meili.index("levels")
+    # Fun fact, this is EXACTLY the same as `add_documents`.
+    await index.update_documents([level.as_dict(include_id=True)])
 
 
 async def update_sql(level: Level) -> int:
