@@ -46,7 +46,7 @@ async def create(user: User) -> int:
         ":twitch_name, :stars, :demons, :primary_colour, "
         ":secondary_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
         ":spider, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds)",
-        user.as_dict(),
+        user.as_dict(include_id=False),
     )
 
     return user_id
@@ -76,7 +76,7 @@ async def update(user: User) -> None:
         "robot = :robot, spider = :spider, explosion = :explosion, glow = :glow, "
         "creator_points = :creator_points, coins = :coins, user_coins = :user_coins, "
         "diamonds = :diamonds WHERE id = :id",
-        user.as_dict(),
+        user.as_dict(include_id=True),
     )
 
     await state.repositories.user_repo.set(user.id, user)

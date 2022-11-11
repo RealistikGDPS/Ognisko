@@ -1,9 +1,10 @@
 bcrypt == 4.0.0
 cryptograpy
-databases[asyncmy] == 0.6.1
+databases[asyncmy] == 0.6.2
 email-validator == 1.2.1
 fastapi == 0.82.0
 httpx == 0.23.0
+meilisearch-python-async == 0.28.1
 python-multipart
 redis == 4.3.4
 structlog==16.0.0

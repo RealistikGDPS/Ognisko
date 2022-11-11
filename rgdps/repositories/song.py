@@ -33,7 +33,7 @@ async def create(song: Song) -> int:
         "download_url, source, blocked, id) VALUES "
         "(:name, :author_id, :author, :author_youtube, :size, "
         ":download_url, :source, :blocked, :id)",
-        song.as_dict(),
+        song.as_dict(include_id=True),
     )
 
 

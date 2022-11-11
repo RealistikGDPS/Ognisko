@@ -29,6 +29,9 @@ class Config:
     redis_db: int = 0
     data_levels: str = "data/levels"
     data_saves: str = "data/saves"
+    meili_host: str = "localhost"
+    meili_port: int = 7700
+    meili_key: str = "master_key"
 
 
 def read_config_json() -> dict[str, Any]:

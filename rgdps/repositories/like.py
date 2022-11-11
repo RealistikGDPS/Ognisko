@@ -25,7 +25,7 @@ async def create(like: Like) -> int:
     return await services.database.execute(
         "INSERT INTO likes (target_type, target_id, user_id, value) VALUES "
         "(:target_type, :target_id, :user_id, :value)",
-        like.as_dict(),
+        like.as_dict(include_id=False),
     )
 
 

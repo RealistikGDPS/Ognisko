@@ -58,7 +58,7 @@ async def create(comment: UserComment) -> int:
     return await services.database.execute(
         "INSERT INTO user_comments (user_id, content, likes, post_ts, deleted) "
         "VALUES (:user_id, :content, :likes, :post_ts, :deleted)",
-        comment.as_dict(),
+        comment.as_dict(include_id=False),
     )
 
 
@@ -67,7 +67,7 @@ async def update(comment: UserComment) -> None:
     await services.database.execute(
         "UPDATE user_comments SET user_id = :user_id, content = :content, "
         "likes = :likes, post_ts = :post_ts, deleted = :deleted WHERE id = :id",
-        comment.as_dict(),
+        comment.as_dict(include_id=True),
     )
 
 

@@ -43,3 +43,6 @@ class MySQLService:
     ) -> Any:
         res = await self._pool.fetch_val(query, values)  # type: ignore
         return res
+
+    async def disconnect(self) -> None:
+        await self._pool.disconnect()

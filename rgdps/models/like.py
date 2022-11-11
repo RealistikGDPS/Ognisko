@@ -25,11 +25,15 @@ class Like:
             value=like_dict["value"],
         )
 
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "id": self.id,
+    def as_dict(self, *, include_id: bool) -> dict[str, Any]:
+        res = {
             "target_type": self.target_type.value,
             "target_id": self.target_id,
             "user_id": self.user_id,
             "value": self.value,
         }
+
+        if include_id:
+            res["id"] = self.id
+
+        return res

@@ -83,9 +83,8 @@ class User:
             diamonds=user_dict["diamonds"],
         )
 
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "id": self.id,
+    def as_dict(self, *, include_id: bool) -> dict[str, Any]:
+        res = {
             "username": self.username,
             "email": self.email,
             "password": self.password,
@@ -111,6 +110,11 @@ class User:
             "glow": self.glow,
             "creator_points": self.creator_points,
             "coins": self.coins,
-            "self_coins": self.user_coins,
+            "user_coins": self.user_coins,
             "diamonds": self.diamonds,
         }
+
+        if include_id:
+            res["id"] = self.id
+
+        return res

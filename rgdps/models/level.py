@@ -91,9 +91,8 @@ class Level:
             deleted=level_dict["deleted"],
         )
 
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "id": self.id,
+    def as_dict(self, *, include_id: bool) -> dict[str, Any]:
+        res = {
             "name": self.name,
             "user_id": self.user_id,
             "description": self.description,
@@ -127,3 +126,8 @@ class Level:
             "update_locked": self.update_locked,
             "deleted": self.deleted,
         }
+
+        if include_id:
+            res["id"] = self.id
+
+        return res

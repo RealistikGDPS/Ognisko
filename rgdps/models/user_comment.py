@@ -26,12 +26,16 @@ class UserComment:
             deleted=comment_dict["deleted"],
         )
 
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "id": self.id,
+    def as_dict(self, *, include_id: bool) -> dict[str, Any]:
+        res = {
             "user_id": self.user_id,
             "content": self.content,
             "likes": self.likes,
             "post_ts": self.post_ts,
             "deleted": self.deleted,
         }
+
+        if include_id:
+            res["id"] = self.id
+
+        return res

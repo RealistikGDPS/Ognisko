@@ -37,9 +37,8 @@ class Song:
             blocked=song_dict["blocked"],
         )
 
-    def as_dict(self) -> dict[str, Any]:
-        return {
-            "id": self.id,
+    def as_dict(self, *, include_id: bool) -> dict[str, Any]:
+        res = {
             "name": self.name,
             "author_id": self.author_id,
             "author": self.author,
@@ -49,3 +48,8 @@ class Song:
             "source": self.source.value,
             "blocked": self.blocked,
         }
+
+        if include_id:
+            res["id"] = self.id
+
+        return res

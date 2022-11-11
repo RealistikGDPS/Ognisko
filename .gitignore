@@ -134,3 +134,4 @@ data/
 
 # Docker stuff
 mysql/
+meilisearch/

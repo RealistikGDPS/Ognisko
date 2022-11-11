@@ -49,7 +49,7 @@ async def create_sql(level: Level) -> int:
         ":demon_difficulty, :coins, :coins_verified, :requested_stars, :feature_order, "
         ":search_flags, :low_detail_mode, :object_count, :copy_password, "
         ":building_time, :update_locked, :deleted)",
-        level.as_dict(),
+        level.as_dict(include_id=False),
     )
 
 
@@ -71,5 +71,5 @@ async def update_sql(level: Level) -> int:
         "object_count = :object_count, copy_password = :copy_password, "
         "building_time = :building_time, update_locked = :update_locked, "
         "deleted = :deleted WHERE id = :id",
-        level.as_dict(),
+        level.as_dict(include_id=True),
     )
