@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pickle
+from datetime import timedelta
 from typing import Callable
 from typing import Optional
 from typing import TypeVar
@@ -33,6 +34,7 @@ class SimpleRedisCache(AbstractAsyncCache[T]):
         "_deserialise",
         "_serialise",
         "_redis",
+        "_expiry",
     )
 
     def __init__(
@@ -41,17 +43,23 @@ class SimpleRedisCache(AbstractAsyncCache[T]):
         key_prefix: str,
         deserialise: DESERIALISE_FUNCTION = deserialise_object,
         serialise: SERIALISE_FUNCTION = serialise_object,
+        expiry: timedelta = timedelta(days=1),
     ) -> None:
         self._key_prefix = key_prefix
         self._deserialise = deserialise
         self._serialise = serialise
         self._redis = redis
+        self._expiry = expiry
 
     def __create_key(self, key: KeyType) -> str:
         return f"{self._key_prefix}:{key}"
 
     async def set(self, key: KeyType, value: T) -> None:
-        await self._redis.set(self.__create_key(key), self._serialise(value))
+        await self._redis.set(
+            name=self.__create_key(key),
+            value=self._serialise(value),
+            ex=self._expiry,
+        )
 
     async def get(self, key: KeyType) -> Optional[T]:
         data = await self._redis.get(self.__create_key(key))
