@@ -8,4 +8,5 @@ curl \
   -H "Authorization: Bearer ${MEILI_KEY}" \
   --data-binary "{ \"uid\": \"levels\", \"primaryKey\": \"id\" }"
 
-echo "\nDone!"
+echo
+echo "Done!"
