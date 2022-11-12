@@ -1,4 +1,4 @@
-CREATE TABLE `level` (
+CREATE TABLE `levels` (
   `id` INT(11) NOT NULL AUTO_INCREMENT,
   `name` VARCHAR(32) NOT NULL,
   `user_id` INT(11) NOT NULL,

@@ -16,3 +16,5 @@ class ServiceError(str, Enum):
     LIKES_INVALID_TARGET = "likes.invalid_target"
     SONGS_NOT_FOUND = "songs.not_found"
     SAVE_DATA_NOT_FOUND = "save_data.not_found"
+    LEVELS_NO_UPDATE_PERMISSION = "levels.no_update_permission"
+    LEVELS_INVALID_CUSTOM_SONG = "levels.invalid_custom_song"

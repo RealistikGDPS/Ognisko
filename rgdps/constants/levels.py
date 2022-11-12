@@ -7,7 +7,7 @@ from enum import IntFlag
 
 
 class LevelSearchFlags(IntFlag):
-    NORMAL = 0
+    NONE = 0
     EPIC = 1 << 0
     AWARDED = 1 << 1
     MAGIC = 1 << 2

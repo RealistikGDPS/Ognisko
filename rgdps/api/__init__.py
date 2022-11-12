@@ -88,3 +88,9 @@ router.add_api_route(
     save_data.get_save_endpoint,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/uploadGJLevel21.php",
+    levels.upload_level,
+    methods=["POST"],
+)

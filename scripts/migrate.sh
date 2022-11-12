@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 DB_DSN="mysql://${SQL_USER}:${SQL_PASS}@tcp(${SQL_HOST}:${SQL_PORT})/${SQL_DB}"
 
 # Support UP and DOWN migrations

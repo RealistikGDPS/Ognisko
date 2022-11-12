@@ -1,12 +1,10 @@
 from __future__ import annotations
 
+import time
+from datetime import datetime
+from typing import Any
 from typing import Optional
 
-from rgdps.constants.levels import LevelDemonDifficulty
-from rgdps.constants.levels import LevelDifficulty
-from rgdps.constants.levels import LevelLength
-from rgdps.constants.levels import LevelPublicity
-from rgdps.constants.levels import LevelSearchFlags
 from rgdps.models.level import Level
 from rgdps.state import services
 
@@ -14,7 +12,7 @@ from rgdps.state import services
 async def from_id(level_id: int) -> Optional[Level]:
     # TODO: Replace with individual columns.
     level_db = await services.database.fetch_one(
-        "SELECT name, user_id, description, custom_song_id, official_song_id, "
+        "SELECT id, name, user_id, description, custom_song_id, official_song_id, "
         "version, length, two_player, publicity, render_str, game_version, "
         "binary_version, upload_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
@@ -55,30 +53,43 @@ async def create_sql(level: Level) -> int:
     )
 
 
+# Functions to assist with meili not liking datetime objects.
+def _make_meili_dict(level: Level) -> dict[str, Any]:
+    unix_ts = int(time.mktime(level.upload_ts.timetuple()))
+    level_dict = level.as_dict(include_id=True)
+    level_dict["upload_ts"] = unix_ts
+    return level_dict
+
+
+def _from_meili_dict(level_dict: dict[str, Any]) -> Level:
+    # Meili returns unix timestamps, so we need to convert them back to datetime.
+    level_dict["upload_ts"] = datetime.fromtimestamp(level_dict["upload_ts"])
+    return Level.from_mapping(level_dict)
+
+
 async def create_meili(level: Level, level_id: int) -> None:
     # This is a bit hacky as we do not have the level ID in the level object yet.
-    level_dict = level.as_dict(include_id=False)
+    level_dict = _make_meili_dict(level)
     level_dict["id"] = level_id
 
     index = services.meili.index("levels")
     await index.add_documents([level_dict])
 
 
-async def update(level: Level) -> int:
+async def update(level: Level) -> None:
     # In case sql fails, we do not want to update meili.
-    level_id = await update_sql(level)
+    await update_sql(level)
     await update_meili(level)
-    return level_id
 
 
 async def update_meili(level: Level) -> None:
     index = services.meili.index("levels")
     # Fun fact, this is EXACTLY the same as `add_documents`.
-    await index.update_documents([level.as_dict(include_id=True)])
+    await index.update_documents([_make_meili_dict(level)])
 
 
-async def update_sql(level: Level) -> int:
-    return await services.database.execute(
+async def update_sql(level: Level) -> None:
+    await services.database.execute(
         "UPDATE levels SET name = :name, user_id = :user_id, description = :description, "
         "custom_song_id = :custom_song_id, official_song_id = :official_song_id, "
         "version = :version, length = :length, two_player = :two_player, "

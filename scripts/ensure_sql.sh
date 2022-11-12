@@ -1,4 +1,5 @@
 #!/bin/bash
+set -euo pipefail
 echo "Creating database ${SQL_DB}..."
 mysql \
     --host=${SQL_HOST} \
