@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import NamedTuple
 from typing import Optional
 
 from rgdps.models.user_comment import UserComment
@@ -33,12 +34,17 @@ async def from_user_id(
     return [UserComment.from_mapping(comment_db) for comment_db in comments_db]
 
 
+class CommentPage(NamedTuple):
+    comments: list[UserComment]
+    total: int
+
+
 async def from_user_id_paginated(
     user_id: int,
     page: int,
     page_size: int,
     include_deleted: bool = False,
-) -> list[UserComment]:
+) -> CommentPage:
     comments_db = await services.database.fetch_all(
         "SELECT id, user_id, content, likes, post_ts, deleted FROM "
         "user_comments WHERE user_id = :user_id AND deleted = :deleted "
@@ -51,7 +57,18 @@ async def from_user_id_paginated(
         },
     )
 
-    return [UserComment.from_mapping(comment_db) for comment_db in comments_db]
+    comments = [UserComment.from_mapping(comment_db) for comment_db in comments_db]
+
+    total = await services.database.fetch_val(
+        "SELECT COUNT(*) FROM user_comments WHERE user_id = :user_id "
+        "AND deleted = 0",
+        {"user_id": user_id},
+    )
+
+    return CommentPage(
+        comments=comments,
+        total=total,
+    )
 
 
 async def create(comment: UserComment) -> int:
@@ -68,12 +85,4 @@ async def update(comment: UserComment) -> None:
         "UPDATE user_comments SET user_id = :user_id, content = :content, "
         "likes = :likes, post_ts = :post_ts, deleted = :deleted WHERE id = :id",
         comment.as_dict(include_id=True),
-    )
-
-
-async def count_from_user_id(user_id: int) -> int:
-    return await services.database.fetch_val(
-        "SELECT COUNT(*) FROM user_comments WHERE user_id = :user_id "
-        "AND deleted = 0",
-        {"user_id": user_id},
     )

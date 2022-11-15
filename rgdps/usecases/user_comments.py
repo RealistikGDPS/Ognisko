@@ -34,11 +34,8 @@ async def get_user(
         page,
         page_size,
     )
-    total = 0
-    if comments:
-        total = await repositories.user_comment.count_from_user_id(user_id)
 
-    return UserCommentResponse(comments, target_user, total)
+    return UserCommentResponse(comments.comments, target_user, comments.total)
 
 
 async def create(
