@@ -1,3 +1,5 @@
 #!/bin/bash
+set -euo pipefail
+
 echo "Starting server..."
-python main.py
+exec python main.py

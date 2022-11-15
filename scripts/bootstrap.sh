@@ -4,4 +4,4 @@ echo "Bootstrapping application..."
 ./scripts/ensure_sql.sh
 ./scripts/ensure_meili.sh
 ./scripts/migrate.sh up
-./scripts/run.sh
+exec ./scripts/run.sh
