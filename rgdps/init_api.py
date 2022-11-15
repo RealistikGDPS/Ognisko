@@ -40,6 +40,7 @@ def init_events(app: FastAPI) -> None:
         await rgdps.state.services.database.disconnect()
         await rgdps.state.services.redis.close()
         await rgdps.state.services.meili.aclose()
+        logger.info("Goodbye!")
 
     @app.exception_handler(RequestValidationError)
     async def on_validation_error(

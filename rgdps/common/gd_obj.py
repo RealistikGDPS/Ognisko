@@ -2,11 +2,15 @@ from __future__ import annotations
 
 import base64
 from typing import Callable
+from typing import Optional
 from typing import TypeVar
 from typing import Union
 
 from rgdps.common.time import into_str_ts
 from rgdps.constants.friends import FriendStatus
+from rgdps.constants.levels import LevelDifficulty
+from rgdps.constants.levels import LevelSearchFlags
+from rgdps.models.level import Level
 from rgdps.models.song import Song
 from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
@@ -103,4 +107,35 @@ def create_song(song: Song) -> GDSerialisable:
         5: song.size,
         7: song.author_youtube or "",
         10: song.download_url,
+    }
+
+
+def create_level_minimal(level: Level) -> GDSerialisable:
+    """Minimal level data for level search."""
+
+    description_b64 = base64.b64encode(level.description.encode()).decode()
+    return {
+        1: level.id,
+        2: level.name,
+        3: description_b64,
+        5: level.version,
+        6: level.user_id,
+        8: 10 if level.difficulty != LevelDifficulty.NA else 0,
+        9: level.difficulty.value,
+        12: level.official_song_id or 0,
+        13: level.game_version,
+        14: level.likes,
+        15: level.length.value,
+        17: level.stars == 10,  # is demon
+        18: level.stars,
+        19: level.feature_order,
+        25: level.stars == 1,  # is auto
+        30: level.original_id or 0,
+        31: 1 if level.original_id else 0,
+        35: level.custom_song_id or 0,
+        37: level.coins,
+        38: 1 if level.coins_verified else 0,
+        39: level.requested_stars,
+        42: 1 if level.search_flags & LevelSearchFlags.EPIC else 0,  # is epic
+        43: level.demon_difficulty.value if level.demon_difficulty else 0,
     }
