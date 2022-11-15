@@ -32,7 +32,7 @@ async def get_song_info(
 async def upload_level(
     user: User = Depends(authenticate_dependency()),
     level_id: int = Form(..., alias="levelID"),
-    name: str = Form(..., alias="levelName"),
+    name: str = Form(..., alias="levelName", max_length=32),  # TODO: Verify
     custom_song_id: int = Form(..., alias="songID"),
     copy_password: int = Form(..., alias="password"),
     two_player: bool = Form(..., alias="twoPlayer"),

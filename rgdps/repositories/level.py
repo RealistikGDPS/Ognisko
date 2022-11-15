@@ -3,6 +3,7 @@ from __future__ import annotations
 import time
 from datetime import datetime
 from typing import Any
+from typing import NamedTuple
 from typing import Optional
 
 from rgdps.models.level import Level
@@ -104,3 +105,21 @@ async def update_sql(level: Level) -> None:
         "deleted = :deleted WHERE id = :id",
         level.as_dict(include_id=True),
     )
+
+
+class SearchResults(NamedTuple):
+    results: list[Level]
+    total: int
+
+
+async def search(
+    query: str,
+    page: int,
+    page_size: int,
+) -> SearchResults:
+    offset = page * page_size
+    index = services.meili.index("levels")
+    results_db = await index.search(query, offset=offset, limit=page_size)
+
+    results = [_from_meili_dict(result) for result in results_db.hits]
+    return SearchResults(results, results_db.estimated_total_hits)
