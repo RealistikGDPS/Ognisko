@@ -112,7 +112,8 @@ class SearchResults(NamedTuple):
     total: int
 
 
-async def search(
+# Simple search, no filters for testing rn.
+async def search_text(
     query: str,
     page: int,
     page_size: int,

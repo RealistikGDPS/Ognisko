@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import NamedTuple
 from typing import Union
 
 from rgdps import repositories
@@ -10,6 +11,7 @@ from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlags
 from rgdps.models.level import Level
+from rgdps.models.song import Song
 from rgdps.models.user import User
 
 
@@ -101,3 +103,33 @@ async def create_or_update(
         repositories.level_data.create(level.id, level_data)
 
     return level
+
+
+class SearchResponse(NamedTuple):
+    levels: list[Level]
+    total: int
+
+    songs: list[Song]
+    users: list[User]
+
+
+async def search_levels(
+    query: str,
+    page: int,
+    page_size: int,
+) -> Union[SearchResponse, ServiceError]:
+    levels_db = await repositories.level.search_text(query, page, page_size)
+
+    songs = []
+    users = []
+    for level in levels_db.results:
+        users.append(await repositories.user.from_id(level.user_id))
+        if level.custom_song_id:
+            songs.append(await repositories.song.from_id(level.custom_song_id))
+
+    return SearchResponse(
+        levels=levels_db.results,
+        total=levels_db.total,
+        songs=songs,
+        users=users,
+    )
