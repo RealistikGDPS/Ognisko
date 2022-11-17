@@ -87,6 +87,9 @@ async def update_user_info(
     return str(user.id)
 
 
+PAGE_SIZE = 10
+
+
 async def view_user_comments(
     target_id: int = Form(
         ...,
@@ -106,7 +109,7 @@ async def view_user_comments(
         gd_obj.dumps(gd_obj.create_user_comment(comment), sep="~")
         for comment in result.comment
     )
-    response += f"#{result.total}:{page}:10"
+    response += "#" + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
 
     logger.info(f"Successfully viewed comments of {target_id}.")
     return response
