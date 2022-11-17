@@ -70,3 +70,7 @@ def decode_gjp(gjp: str) -> str:
 
 def hash_md5(plain: str) -> str:
     return hashlib.md5(plain.encode()).hexdigest()
+
+
+def hash_sha1(plain: str) -> str:
+    return hashlib.sha1(plain.encode()).hexdigest()

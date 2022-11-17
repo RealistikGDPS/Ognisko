@@ -85,3 +85,40 @@ async def upload_level(
 
     logger.info(f"Successfully uploaded level {level}.")
     return str(level.id)
+
+
+PAGE_SIZE = 10
+
+
+async def search_levels(
+    query: str = Form("", alias="str"),
+    page: int = Form(0, alias="page", ge=0),
+) -> str:
+
+    level_res = await levels.search(query, page, PAGE_SIZE)
+
+    if isinstance(level_res, ServiceError):
+        logger.info(f"Failed to search levels with error {level_res!r}.")
+        return str(GenericResponse.FAIL)
+
+    logger.info(
+        f"Successfully fulfilled the search for query {query!r} with "
+        f"{level_res.total} results.",
+    )
+
+    return "#".join(
+        (
+            "|".join(
+                gd_obj.dumps(gd_obj.create_level_minimal(level))
+                for level in level_res.levels
+            ),
+            "|".join(
+                gd_obj.dumps(gd_obj.create_profile(user)) for user in level_res.users
+            ),
+            "~|~".join(
+                gd_obj.dumps(gd_obj.create_song(song)) for song in level_res.songs
+            ),
+            gd_obj.create_pagination_info(level_res.total, page, PAGE_SIZE),
+            gd_obj.create_search_security_str(level_res.levels),
+        ),
+    )

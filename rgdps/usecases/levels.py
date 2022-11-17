@@ -113,7 +113,7 @@ class SearchResponse(NamedTuple):
     users: list[User]
 
 
-async def search_levels(
+async def search(
     query: str,
     page: int,
     page_size: int,

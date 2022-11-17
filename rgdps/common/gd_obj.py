@@ -6,6 +6,7 @@ from typing import Optional
 from typing import TypeVar
 from typing import Union
 
+from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.levels import LevelDifficulty
@@ -139,3 +140,20 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         42: 1 if level.search_flags & LevelSearchFlags.EPIC else 0,  # is epic
         43: level.demon_difficulty.value if level.demon_difficulty else 0,
     }
+
+
+def create_level_security_str(level: Level) -> str:
+    level_id_str = str(level.id)
+
+    return f"{level_id_str[0]}{level_id_str[-1]}{level.stars}{level.coins}"
+
+
+def create_search_security_str(levels: list[Level]) -> str:
+    return hashes.hash_sha1(
+        "".join(create_level_security_str(level) for level in levels) + "xI25fpAapCQg",
+    )
+
+
+def create_pagination_info(total: int, page: int, page_size: int) -> str:
+    offset = page * page_size
+    return f"{total}:{offset}:{page_size}"
