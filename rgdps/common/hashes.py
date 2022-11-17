@@ -74,3 +74,10 @@ def hash_md5(plain: str) -> str:
 
 def hash_sha1(plain: str) -> str:
     return hashlib.sha1(plain.encode()).hexdigest()
+
+
+def hash_level_password(password: int) -> str:
+    return xor_cipher.xor_cyclic_str(
+        content=str(password),
+        key=XorKeys.LEVEL_PASSWORD,
+    )

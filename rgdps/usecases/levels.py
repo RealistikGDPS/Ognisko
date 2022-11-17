@@ -96,6 +96,8 @@ async def create_or_update(
         # Update
         if old_level.user_id != user.id:
             return ServiceError.LEVELS_NO_UPDATE_PERMISSION
+        if old_level.update_locked:
+            return ServiceError.LEVELS_UPDATE_LOCKED
         await repositories.level.update(level)
         repositories.level_data.create(level.id, level_data)
     else:
@@ -132,4 +134,27 @@ async def search(
         total=levels_db.total,
         songs=songs,
         users=users,
+    )
+
+
+# Fun fact, gd relies on the search endpoint for song and user data.
+class LevelResponse(NamedTuple):
+    level: Level
+    data: str
+
+
+async def get(level_id: int) -> Union[LevelResponse, ServiceError]:
+    level = await repositories.level.from_id(level_id)
+    level_data = repositories.level_data.from_level_id(level_id)
+    if not (level and level_data):
+        return ServiceError.LEVELS_NOT_FOUND
+
+    # Handle stats updates
+    level.downloads += 1
+
+    await repositories.level.update(level)
+
+    return LevelResponse(
+        level=level,
+        data=level_data,
     )

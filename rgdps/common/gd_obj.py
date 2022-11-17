@@ -123,6 +123,7 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         6: level.user_id,
         8: 10 if level.difficulty != LevelDifficulty.NA else 0,
         9: level.difficulty.value,
+        10: level.downloads,
         12: level.official_song_id or 0,
         13: level.game_version,
         14: level.likes,
@@ -131,6 +132,7 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         18: level.stars,
         19: level.feature_order,
         25: level.stars == 1,  # is auto
+        27: hashes.hash_level_password(level.copy_password),
         30: level.original_id or 0,
         31: 1 if level.original_id else 0,
         35: level.custom_song_id or 0,
@@ -139,6 +141,15 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         39: level.requested_stars,
         42: 1 if level.search_flags & LevelSearchFlags.EPIC else 0,  # is epic
         43: level.demon_difficulty.value if level.demon_difficulty else 0,
+        45: level.object_count,
+    }
+
+
+def create_level(level: Level, level_data: str) -> GDSerialisable:
+    return create_level_minimal(level) | {
+        4: level_data,
+        28: into_str_ts(level.upload_ts),
+        36: level.render_str,
     }
 
 
