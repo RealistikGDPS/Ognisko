@@ -51,6 +51,14 @@ class Level:
 
     # verification_replay: str
 
+    @property
+    def is_demon(self) -> bool:
+        return self.stars == 10
+
+    @property
+    def is_auto(self) -> bool:
+        return self.stars == 1
+
     @staticmethod
     def from_mapping(level_dict: Mapping[str, Any]) -> Level:
         demon_difficulty = None

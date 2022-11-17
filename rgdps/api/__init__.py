@@ -100,3 +100,9 @@ router.add_api_route(
     levels.search_levels,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/downloadGJLevel22.php",
+    levels.get_level,
+    methods=["POST"],
+)

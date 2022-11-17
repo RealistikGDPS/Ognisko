@@ -128,10 +128,10 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         13: level.game_version,
         14: level.likes,
         15: level.length.value,
-        17: level.stars == 10,  # is demon
+        17: level.is_demon,
         18: level.stars,
         19: level.feature_order,
-        25: level.stars == 1,  # is auto
+        25: level.is_auto,
         27: hashes.hash_level_password(level.copy_password),
         30: level.original_id or 0,
         31: 1 if level.original_id else 0,
@@ -153,6 +153,7 @@ def create_level(level: Level, level_data: str) -> GDSerialisable:
     }
 
 
+# TODO: These should probably be renamed to be more concise.
 def create_level_security_str(level: Level) -> str:
     level_id_str = str(level.id)
 
@@ -163,6 +164,34 @@ def create_search_security_str(levels: list[Level]) -> str:
     return hashes.hash_sha1(
         "".join(create_level_security_str(level) for level in levels) + "xI25fpAapCQg",
     )
+
+
+def create_level_data_security_str(level_data: str) -> str:
+    res = ""
+    size = len(level_data)
+    for i in range(0, 40, size // 40):
+        res += level_data[i]
+
+    return res
+
+
+def create_level_metadata_security_str(level: Level) -> str:
+    return ",".join(
+        (
+            str(level.user_id),
+            str(level.stars),
+            "1" if level.is_demon else "0",
+            str(level.id),
+            "1" if level.coins_verified else "0",
+            str(level.feature_order),
+            str(level.copy_password),
+            "0",
+        ),
+    )
+
+
+def create_level_metadata_security_str_hashed(level: Level) -> str:
+    return hashes.hash_sha1(create_level_metadata_security_str(level) + "xI25fpAapCQg")
 
 
 def create_pagination_info(total: int, page: int, page_size: int) -> str:

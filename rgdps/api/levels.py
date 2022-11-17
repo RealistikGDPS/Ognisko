@@ -122,3 +122,25 @@ async def search_levels(
             gd_obj.create_search_security_str(level_res.levels),
         ),
     )
+
+
+async def get_level(
+    level_id: int = Form(..., alias="levelID"),
+) -> str:
+
+    level_res = await levels.get(level_id)
+
+    if isinstance(level_res, ServiceError):
+        logger.info(f"Failed to fetch level with error {level_res!r}.")
+        return str(GenericResponse.FAIL)
+
+    logger.info(f"Successfully fetched level {level_res.level}.")
+
+    return "#".join(
+        (
+            gd_obj.dumps(gd_obj.create_level(level_res.level, level_res.data)),
+            gd_obj.create_level_data_security_str(level_res.data),
+            gd_obj.create_level_metadata_security_str(level_res.level),
+            gd_obj.create_level_metadata_security_str_hashed(level_res.level),
+        ),
+    )
