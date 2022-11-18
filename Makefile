@@ -6,4 +6,5 @@ run:
 	docker-compose up \
 		redis \
 		mysql \
+		meilisearch \
 		realistikgdps
