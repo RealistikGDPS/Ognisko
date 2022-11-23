@@ -47,8 +47,6 @@ services:
     volumes:
       - ./data/levels:/data/levels
       - ./data/saves:/data/saves
-      # Migrations
-      - ./database/migrations:/app/database/migrations
 
   meilisearch:
     image: getmeili/meilisearch:latest

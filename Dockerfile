@@ -23,6 +23,9 @@ RUN cd xor_cipher && python3 setup.py build_ext --inplace && pip install . && cd
 COPY requirements/requirements.txt .
 RUN pip install -r requirements.txt
 
+# Move migrations
+COPY database /app/database
+
 # Move scripts to /app
 RUN apt update && apt install default-mysql-client curl -y
 COPY scripts /app/scripts
