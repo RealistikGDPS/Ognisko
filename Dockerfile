@@ -27,8 +27,10 @@ RUN pip install -r requirements.txt
 COPY database /app/database
 
 # Move scripts to /app
-RUN apt update && apt install default-mysql-client curl -y
+RUN apt update && apt install default-mysql-client curl dos2unix -y
 COPY scripts /app/scripts
+RUN dos2unix /app/scripts/*
+RUN chmod +x /app/scripts/*
 
 # Copy the application
 COPY rgdps /app/rgdps
@@ -36,4 +38,4 @@ COPY main.py /app/
 
 # Run the application
 EXPOSE 80
-CMD ["./scripts/bootstrap.sh"]
+CMD ["/app/scripts/bootstrap.sh"]
