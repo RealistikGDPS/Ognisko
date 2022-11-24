@@ -132,7 +132,6 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         18: level.stars,
         19: level.feature_order,
         25: level.is_auto,
-        27: hashes.hash_level_password(level.copy_password),
         30: level.original_id or 0,
         31: 1 if level.original_id else 0,
         35: level.custom_song_id or 0,
@@ -148,6 +147,7 @@ def create_level_minimal(level: Level) -> GDSerialisable:
 def create_level(level: Level, level_data: str) -> GDSerialisable:
     return create_level_minimal(level) | {
         4: level_data,
+        27: hashes.hash_level_password(level.copy_password),
         28: into_str_ts(level.upload_ts),
         36: level.render_str,
     }

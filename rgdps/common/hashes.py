@@ -77,7 +77,12 @@ def hash_sha1(plain: str) -> str:
 
 
 def hash_level_password(password: int) -> str:
-    return xor_cipher.xor_cyclic_str(
-        content=str(password),
+    if not password:
+        return "0"
+
+    xor_password = xor_cipher.xor_cyclic_unsafe(
+        content=str(password).encode(),
         key=XorKeys.LEVEL_PASSWORD,
     )
+
+    return base64.b64encode(xor_password).decode()

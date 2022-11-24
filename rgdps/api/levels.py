@@ -44,7 +44,7 @@ async def upload_level(
     level_data: str = Form(..., alias="levelString"),
     length: LevelLength = Form(..., alias="levelLength"),
     version: int = Form(..., alias="levelVersion"),
-    description_b64: str = Form(..., alias="levelDesc"),
+    description_b64: str = Form("", alias="levelDesc"),
     original: int = Form(..., alias="original"),
     official_song_id: int = Form(..., alias="audioTrack"),
     game_version: int = Form(..., alias="gameVersion"),

@@ -10,6 +10,7 @@ from rgdps import repositories
 from rgdps.constants.responses import GenericResponse
 from rgdps.models.user import User
 from rgdps.repositories import auth
+from rgdps import logger
 
 # TODO: add option to replicate https://github.com/RealistikDash/GDPyS/blob/9266cc57c3a4c5d1f51363aa3899ee3c09a23ee8/web/http.py#L338-L341
 # FastAPI dependency for seemless authentication.
@@ -54,6 +55,7 @@ def password_authenticate_dependency(
         user = await repositories.user.from_name(username)
 
         if user is None:
+            logger.debug(f"Authentication failed for user {username} (user not found)")
             raise HTTPException(
                 status_code=200,
                 detail=str(GenericResponse.FAIL),
@@ -63,6 +65,7 @@ def password_authenticate_dependency(
             user.password,
             password,
         ):
+            logger.debug(f"Authentication failed for user {username} (password mismatch)")
             raise HTTPException(
                 status_code=200,
                 detail=str(GenericResponse.FAIL),
