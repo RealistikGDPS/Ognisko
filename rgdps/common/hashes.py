@@ -62,8 +62,8 @@ def decode_gjp(gjp: str) -> str:
         str: The plaintext password.
     """
 
-    return xor_cipher.xor_cyclic_unsafe(
-        content=base64.b64decode(gjp.encode()),
+    return xor_cipher.cyclic_xor_unsafe(
+        data=base64.b64decode(gjp.encode()),
         key=XorKeys.GJP,
     ).decode()
 
@@ -80,8 +80,8 @@ def hash_level_password(password: int) -> str:
     if not password:
         return "0"
 
-    xor_password = xor_cipher.xor_cyclic_unsafe(
-        content=str(password).encode(),
+    xor_password = xor_cipher.cyclic_xor_unsafe(
+        data=str(password).encode(),
         key=XorKeys.LEVEL_PASSWORD,
     )
 

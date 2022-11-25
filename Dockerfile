@@ -12,13 +12,6 @@ RUN wget https://github.com/golang-migrate/migrate/releases/download/v4.15.2/mig
     chmod u+x /usr/local/bin/go-migrate && \
     rm migrate.linux-amd64.tar.gz
 
-# Temporary workaround for my xor cipher module being broken
-ENV CYTHONISE = 1
-RUN apt-get install -y git
-RUN git clone https://github.com/RealistikDash/xor_cipher
-RUN pip install cython
-RUN cd xor_cipher && python3 setup.py build_ext --inplace && pip install . && cd ..
-
 # Python Dependencies
 COPY requirements/requirements.txt .
 RUN pip install -r requirements.txt
