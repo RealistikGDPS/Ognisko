@@ -57,39 +57,6 @@ async def create_or_update(
     else:
         publicity = LevelPublicity.PUBLIC
 
-    level = Level(
-        id=level_id,
-        name=name,
-        user_id=user.id,
-        description=description,
-        custom_song_id=song_id,
-        official_song_id=track_id,
-        version=version,
-        length=length,
-        two_player=two_player,
-        publicity=publicity,
-        render_str=render_str,
-        game_version=game_version,
-        binary_version=binary_version,
-        upload_ts=datetime.now(),
-        original_id=original or None,
-        downloads=0,
-        likes=0,
-        stars=0,
-        difficulty=LevelDifficulty.NA,
-        demon_difficulty=None,
-        coins=coins,
-        coins_verified=False,
-        requested_stars=requested_stars,
-        feature_order=0,
-        search_flags=LevelSearchFlags.NONE,
-        low_detail_mode=low_detail_mode,
-        object_count=object_count,
-        copy_password=copy_password,
-        building_time=building_time,
-        update_locked=False,
-        deleted=False,
-    )
 
     # Check if we are updating or creating.
     if level_id and (old_level := await repositories.level.from_id(level_id)):
@@ -98,9 +65,63 @@ async def create_or_update(
             return ServiceError.LEVELS_NO_UPDATE_PERMISSION
         if old_level.update_locked:
             return ServiceError.LEVELS_UPDATE_LOCKED
+        
+        # Apply new values to the old level.
+        level = old_level
+        level.name = name
+        level.custom_song_id = song_id
+        level.official_song_id = track_id
+        level.two_player = two_player
+        level.coins = coins
+        level.publicity = publicity
+        level.render_str = render_str
+        level.requested_stars = requested_stars
+        level.length = length
+        level.version = version
+        level.description = description
+        level.original_id = original
+        level.game_version = game_version
+        level.binary_version = binary_version
+        level.low_detail_mode = low_detail_mode
+        level.building_time = building_time
+        level.update_ts = datetime.utcnow()
         await repositories.level.update(level)
         repositories.level_data.create(level.id, level_data)
     else:
+        level = Level(
+            id=level_id,
+            name=name,
+            user_id=user.id,
+            description=description,
+            custom_song_id=song_id,
+            official_song_id=track_id,
+            version=version,
+            length=length,
+            two_player=two_player,
+            publicity=publicity,
+            render_str=render_str,
+            game_version=game_version,
+            binary_version=binary_version,
+            upload_ts=datetime.now(),
+            update_ts=datetime.now(),
+            original_id=original or None,
+            downloads=0,
+            likes=0,
+            stars=0,
+            difficulty=LevelDifficulty.NA,
+            demon_difficulty=None,
+            coins=coins,
+            coins_verified=False,
+            requested_stars=requested_stars,
+            feature_order=0,
+            search_flags=LevelSearchFlags.NONE,
+            low_detail_mode=low_detail_mode,
+            object_count=object_count,
+            copy_password=copy_password,
+            building_time=building_time,
+            update_locked=False,
+            deleted=False,
+        )
         level.id = await repositories.level.create(level)
         repositories.level_data.create(level.id, level_data)
 

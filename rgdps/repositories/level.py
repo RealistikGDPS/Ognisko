@@ -15,7 +15,7 @@ async def from_id(level_id: int) -> Optional[Level]:
     level_db = await services.database.fetch_one(
         "SELECT id, name, user_id, description, custom_song_id, official_song_id, "
         "version, length, two_player, publicity, render_str, game_version, "
-        "binary_version, upload_ts, original_id, downloads, likes, stars, difficulty, "
+        "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
         "search_flags, low_detail_mode, object_count, copy_password, building_time, "
         "update_locked, deleted FROM levels WHERE id = :id",
@@ -40,31 +40,37 @@ async def create_sql(level: Level) -> int:
     return await services.database.execute(
         "INSERT INTO levels (name, user_id, description, custom_song_id, "
         "official_song_id, version, length, two_player, publicity, render_str, "
-        "game_version, binary_version, upload_ts, original_id, downloads, likes, "
+        "game_version, binary_version, upload_ts, update_ts, original_id, downloads, likes, "
         "stars, difficulty, demon_difficulty, coins, coins_verified, requested_stars, "
         "feature_order, search_flags, low_detail_mode, object_count, copy_password, "
         "building_time, update_locked, deleted) VALUES (:name, :user_id, "
         ":description, :custom_song_id, :official_song_id, :version, :length, "
         ":two_player, :publicity, :render_str, :game_version, :binary_version, "
-        ":upload_ts, :original_id, :downloads, :likes, :stars, :difficulty, "
+        ":upload_ts, :update_ts, :original_id, :downloads, :likes, :stars, :difficulty, "
         ":demon_difficulty, :coins, :coins_verified, :requested_stars, :feature_order, "
         ":search_flags, :low_detail_mode, :object_count, :copy_password, "
         ":building_time, :update_locked, :deleted)",
         level.as_dict(include_id=False),
     )
 
-
 # Functions to assist with meili not liking datetime objects.
+def _dt_as_unix_ts(dt: datetime) -> int:
+    return int(time.mktime(dt.timetuple()))
+
+def _unix_ts_as_dt(unix_ts: int) -> datetime:
+    return datetime.fromtimestamp(unix_ts)
+
 def _make_meili_dict(level: Level) -> dict[str, Any]:
-    unix_ts = int(time.mktime(level.upload_ts.timetuple()))
     level_dict = level.as_dict(include_id=True)
-    level_dict["upload_ts"] = unix_ts
+    level_dict["upload_ts"] = _dt_as_unix_ts(level_dict["upload_ts"])
+    level_dict["update_ts"] = _dt_as_unix_ts(level_dict["update_ts"])
     return level_dict
 
 
 def _from_meili_dict(level_dict: dict[str, Any]) -> Level:
     # Meili returns unix timestamps, so we need to convert them back to datetime.
-    level_dict["upload_ts"] = datetime.fromtimestamp(level_dict["upload_ts"])
+    level_dict["upload_ts"] = _unix_ts_as_dt(level_dict["upload_ts"])
+    level_dict["update_ts"] = _unix_ts_as_dt(level_dict["update_ts"])
     return Level.from_mapping(level_dict)
 
 
@@ -95,8 +101,8 @@ async def update_sql(level: Level) -> None:
         "custom_song_id = :custom_song_id, official_song_id = :official_song_id, "
         "version = :version, length = :length, two_player = :two_player, "
         "publicity = :publicity, render_str = :render_str, game_version = :game_version, "
-        "binary_version = :binary_version, upload_ts = :upload_ts, original_id = :original_id, "
-        "downloads = :downloads, likes = :likes, stars = :stars, difficulty = :difficulty, "
+        "binary_version = :binary_version, upload_ts = :upload_ts, update_ts = :update_ts, "
+        "original_id = :original_id, downloads = :downloads, likes = :likes, stars = :stars, difficulty = :difficulty, "
         "demon_difficulty = :demon_difficulty, coins = :coins, coins_verified = :coins_verified, "
         "requested_stars = :requested_stars, feature_order = :feature_order, "
         "search_flags = :search_flags, low_detail_mode = :low_detail_mode, "

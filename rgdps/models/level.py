@@ -29,6 +29,7 @@ class Level:
     game_version: int
     binary_version: int
     upload_ts: datetime
+    update_ts: datetime
     original_id: Optional[int]
 
     # Statistics
@@ -80,6 +81,7 @@ class Level:
             game_version=level_dict["game_version"],
             binary_version=level_dict["binary_version"],
             upload_ts=level_dict["upload_ts"],
+            update_ts=level_dict["update_ts"],
             original_id=level_dict["original_id"],
             downloads=level_dict["downloads"],
             likes=level_dict["likes"],
@@ -114,6 +116,7 @@ class Level:
             "game_version": self.game_version,
             "binary_version": self.binary_version,
             "upload_ts": self.upload_ts,
+            "update_ts": self.update_ts,
             "original_id": self.original_id,
             "downloads": self.downloads,
             "likes": self.likes,
