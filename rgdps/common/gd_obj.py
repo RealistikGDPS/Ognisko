@@ -128,10 +128,10 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         13: level.game_version,
         14: level.likes,
         15: level.length.value,
-        17: level.is_demon,
+        17: int(level.is_demon),
         18: level.stars,
         19: level.feature_order,
-        25: level.is_auto,
+        25: int(level.is_auto),
         30: level.original_id or 0,
         31: 1 if level.original_id else 0,
         35: level.custom_song_id or 0,
@@ -149,6 +149,7 @@ def create_level(level: Level, level_data: str) -> GDSerialisable:
         4: level_data,
         27: hashes.hash_level_password(level.copy_password),
         28: into_str_ts(level.upload_ts),
+        29: into_str_ts(level.upload_ts), # TODO: This is wrong. Meant to be last updated.
         36: level.render_str,
     }
 
@@ -168,11 +169,11 @@ def create_search_security_str(levels: list[Level]) -> str:
 
 def create_level_data_security_str(level_data: str) -> str:
     res = ""
-    size = len(level_data)
-    for i in range(0, 40, size // 40):
-        res += level_data[i]
+    size = len(level_data) // 40
+    for i in range(40):
+        res += level_data[i * size]
 
-    return res
+    return hashes.hash_sha1(res + "xI25fpAapCQg")
 
 
 def create_level_metadata_security_str(level: Level) -> str:

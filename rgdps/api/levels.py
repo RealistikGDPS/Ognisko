@@ -140,7 +140,7 @@ async def get_level(
         (
             gd_obj.dumps(gd_obj.create_level(level_res.level, level_res.data)),
             gd_obj.create_level_data_security_str(level_res.data),
-            gd_obj.create_level_metadata_security_str(level_res.level),
             gd_obj.create_level_metadata_security_str_hashed(level_res.level),
+            gd_obj.create_level_metadata_security_str(level_res.level),
         ),
     )

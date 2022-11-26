@@ -87,16 +87,16 @@ class Level:
             difficulty=LevelDifficulty(level_dict["difficulty"]),
             demon_difficulty=demon_difficulty,
             coins=level_dict["coins"],
-            coins_verified=level_dict["coins_verified"],
+            coins_verified=bool(level_dict["coins_verified"]),
             requested_stars=level_dict["requested_stars"],
             feature_order=level_dict["feature_order"],
             search_flags=LevelSearchFlags(level_dict["search_flags"]),
-            low_detail_mode=level_dict["low_detail_mode"],
+            low_detail_mode=bool(level_dict["low_detail_mode"]),
             object_count=level_dict["object_count"],
             copy_password=level_dict["copy_password"],
             building_time=level_dict["building_time"],
-            update_locked=level_dict["update_locked"],
-            deleted=level_dict["deleted"],
+            update_locked=bool(level_dict["update_locked"]),
+            deleted=bool(level_dict["deleted"]),
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
