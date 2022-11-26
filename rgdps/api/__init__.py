@@ -8,6 +8,7 @@ from . import levels
 from . import misc
 from . import profiles
 from . import save_data
+from . import leaderboards
 from rgdps.config import config
 
 router = APIRouter(
@@ -104,5 +105,11 @@ router.add_api_route(
 router.add_api_route(
     "/downloadGJLevel22.php",
     levels.get_level,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/getGJScores20.php",
+    leaderboards.get_leaderboard,
     methods=["POST"],
 )

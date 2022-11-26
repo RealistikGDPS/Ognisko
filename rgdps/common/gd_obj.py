@@ -56,7 +56,7 @@ def create_profile(
         2: user.id,
         3: user.stars,
         4: user.demons,
-        6: 0,  # TODO: Implement rank
+        6: rank,
         7: user.id,
         8: user.creator_points,
         9: user.display_type,
@@ -83,7 +83,7 @@ def create_profile(
         43: user.spider,
         44: user.twitter_name or "",
         45: user.twitch_name or "",
-        46: 0,  # TODO: Diamonds, which require save data parsing....
+        46: user.diamonds,
         48: user.explosion,
         49: 0,  # TODO: Badge level with privileges.
         50: user.comment_privacy.value,

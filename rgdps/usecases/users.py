@@ -112,7 +112,7 @@ async def get_user_perspective(
         # TODO: Use something more concise.
         return ServiceError.PROFILE_USER_NOT_FOUND
 
-    rank = await repositories.leaderboards.get_star_rank(user_id)
+    rank = await repositories.leaderboard.get_star_rank(user_id)
 
     return UserPerspective(
         user=user,
@@ -183,7 +183,7 @@ async def update_stats(
         creator_points=user.creator_points,
     )
 
-    await repositories.leaderboards.set_star_rating(user.id, updated_user.stars)
+    await repositories.leaderboard.set_star_count(user.id, updated_user.stars)
 
     await repositories.user.update(updated_user)  # TODO: Partial update
     return updated_user

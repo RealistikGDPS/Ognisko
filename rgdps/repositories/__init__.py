@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from . import auth
-from . import leaderboards
+from . import leaderboard
 from . import level
 from . import level_data
 from . import like
