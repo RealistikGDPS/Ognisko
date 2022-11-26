@@ -49,6 +49,7 @@ def loads(
 def create_profile(
     user: User,
     friend_status: FriendStatus = FriendStatus.NONE,
+    rank: int = 0,
 ) -> GDSerialisable:
     return {
         1: user.username,
@@ -77,7 +78,7 @@ def create_profile(
         26: user.robot,
         28: int(user.glow),
         29: 1,  # Is Registered
-        30: 0,  # TODO: Implement rank
+        30: rank,
         31: friend_status.value,
         43: user.spider,
         44: user.twitter_name or "",

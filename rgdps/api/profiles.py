@@ -32,7 +32,7 @@ async def view_user_info(
     logger.info(f"Successfully viewed the profile of {target.user}.")
 
     return gd_obj.dumps(
-        gd_obj.create_profile(target.user, target.friend_status),
+        gd_obj.create_profile(target.user, target.friend_status, target.rank),
     )
 
 

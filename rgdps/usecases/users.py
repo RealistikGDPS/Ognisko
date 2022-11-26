@@ -94,6 +94,7 @@ async def authenticate(
 
 class UserPerspective(NamedTuple):
     user: User
+    rank: int
     friend_status: FriendStatus
 
 
@@ -111,8 +112,11 @@ async def get_user_perspective(
         # TODO: Use something more concise.
         return ServiceError.PROFILE_USER_NOT_FOUND
 
+    rank = await repositories.leaderboards.get_star_rank(user_id)
+
     return UserPerspective(
         user=user,
+        rank=rank,
         friend_status=FriendStatus.NONE,
     )
 
@@ -178,6 +182,8 @@ async def update_stats(
         user_coins=user_coins or user.user_coins,
         creator_points=user.creator_points,
     )
+
+    await repositories.leaderboards.set_star_rating(user.id, updated_user.stars)
 
     await repositories.user.update(updated_user)  # TODO: Partial update
     return updated_user
