@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from fastapi import Form
 from fastapi import Depends
-import base64
 
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import GenericResponse
 from rgdps.constants.likes import LikeType
 from rgdps.common import gd_obj
+from rgdps.common.validators import Base64String
 from rgdps.models.user import User
 from rgdps.usecases import user_comments
 from rgdps.usecases import likes
@@ -44,9 +44,8 @@ async def view_user_comments(
 
 async def post_user_comment(
     user: User = Depends(authenticate_dependency()),
-    content_b64: str = Form(..., alias="comment"),
+    content: Base64String = Form(..., alias="comment"),
 ) -> str:
-    content = base64.urlsafe_b64decode(content_b64.encode()).decode()
     result = await user_comments.create(user, content)
 
     if isinstance(result, ServiceError):

@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import base64
-
 from fastapi import Depends
 from fastapi import Form
 
 from rgdps import logger
 from rgdps.common import gd_obj
+from rgdps.common.validators import Base64String
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.responses import GenericResponse
@@ -44,7 +43,7 @@ async def upload_level(
     level_data: str = Form(..., alias="levelString"),
     length: LevelLength = Form(..., alias="levelLength"),
     version: int = Form(..., alias="levelVersion"),
-    description_b64: str = Form("", alias="levelDesc"),
+    description: Base64String = Form("", alias="levelDesc"),
     original: int = Form(..., alias="original"),
     official_song_id: int = Form(..., alias="audioTrack"),
     game_version: int = Form(..., alias="gameVersion"),
@@ -52,8 +51,6 @@ async def upload_level(
     low_detail_mode: bool = Form(..., alias="ldm"),
     building_time: int = Form(..., alias="wt2"),
 ) -> str:
-
-    description = base64.urlsafe_b64decode(description_b64.encode()).decode()
 
     level = await levels.create_or_update(
         user=user,
