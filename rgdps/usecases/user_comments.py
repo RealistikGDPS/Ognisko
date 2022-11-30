@@ -58,3 +58,21 @@ async def create(
     comment.id = await repositories.user_comment.create(comment)
 
     return comment
+
+
+async def delete(
+    user: User,
+    comment_id: int,
+) -> Union[UserComment, ServiceError]:
+    comment = await repositories.user_comment.from_id(comment_id)
+
+    if comment is None:
+        return ServiceError.COMMENTS_NOT_FOUND
+
+    if comment.user_id != user.id:
+        return ServiceError.COMMENTS_INVALID_OWNER
+
+    comment.deleted = True
+    await repositories.user_comment.update(comment)
+
+    return comment

@@ -9,6 +9,7 @@ from . import misc
 from . import profiles
 from . import save_data
 from . import leaderboards
+from . import user_comments
 from rgdps.config import config
 
 router = APIRouter(
@@ -42,19 +43,19 @@ router.add_api_route(
 
 router.add_api_route(
     "/updateGJUserScore22.php",
-    profiles.update_user_info,
+    user_comments.update_user_info,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/uploadGJAccComment20.php",
-    profiles.post_user_comment,
+    user_comments.post_user_comment,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/getGJAccountComments20.php",
-    profiles.view_user_comments,
+    user_comments.view_user_comments,
     methods=["POST"],
 )
 
