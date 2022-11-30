@@ -13,6 +13,7 @@ from rgdps.constants.responses import GenericResponse
 from rgdps.models.user import User
 from rgdps.usecases import user_comments
 from rgdps.usecases import users
+from rgdps.usecases import likes
 from rgdps.usecases.auth import authenticate_dependency
 
 
@@ -20,6 +21,7 @@ async def view_user_info(
     target_id: int = Form(..., alias="targetAccountID"),
     user: User = Depends(authenticate_dependency()),
 ) -> str:
+    print(target_id)
     target = await users.get_user_perspective(target_id, user)
 
     if isinstance(target, ServiceError):
@@ -133,14 +135,27 @@ async def post_user_comment(
 
 
 # TODO: MOVE
-# async def like_target(
-#    target_type: LikeType = Form(..., alias="type"),
-#    target_id: int = Form(..., alias="itemID"),
-#    is_positive: bool = Form(..., alias="like"),
-# ) -> str:
-#
-#    if target_type is LikeType.USER_COMMENT:
-#        result = await user_comments.like(user, is_positive)
+async def like_target(
+    user: User = Depends(authenticate_dependency()),
+    target_type: LikeType = Form(..., alias="type"),
+    target_id: int = Form(..., alias="itemID"),
+    is_positive: bool = Form(..., alias="like"),
+) -> str:
+
+    result = None
+    if target_type is LikeType.USER_COMMENT:
+        result = await likes.like_comment(user, target_id, int(is_positive))
+    elif target_type is LikeType.LEVEL:
+        result = await likes.like_level(user, target_id, int(is_positive))
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            f"Failed to like {target_type!r} {target_id} with error {result!r}.",
+        )
+        return str(GenericResponse.FAIL)
+
+    logger.info(f"{user} successfully liked {target_type!r} {target_id}.")
+    return str(GenericResponse.SUCCESS)
 
 
 async def update_settings(

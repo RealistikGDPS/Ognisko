@@ -113,3 +113,9 @@ router.add_api_route(
     leaderboards.get_leaderboard,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/likeGJItem211.php",
+    profiles.like_target,
+    methods=["POST"],
+)

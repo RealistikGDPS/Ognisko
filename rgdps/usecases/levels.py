@@ -144,11 +144,17 @@ async def search(
     levels_db = await repositories.level.search_text(query, page, page_size)
 
     songs = []
-    users = []
+    unique_users = set()
     for level in levels_db.results:
-        users.append(await repositories.user.from_id(level.user_id))
+        unique_users.add(level.user_id)
         if level.custom_song_id:
             songs.append(await repositories.song.from_id(level.custom_song_id))
+
+    users = []
+    for user_id in unique_users:
+        user = await repositories.user.from_id(user_id)
+        assert user is not None, "User associated with level not found."
+        users.append(user)
 
     return SearchResponse(
         levels=levels_db.results,

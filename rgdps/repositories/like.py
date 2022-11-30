@@ -9,7 +9,7 @@ from rgdps.state import services
 
 async def from_id(id: int) -> Optional[Like]:
     like_db = await services.database.fetch_one(
-        "SELECT target_type, target_id, user_id, value FROM likes WHERE id = :id",
+        "SELECT target_type, target_id, user_id, value FROM user_likes WHERE id = :id",
         {
             "id": id,
         },
@@ -23,7 +23,7 @@ async def from_id(id: int) -> Optional[Like]:
 
 async def create(like: Like) -> int:
     return await services.database.execute(
-        "INSERT INTO likes (target_type, target_id, user_id, value) VALUES "
+        "INSERT INTO user_likes (target_type, target_id, user_id, value) VALUES "
         "(:target_type, :target_id, :user_id, :value)",
         like.as_dict(include_id=False),
     )
@@ -36,7 +36,7 @@ async def exists_by_target_and_user(
 ) -> bool:
     return (
         await services.database.fetch_one(
-            "SELECT id FROM likes WHERE target_type = :target_type AND target_id = :target_id AND user_id = :user_id",
+            "SELECT id FROM user_likes WHERE target_type = :target_type AND target_id = :target_id AND user_id = :user_id",
             {
                 "target_type": target_type.value,
                 "target_id": target_id,
@@ -52,7 +52,7 @@ async def sum_by_target(
     target_id: int,
 ) -> int:
     like_db = await services.database.fetch_one(
-        "SELECT SUM(value) AS sum FROM likes WHERE target_type = :target_type "
+        "SELECT SUM(value) AS sum FROM user_likes WHERE target_type = :target_type "
         "AND target_id = :target_id",
         {
             "target_type": target_type.value,
