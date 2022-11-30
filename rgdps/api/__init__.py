@@ -43,7 +43,7 @@ router.add_api_route(
 
 router.add_api_route(
     "/updateGJUserScore22.php",
-    user_comments.update_user_info,
+    profiles.update_user_info,
     methods=["POST"],
 )
 
@@ -117,6 +117,12 @@ router.add_api_route(
 
 router.add_api_route(
     "/likeGJItem211.php",
-    profiles.like_target,
+    user_comments.like_target,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/deleteGJAccComment20.php",
+    user_comments.delete_user_comment,
     methods=["POST"],
 )

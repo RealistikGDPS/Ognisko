@@ -81,3 +81,19 @@ async def like_target(
 
     logger.info(f"{user} successfully liked {target_type!r} {target_id}.")
     return str(GenericResponse.SUCCESS)
+
+
+async def delete_user_comment(
+    user: User = Depends(authenticate_dependency()),
+    comment_id: int = Form(..., alias="commentID"),
+) -> str:
+    result = await user_comments.delete(user, comment_id)
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            f"Failed to delete comment {comment_id} with error {result!r}.",
+        )
+        return str(GenericResponse.FAIL)
+
+    logger.info(f"{user} successfully deleted comment {comment_id}.")
+    return str(GenericResponse.SUCCESS)
