@@ -76,7 +76,7 @@ class User:
             robot=user_dict["robot"],
             spider=user_dict["spider"],
             explosion=user_dict["explosion"],
-            glow=user_dict["glow"],
+            glow=bool(user_dict["glow"]),
             creator_points=user_dict["creator_points"],
             coins=user_dict["coins"],
             user_coins=user_dict["user_coins"],

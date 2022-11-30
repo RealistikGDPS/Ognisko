@@ -23,7 +23,7 @@ class UserComment:
             content=comment_dict["content"],
             likes=comment_dict["likes"],
             post_ts=comment_dict["post_ts"],
-            deleted=comment_dict["deleted"],
+            deleted=bool(comment_dict["deleted"]),
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:

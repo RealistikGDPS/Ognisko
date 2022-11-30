@@ -75,7 +75,7 @@ class Level:
             official_song_id=level_dict["official_song_id"],
             version=level_dict["version"],
             length=LevelLength(level_dict["length"]),
-            two_player=level_dict["two_player"],
+            two_player=bool(level_dict["two_player"]),
             publicity=LevelPublicity(level_dict["publicity"]),
             render_str=level_dict["render_str"],
             game_version=level_dict["game_version"],

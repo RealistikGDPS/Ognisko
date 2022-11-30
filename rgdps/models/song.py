@@ -34,7 +34,7 @@ class Song:
             size=song_dict["size"],
             download_url=song_dict["download_url"],
             source=SongSource(song_dict["source"]),
-            blocked=song_dict["blocked"],
+            blocked=bool(song_dict["blocked"]),
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
