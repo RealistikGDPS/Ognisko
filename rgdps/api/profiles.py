@@ -16,7 +16,6 @@ async def view_user_info(
     target_id: int = Form(..., alias="targetAccountID"),
     user: User = Depends(authenticate_dependency()),
 ) -> str:
-    print(target_id)
     target = await users.get_user_perspective(target_id, user)
 
     if isinstance(target, ServiceError):
