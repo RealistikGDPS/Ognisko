@@ -112,6 +112,10 @@ async def update_sql(level: Level) -> None:
         level.as_dict(include_id=True),
     )
 
+async def delete_meili(level_id: int) -> None:
+    index = services.meili.index("levels")
+    await index.delete_documents([str(level_id)])
+
 
 class SearchResults(NamedTuple):
     results: list[Level]

@@ -182,3 +182,17 @@ async def get(level_id: int) -> Union[LevelResponse, ServiceError]:
         level=level,
         data=level_data,
     )
+
+async def delete(level_id: int, user: User) -> Union[bool, ServiceError]:
+    level = await repositories.level.from_id(level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    # TODO: Check if user has permission to delete.
+    if level.user_id != user.id:
+        return ServiceError.LEVELS_NO_DELETE_PERMISSION
+
+    level.deleted = True
+    await repositories.level.update(level)
+    await repositories.level.delete_meili(level_id)
+    return True

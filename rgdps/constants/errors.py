@@ -21,3 +21,4 @@ class ServiceError(str, Enum):
     LEVELS_INVALID_CUSTOM_SONG = "levels.invalid_custom_song"
     LEVELS_NOT_FOUND = "levels.not_found"
     LEVELS_UPDATE_LOCKED = "levels.update_locked"
+    LEVELS_NO_DELETE_PERMISSION = "levels.no_delete_permission"
