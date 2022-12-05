@@ -46,9 +46,6 @@ class User:
     user_coins: int
     diamonds: int
 
-    def __str__(self) -> str:
-        return f"{self.username} ({self.id})"
-
     @staticmethod
     def from_mapping(user_dict: Mapping[str, Any]) -> User:
         return User(
@@ -118,3 +115,10 @@ class User:
             res["id"] = self.id
 
         return res
+
+    # Dunder methods
+    def __str__(self) -> str:
+        return f"{self.username} ({self.id})"
+
+    def __hash__(self) -> int:
+        return self.id
