@@ -37,3 +37,7 @@ class Like:
             res["id"] = self.id
 
         return res
+
+    # Dunder methods
+    def __hash__(self) -> int:
+        return self.id
