@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import pickle
 from datetime import timedelta
+from typing import Any
 from typing import Callable
 from typing import Optional
 from typing import TypeVar
@@ -18,12 +19,12 @@ SERIALISE_FUNCTION = Callable[[T], bytes]
 
 # Cast functions for common occurrences
 # TODO: Maybe move these into a separate file?
-def serialise_object(obj: object) -> bytes:
+def serialise_object(obj: Any) -> bytes:
     """Indiscriminately serialises an object to bytes."""
     return pickle.dumps(obj)
 
 
-def deserialise_object(data: bytes) -> object:
+def deserialise_object(data: bytes) -> Any:
     """Indiscriminately deserialises bytes to an object."""
     return pickle.loads(data)
 
