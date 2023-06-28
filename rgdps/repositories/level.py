@@ -193,10 +193,10 @@ async def search(
         sort.append("feature_order:desc")
 
     elif search_type is LevelSearchType.MAGIC:
-        filters.append(f"magic = 1")
+        filters.append(f"magic = true")
 
     elif search_type is LevelSearchType.AWARDED:
-        filters.append("awarded = 1")
+        filters.append("awarded = true")
 
     elif search_type is LevelSearchType.FOLLOWED:
         assert followed_list is not None
@@ -206,7 +206,7 @@ async def search(
         raise NotImplementedError("Friends not implemented yet.")
 
     elif search_type is LevelSearchType.EPIC:
-        filters.append("epic = 1")
+        filters.append("epic = true")
         sort.append("feature_order:desc")
 
     elif search_type is LevelSearchType.DAILY:
@@ -227,7 +227,7 @@ async def search(
         filters.append("original_id IS NULL")
 
     if two_player:
-        filters.append("two_player = 1")
+        filters.append("two_player = true")
 
     if unrated:
         filters.append("stars = 0")
