@@ -1,13 +1,13 @@
-bcrypt == 4.0.0
+bcrypt == 4.0.1
 cryptograpy
-databases[asyncmy] == 0.6.2
-email-validator == 1.2.1
-fastapi == 0.82.0
-httpx == 0.23.0
-meilisearch-python-async == 0.28.1
+databases[asyncmy] == 0.7.0
+email-validator == 2.0.0
+fastapi == 0.98.0
+httpx == 0.24.1
+meilisearch-python-async == 1.4.2
 python-multipart
-redis == 4.3.4
-structlog==16.0.0
-uvicorn == 0.18.3
-uvloop == 0.16.0; sys_platform != "win32"
-xor-cipher == 2.2.2
+redis == 4.6.0
+structlog==23.1.0
+uvicorn == 0.22.0
+uvloop == 0.17.0; sys_platform != "win32"
+xor-cipher == 3.0.1
