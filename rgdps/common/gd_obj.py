@@ -10,7 +10,7 @@ from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.levels import LevelDifficulty
-from rgdps.constants.levels import LevelSearchFlags
+from rgdps.constants.levels import LevelSearchFlag
 from rgdps.models.level import Level
 from rgdps.models.song import Song
 from rgdps.models.user import User
@@ -139,7 +139,7 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         37: level.coins,
         38: 1 if level.coins_verified else 0,
         39: level.requested_stars,
-        42: 1 if level.search_flags & LevelSearchFlags.EPIC else 0,  # is epic
+        42: 1 if level.search_flags & LevelSearchFlag.EPIC else 0,  # is epic
         43: level.demon_difficulty.value if level.demon_difficulty else 0,
         45: level.object_count,
     }
@@ -199,3 +199,9 @@ def create_level_metadata_security_str_hashed(level: Level) -> str:
 def create_pagination_info(total: int, page: int, page_size: int) -> str:
     offset = page * page_size
     return f"{total}:{offset}:{page_size}"
+
+
+def comma_separated_ints(data: str) -> list[int]:
+    """Parses a list of ints in the from `(1,2,3,4)`."""
+
+    return [int(x) for x in data[1:-1].split(",")]

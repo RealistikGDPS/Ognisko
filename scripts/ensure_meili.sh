@@ -28,12 +28,14 @@ curl \
         \"stars\", \
         \"length\", \
         \"two_player\", \
-        \"difficulty\" \
+        \"difficulty\", \
+        \"id\" \
     ], \
     \"sortableAttributes\": [ \
       \"downloads\", \
       \"likes\", \
-      \"feature_order\" \
+      \"feature_order\", \
+      \"upload_ts\" \
     ] \
   }"
 

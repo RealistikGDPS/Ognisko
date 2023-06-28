@@ -10,7 +10,7 @@ from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
-from rgdps.constants.levels import LevelSearchFlags
+from rgdps.constants.levels import LevelSearchFlag
 
 
 @dataclass
@@ -42,7 +42,7 @@ class Level:
     coins_verified: bool
     requested_stars: int
     feature_order: int
-    search_flags: LevelSearchFlags
+    search_flags: LevelSearchFlag
     low_detail_mode: bool
     object_count: int
     copy_password: int
@@ -92,7 +92,7 @@ class Level:
             coins_verified=bool(level_dict["coins_verified"]),
             requested_stars=level_dict["requested_stars"],
             feature_order=level_dict["feature_order"],
-            search_flags=LevelSearchFlags(level_dict["search_flags"]),
+            search_flags=LevelSearchFlag(level_dict["search_flags"]),
             low_detail_mode=bool(level_dict["low_detail_mode"]),
             object_count=level_dict["object_count"],
             copy_password=level_dict["copy_password"],

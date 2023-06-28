@@ -8,6 +8,10 @@ from typing import Optional
 
 from rgdps.models.level import Level
 from rgdps.state import services
+from rgdps.common import data_utils
+from rgdps.constants.levels import LevelLength
+from rgdps.constants.levels import LevelSearchType
+from rgdps.constants.levels import LevelSearchFlag
 
 
 async def from_id(level_id: int) -> Optional[Level]:
@@ -122,15 +126,110 @@ class SearchResults(NamedTuple):
     total: int
 
 
-# Simple search, no filters for testing rn.
-async def search_text(
-    query: str,
+async def search(
     page: int,
     page_size: int,
+    query: Optional[str] = None,
+    search_type: Optional[LevelSearchType] = None,
+    level_lengths: Optional[list[LevelLength]] = None,
+    completed_levels: Optional[list[int]] = None,
+    featured: bool = False,
+    original: bool = False,
+    two_player: bool = False,
+    unrated: bool = False,
+    rated: bool = False,
+    song_id: Optional[int] = None,
+    custom_song_id: Optional[int] = None,
+    followed_list: Optional[list[int]] = None,
 ) -> SearchResults:
+    # Create the filters.
+    filters = []
+    sort = []
+
+    # TODO: Match statement if we ever get to python 3.11?
+    if search_type is LevelSearchType.MOST_DOWNLOADED:
+        sort.append("downloads:desc")
+
+    elif search_type is LevelSearchType.MOST_LIKED:
+        sort.append("likes:desc")
+
+    # TODO: Trending
+    elif search_type is LevelSearchType.RECENT:
+        sort.append("upload_ts:desc")
+
+    elif search_type is LevelSearchType.USER_LEVELS:
+        filters.append(f"user_id = {query}")
+
+    elif search_type is LevelSearchType.FEATURED:
+        filters.append("feature_order > 0")
+        sort.append("feature_order:desc")
+
+    elif search_type is LevelSearchType.MAGIC:
+        filters.append(f"search_flags & {LevelSearchFlag.MAGIC.value}")
+
+    elif search_type is LevelSearchType.AWARDED:
+        filters.append(f"search_flags & {LevelSearchFlag.AWARDED.value}")
+
+    elif search_type is LevelSearchType.FOLLOWED:
+        assert followed_list is not None
+        filters.append(f"user_id IN {followed_list}")
+
+    elif search_type is LevelSearchType.FRIENDS:
+        raise NotImplementedError("Friends not implemented yet.")
+
+    elif search_type is LevelSearchType.EPIC:
+        filters.append(f"search_flags & {LevelSearchFlag.EPIC.value}")
+        sort.append("feature_order:desc")
+
+    elif search_type is LevelSearchType.DAILY:
+        raise NotImplementedError("Daily not implemented yet.")
+
+    elif search_type is LevelSearchType.WEEKLY:
+        raise NotImplementedError("Weekly not implemented yet.")
+
+    
+    # Optional filters.
+    if level_lengths is not None:
+        length_ints = data_utils.enum_int_list(level_lengths)
+        filters.append(f"length IN {length_ints}")
+
+    if featured:
+        filters.append("feature_order > 0")
+
+    if original:
+        filters.append("original_id IS NULL")
+
+    if two_player:
+        filters.append("two_player = 1")
+
+    if unrated:
+        filters.append("stars = 0")
+
+    if rated:
+        filters.append("stars > 0")
+
+    if song_id is not None:
+        filters.append(f"official_song_id = {song_id}")
+
+    if custom_song_id is not None:
+        filters.append(f"custom_song_id = {custom_song_id}")
+
+    if completed_levels is not None:
+        filters.append(f"id NOT IN {completed_levels}")
+
+    
     offset = page * page_size
     index = services.meili.index("levels")
-    results_db = await index.search(query, offset=offset, limit=page_size)
+    results_db = await index.search(
+        query,
+        offset=offset,
+        limit=page_size,
+        filter=filters,
+        sort=sort,
+    )
+
+    if (not results_db.hits) or (not results_db.estimated_total_hits):
+        return SearchResults([], 0)
 
     results = [_from_meili_dict(result) for result in results_db.hits]
     return SearchResults(results, results_db.estimated_total_hits)

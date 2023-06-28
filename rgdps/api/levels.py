@@ -3,12 +3,15 @@ from __future__ import annotations
 from fastapi import Depends
 from fastapi import Form
 
+from typing import Optional
+
 from rgdps import logger
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.responses import GenericResponse
+from rgdps.constants.levels import LevelSearchType
 from rgdps.models.user import User
 from rgdps.usecases import levels
 from rgdps.usecases import songs
@@ -90,9 +93,52 @@ PAGE_SIZE = 10
 async def search_levels(
     query: str = Form("", alias="str"),
     page: int = Form(0, alias="page", ge=0),
+    search_type: LevelSearchType = Form(LevelSearchType.MOST_LIKED, alias="type"),
+    level_lengths: str = Form(..., alias="len"),
+    completed_levels: Optional[str] = Form(None, alias="completedLevels"),
+    featured: bool = Form(...),
+    original: bool = Form(...),
+    two_player: bool = Form(..., alias="twoPlayer"),
+    unrated: bool = Form(False, alias="noStar"),
+    rated: bool = Form(False, alias="star"),
+    song_id: Optional[int] = Form(None, alias="song"),
+    custom_song_id: Optional[int] = Form(None, alias="customSong"),
+    followed_list: Optional[str] = Form(None, alias="followed"),
 ) -> str:
 
-    level_res = await levels.search(query, page, PAGE_SIZE)
+    if level_lengths != "-":
+        level_length_list = [
+            LevelLength(x) for x in gd_obj.comma_separated_ints(level_lengths)
+        ]
+    else:
+        level_length_list = None
+
+    if completed_levels is not None:
+        completed_levels_list = gd_obj.comma_separated_ints(completed_levels)
+    else:
+        completed_levels_list = None
+
+    if followed_list is not None:
+        followed_list_list = gd_obj.comma_separated_ints(followed_list)
+    else:
+        followed_list_list = None
+
+    level_res = await levels.search(
+        page=page,
+        page_size=PAGE_SIZE,
+        query=query,
+        search_type=search_type,
+        level_lengths=level_length_list,
+        completed_levels=completed_levels_list,
+        featured=featured,
+        original=original,
+        two_player=two_player,
+        unrated=unrated,
+        rated=rated,
+        song_id=song_id,
+        custom_song_id=custom_song_id,
+        followed_list=followed_list_list,
+    )
 
     if isinstance(level_res, ServiceError):
         logger.info(f"Failed to search levels with error {level_res!r}.")

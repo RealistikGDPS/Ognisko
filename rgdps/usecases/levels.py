@@ -3,13 +3,15 @@ from __future__ import annotations
 from datetime import datetime
 from typing import NamedTuple
 from typing import Union
+from typing import Optional
 
 from rgdps import repositories
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
-from rgdps.constants.levels import LevelSearchFlags
+from rgdps.constants.levels import LevelSearchFlag
+from rgdps.constants.levels import LevelSearchType
 from rgdps.models.level import Level
 from rgdps.models.song import Song
 from rgdps.models.user import User
@@ -114,7 +116,7 @@ async def create_or_update(
             coins_verified=False,
             requested_stars=requested_stars,
             feature_order=0,
-            search_flags=LevelSearchFlags.NONE,
+            search_flags=LevelSearchFlag.NONE,
             low_detail_mode=low_detail_mode,
             object_count=object_count,
             copy_password=copy_password,
@@ -137,11 +139,37 @@ class SearchResponse(NamedTuple):
 
 
 async def search(
-    query: str,
     page: int,
     page_size: int,
+    query: Optional[str] = None,
+    search_type: Optional[LevelSearchType] = None,
+    level_lengths: Optional[list[LevelLength]] = None,
+    completed_levels: Optional[list[int]] = None,
+    featured: bool = False,
+    original: bool = False,
+    two_player: bool = False,
+    unrated: bool = False,
+    rated: bool = False,
+    song_id: Optional[int] = None,
+    custom_song_id: Optional[int] = None,
+    followed_list: Optional[list[int]] = None,
 ) -> Union[SearchResponse, ServiceError]:
-    levels_db = await repositories.level.search_text(query, page, page_size)
+    levels_db = await repositories.level.search(
+        page=page,
+        page_size=page_size,
+        query=query,
+        search_type=search_type,
+        level_lengths=level_lengths,
+        completed_levels=completed_levels,
+        featured=featured,
+        original=original,
+        two_player=two_player,
+        unrated=unrated,
+        rated=rated,
+        song_id=song_id,
+        custom_song_id=custom_song_id,
+        followed_list=followed_list,
+    )
 
     songs = []
     users = set()
