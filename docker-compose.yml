@@ -45,6 +45,7 @@ services:
       - MEILI_HOST=meilisearch
       - MEILI_PORT=7700
       - MEILI_KEY=masterKey
+      - SERVICE_READINESS_TIMEOUT=30
     volumes:
       - ./data/levels:/data/levels
       - ./data/saves:/data/saves
