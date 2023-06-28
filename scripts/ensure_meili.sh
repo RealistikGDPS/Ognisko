@@ -23,7 +23,9 @@ curl \
         \"user_id\", \
         \"publicity\", \
         \"official_song_id\", \
-        \"search_flags\", \
+        \"epic\", \
+        \"magic\", \
+        \"awarded\", \
         \"feature_order\", \
         \"stars\", \
         \"length\", \

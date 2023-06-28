@@ -8,6 +8,7 @@ from rgdps.models.user import User
 
 LEADERBOARD_SIZE = 100
 
+
 async def get_top_stars() -> Union[list[User], ServiceError]:
     top_user_ids = await repositories.leaderboard.get_top_stars_paginated(
         page=0,

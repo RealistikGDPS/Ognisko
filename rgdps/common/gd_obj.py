@@ -150,7 +150,9 @@ def create_level(level: Level, level_data: str) -> GDSerialisable:
         4: level_data,
         27: hashes.hash_level_password(level.copy_password),
         28: into_str_ts(level.upload_ts),
-        29: into_str_ts(level.upload_ts), # TODO: This is wrong. Meant to be last updated.
+        29: into_str_ts(
+            level.upload_ts,
+        ),  # TODO: This is wrong. Meant to be last updated.
         36: level.render_str,
     }
 

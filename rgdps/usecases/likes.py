@@ -5,8 +5,8 @@ from typing import Union
 from rgdps import repositories
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.likes import LikeType
-from rgdps.models.like import Like
 from rgdps.models.level import Level
+from rgdps.models.like import Like
 from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
 
@@ -29,6 +29,7 @@ async def recalculate_likes(
     like.value = calced_value
     await repositories.like.update_value(like.id, like.value)
     return like
+
 
 async def like_comment(
     user: User,
@@ -56,6 +57,7 @@ async def like_comment(
 
     return comment
 
+
 async def like_level(
     user: User,
     comment_id: int,
@@ -82,7 +84,7 @@ async def like_level(
         user.id,
     ):
         return ServiceError.LIKES_ALREADY_LIKED
-    
+
     level.likes += value
     await repositories.level.update(level)
 

@@ -6,12 +6,12 @@ from typing import Any
 from typing import NamedTuple
 from typing import Optional
 
-from rgdps.models.level import Level
-from rgdps.state import services
 from rgdps.common import data_utils
 from rgdps.constants.levels import LevelLength
-from rgdps.constants.levels import LevelSearchType
 from rgdps.constants.levels import LevelSearchFlag
+from rgdps.constants.levels import LevelSearchType
+from rgdps.models.level import Level
+from rgdps.state import services
 
 
 async def from_id(level_id: int) -> Optional[Level]:
@@ -57,17 +57,26 @@ async def create_sql(level: Level) -> int:
         level.as_dict(include_id=False),
     )
 
+
 # Functions to assist with meili not liking datetime objects.
 def _dt_as_unix_ts(dt: datetime) -> int:
     return int(time.mktime(dt.timetuple()))
 
+
 def _unix_ts_as_dt(unix_ts: int) -> datetime:
     return datetime.fromtimestamp(unix_ts)
+
 
 def _make_meili_dict(level: Level) -> dict[str, Any]:
     level_dict = level.as_dict(include_id=True)
     level_dict["upload_ts"] = _dt_as_unix_ts(level_dict["upload_ts"])
     level_dict["update_ts"] = _dt_as_unix_ts(level_dict["update_ts"])
+
+    # Split up bitwise enums as meili does not support bitwise operations.
+    level_dict["epic"] = bool(level_dict["search_flags"] & LevelSearchFlag.EPIC)
+    level_dict["magic"] = bool(level_dict["search_flags"] & LevelSearchFlag.MAGIC)
+    level_dict["awarded"] = bool(level_dict["search_flags"] & LevelSearchFlag.AWARDED)
+
     return level_dict
 
 
@@ -75,6 +84,24 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> Level:
     # Meili returns unix timestamps, so we need to convert them back to datetime.
     level_dict["upload_ts"] = _unix_ts_as_dt(level_dict["upload_ts"])
     level_dict["update_ts"] = _unix_ts_as_dt(level_dict["update_ts"])
+
+    search_flags = LevelSearchFlag.NONE
+
+    if level_dict["epic"]:
+        search_flags |= LevelSearchFlag.EPIC
+
+    if level_dict["magic"]:
+        search_flags |= LevelSearchFlag.MAGIC
+
+    if level_dict["awarded"]:
+        search_flags |= LevelSearchFlag.AWARDED
+
+    level_dict["search_flags"] = search_flags
+
+    del level_dict["epic"]
+    del level_dict["magic"]
+    del level_dict["awarded"]
+
     return Level.from_mapping(level_dict)
 
 
@@ -115,6 +142,7 @@ async def update_sql(level: Level) -> None:
         "deleted = :deleted WHERE id = :id",
         level.as_dict(include_id=True),
     )
+
 
 async def delete_meili(level_id: int) -> None:
     index = services.meili.index("levels")
@@ -165,10 +193,10 @@ async def search(
         sort.append("feature_order:desc")
 
     elif search_type is LevelSearchType.MAGIC:
-        filters.append(f"search_flags & {LevelSearchFlag.MAGIC.value}")
+        filters.append(f"magic = 1")
 
     elif search_type is LevelSearchType.AWARDED:
-        filters.append(f"search_flags & {LevelSearchFlag.AWARDED.value}")
+        filters.append("awarded = 1")
 
     elif search_type is LevelSearchType.FOLLOWED:
         assert followed_list is not None
@@ -178,7 +206,7 @@ async def search(
         raise NotImplementedError("Friends not implemented yet.")
 
     elif search_type is LevelSearchType.EPIC:
-        filters.append(f"search_flags & {LevelSearchFlag.EPIC.value}")
+        filters.append("epic = 1")
         sort.append("feature_order:desc")
 
     elif search_type is LevelSearchType.DAILY:
@@ -187,7 +215,6 @@ async def search(
     elif search_type is LevelSearchType.WEEKLY:
         raise NotImplementedError("Weekly not implemented yet.")
 
-    
     # Optional filters.
     if level_lengths is not None:
         length_ints = data_utils.enum_int_list(level_lengths)
@@ -217,7 +244,6 @@ async def search(
     if completed_levels is not None:
         filters.append(f"id NOT IN {completed_levels}")
 
-    
     offset = page * page_size
     index = services.meili.index("levels")
     results_db = await index.search(

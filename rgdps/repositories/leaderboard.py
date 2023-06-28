@@ -14,7 +14,7 @@ async def get_star_rank(user_id: int) -> int:
 
     if redis_rank is None:
         return 0
-    
+
     return redis_rank + 1
 
 
@@ -27,7 +27,7 @@ async def set_star_count(user_id: int, stars: int) -> None:
         return
     await services.redis.zadd(
         "rgdps:leaderboards:stars",
-        {str(user_id): stars}, # is str necessary?
+        {str(user_id): stars},  # is str necessary?
     )
 
 

@@ -4,11 +4,11 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
 from . import authentication
+from . import leaderboards
 from . import levels
 from . import misc
 from . import profiles
 from . import save_data
-from . import leaderboards
 from . import user_comments
 from rgdps.config import config
 

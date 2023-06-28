@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import NamedTuple
-from typing import Union
 from typing import Optional
+from typing import Union
 
 from rgdps import repositories
 from rgdps.constants.errors import ServiceError
@@ -59,7 +59,6 @@ async def create_or_update(
     else:
         publicity = LevelPublicity.PUBLIC
 
-
     # Check if we are updating or creating.
     if level_id and (old_level := await repositories.level.from_id(level_id)):
         # Update
@@ -67,7 +66,7 @@ async def create_or_update(
             return ServiceError.LEVELS_NO_UPDATE_PERMISSION
         if old_level.update_locked:
             return ServiceError.LEVELS_UPDATE_LOCKED
-        
+
         # Apply new values to the old level.
         level = old_level
         level.name = name
@@ -180,7 +179,6 @@ async def search(
         if level.custom_song_id:
             songs.append(await repositories.song.from_id(level.custom_song_id))
 
-
     return SearchResponse(
         levels=levels_db.results,
         total=levels_db.total,
@@ -210,6 +208,7 @@ async def get(level_id: int) -> Union[LevelResponse, ServiceError]:
         level=level,
         data=level_data,
     )
+
 
 async def delete(level_id: int, user: User) -> Union[bool, ServiceError]:
     level = await repositories.level.from_id(level_id)

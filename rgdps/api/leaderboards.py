@@ -2,12 +2,12 @@ from __future__ import annotations
 
 from fastapi import Form
 
+from rgdps import logger
 from rgdps.common import gd_obj
-from rgdps.constants.leaderboards import LeaderboardType
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.leaderboards import LeaderboardType
 from rgdps.constants.responses import GenericResponse
 from rgdps.usecases import leaderboards
-from rgdps import logger
 
 
 async def get_leaderboard(

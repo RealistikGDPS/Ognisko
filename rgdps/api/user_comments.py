@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-from fastapi import Form
 from fastapi import Depends
+from fastapi import Form
 
-from rgdps.constants.errors import ServiceError
-from rgdps.constants.responses import GenericResponse
-from rgdps.constants.likes import LikeType
+from rgdps import logger
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
+from rgdps.constants.errors import ServiceError
+from rgdps.constants.likes import LikeType
+from rgdps.constants.responses import GenericResponse
 from rgdps.models.user import User
-from rgdps.usecases import user_comments
 from rgdps.usecases import likes
+from rgdps.usecases import user_comments
 from rgdps.usecases.auth import authenticate_dependency
-from rgdps import logger
 
 PAGE_SIZE = 10
 

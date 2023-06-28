@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+from typing import Optional
+
 from fastapi import Depends
 from fastapi import Form
-
-from typing import Optional
 
 from rgdps import logger
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelLength
-from rgdps.constants.responses import GenericResponse
 from rgdps.constants.levels import LevelSearchType
+from rgdps.constants.responses import GenericResponse
 from rgdps.models.user import User
 from rgdps.usecases import levels
 from rgdps.usecases import songs
