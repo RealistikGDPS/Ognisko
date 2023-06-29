@@ -8,6 +8,7 @@ from typing import Optional
 
 from rgdps.common import data_utils
 from rgdps.constants.levels import LevelLength
+from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
 from rgdps.models.level import Level
@@ -217,7 +218,8 @@ async def search(
 
     # Optional filters.
     if level_lengths is not None:
-        length_ints = data_utils.enum_int_list(level_lengths)
+        # FIXME: Type ignore
+        length_ints = data_utils.enum_int_list(level_lengths)  # type: ignore
         filters.append(f"length IN {length_ints}")
 
     if featured:
@@ -243,6 +245,9 @@ async def search(
 
     if completed_levels is not None:
         filters.append(f"id NOT IN {completed_levels}")
+
+    # TODO: More unlisted logic, such as friends
+    filters.append(f"publicity = {LevelPublicity.PUBLIC.value}")
 
     offset = page * page_size
     index = services.meili.index("levels")
