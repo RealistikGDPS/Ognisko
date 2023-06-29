@@ -235,3 +235,20 @@ async def delete(level_id: int, user: User) -> Union[bool, ServiceError]:
     await repositories.level.update(level)
     await repositories.level.delete_meili(level_id)
     return True
+
+
+async def synchronise_search() -> Union[bool, ServiceError]:
+    """Synchronise the search index with the backing database.
+    Should be rarely used as its demanding on resources.
+    """
+
+    levels = await repositories.level.all_ids()
+
+    for level_id in levels:
+        level = await repositories.level.from_id(level_id)
+        # It got deleted while we were iterating.
+        if (not level) or level.deleted:
+            continue
+        await repositories.level.update_meili(level)
+
+    return True

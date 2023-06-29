@@ -264,3 +264,12 @@ async def search(
 
     results = [_from_meili_dict(result) for result in results_db.hits]
     return SearchResults(results, results_db.estimated_total_hits)
+
+
+async def all_ids() -> list[int]:
+    return [
+        x["id"]
+        for x in await services.database.fetch_all(
+            "SELECT id FROM levels WHERE deleted = false",
+        )
+    ]
