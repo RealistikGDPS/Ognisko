@@ -153,6 +153,14 @@ async def search(
     custom_song_id: Optional[int] = None,
     followed_list: Optional[list[int]] = None,
 ) -> Union[SearchResponse, ServiceError]:
+    # Allow for a level to be looked up by ID while
+    # allowing level names consisting of numbers.
+    lookup_level = None
+    if query and query.isnumeric() and page == 0:
+        lookup_level = await repositories.level.from_id(int(query))
+        if lookup_level:
+            page_size -= 1
+
     levels_db = await repositories.level.search(
         page=page,
         page_size=page_size,
@@ -179,9 +187,13 @@ async def search(
         if level.custom_song_id:
             songs.append(await repositories.song.from_id(level.custom_song_id))
 
+    if lookup_level:
+        levels_db.results.insert(0, lookup_level)
+        users.add(await repositories.user.from_id(lookup_level.user_id))
+
     return SearchResponse(
         levels=levels_db.results,
-        total=levels_db.total,
+        total=levels_db.total + (1 if lookup_level else 0),
         songs=songs,
         users=list(users),
     )
