@@ -75,7 +75,7 @@ async def update(user: User) -> None:
         "icon = :icon, ship = :ship, ball = :ball, ufo = :ufo, wave = :wave, "
         "robot = :robot, spider = :spider, explosion = :explosion, glow = :glow, "
         "creator_points = :creator_points, coins = :coins, user_coins = :user_coins, "
-        "diamonds = :diamonds WHERE id = :id",
+        "diamonds = :diamonds, privileges = :privileges WHERE id = :id",
         user.as_dict(include_id=True),
     )
 

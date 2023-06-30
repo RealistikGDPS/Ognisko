@@ -16,9 +16,30 @@ from rgdps.common import hashes
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.privacy import PrivacySetting
-from rgdps.constants.responses import GenericResponse
 from rgdps.constants.responses import RegisterResponse
+from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
+
+
+DEFAULT_PRIVILEGES = (
+    UserPrivileges.USER_AUTHENTICATE
+    | UserPrivileges.USER_PROFILE_PUBLIC
+    | UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC
+    | UserPrivileges.USER_CP_LEADERBOARD_PUBLIC
+    | UserPrivileges.USER_CREATE_USER_COMMENTS
+    | UserPrivileges.USER_CHANGE_CREDENTIALS_OWN
+    | UserPrivileges.LEVEL_UPLOAD
+    | UserPrivileges.LEVEL_UPDATE
+    | UserPrivileges.LEVEL_DELETE_OWN
+    | UserPrivileges.COMMENTS_POST
+    | UserPrivileges.COMMENTS_DELETE_OWN
+    | UserPrivileges.COMMENTS_TRIGGER_COMMANDS
+    | UserPrivileges.MESSAGES_SEND
+    | UserPrivileges.MESSAGES_DELETE_OWN
+    | UserPrivileges.FRIEND_REQUESTS_SEND
+    | UserPrivileges.FRIEND_REQUESTS_ACCEPT
+    | UserPrivileges.FRIEND_REQUESTS_DELETE_OWN
+)
 
 
 async def register(
@@ -43,6 +64,7 @@ async def register(
         username=name,
         email=email,
         password=hashed_password,
+        privileges=DEFAULT_PRIVILEGES,
         stars=0,
         demons=0,
         creator_points=0,
@@ -156,6 +178,7 @@ async def update_stats(
         username=user.username,
         email=user.email,
         password=user.password,
+        privileges=user.privileges,
         message_privacy=message_privacy or user.message_privacy,
         friend_privacy=friend_privacy or user.friend_privacy,
         comment_privacy=comment_privacy or user.comment_privacy,
@@ -183,7 +206,25 @@ async def update_stats(
         creator_points=user.creator_points,
     )
 
-    await repositories.leaderboard.set_star_count(user.id, updated_user.stars)
+    if user.privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC:
+        await repositories.leaderboard.set_star_count(user.id, updated_user.stars)
 
     await repositories.user.update(updated_user)  # TODO: Partial update
+    return updated_user
+
+
+async def update_privileges(
+    user: User,
+    privileges: UserPrivileges,
+) -> Union[User, ServiceError]:
+    # Check if we should remove them from the leaderboard
+    if not privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC:
+        await repositories.leaderboard.remove_star_count(user.id)
+
+    if not privileges & UserPrivileges.USER_CP_LEADERBOARD_PUBLIC:
+        # TODO: Add CP leaderboard
+        ...
+
+    updated_user = user.copy()
+    await repositories.user.update(updated_user)
     return updated_user

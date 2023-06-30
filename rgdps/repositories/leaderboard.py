@@ -40,3 +40,10 @@ async def get_top_stars_paginated(
         page * page_size,
         (page + 1) * page_size,
     )
+
+
+async def remove_star_count(user_id: int) -> None:
+    await services.redis.zrem(
+        "rgdps:leaderboards:stars",
+        user_id,
+    )

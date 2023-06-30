@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Awaitable
 from typing import Callable
+from typing import Optional
 
 from fastapi import Form
 from fastapi.exceptions import HTTPException
@@ -9,6 +10,7 @@ from fastapi.exceptions import HTTPException
 from rgdps import logger
 from rgdps import repositories
 from rgdps.constants.responses import GenericResponse
+from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.repositories import auth
 
@@ -17,6 +19,7 @@ from rgdps.repositories import auth
 def authenticate_dependency(
     account_id_alias: str = "accountID",
     password_alias: str = "gjp",
+    required_privileges: Optional[UserPrivileges] = None,
 ) -> Callable[[int, str], Awaitable[User]]:
     async def wrapper(
         account_id: int = Form(..., alias=account_id_alias),
@@ -30,6 +33,12 @@ def authenticate_dependency(
                 detail=str(GenericResponse.FAIL),
             )
 
+        if not user.privileges & UserPrivileges.USER_AUTHENTICATE:
+            raise HTTPException(
+                status_code=200,
+                detail=str(GenericResponse.FAIL),
+            )
+
         if not await auth.compare_bcrypt_gjp(
             user.password,
             gjp,
@@ -38,6 +47,13 @@ def authenticate_dependency(
                 status_code=200,
                 detail=str(GenericResponse.FAIL),
             )
+
+        if required_privileges is not None:
+            if not (user.privileges & required_privileges) == required_privileges:
+                raise HTTPException(
+                    status_code=200,
+                    detail=str(GenericResponse.FAIL),
+                )
 
         return user
 
