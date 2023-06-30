@@ -156,7 +156,12 @@ async def search(
     # Allow for a level to be looked up by ID while
     # allowing level names consisting of numbers.
     lookup_level = None
-    if query and query.isnumeric() and page == 0:
+    if (
+        search_type is LevelSearchType.SEARCH_QUERY
+        and query
+        and query.isnumeric()
+        and page == 0
+    ):
         lookup_level = await repositories.level.from_id(int(query))
         if lookup_level:
             page_size -= 1
@@ -188,6 +193,9 @@ async def search(
             songs.append(await repositories.song.from_id(level.custom_song_id))
 
     if lookup_level:
+        # Move to the top.
+        if lookup_level in levels_db.results:
+            levels_db.results.remove(lookup_level)
         levels_db.results.insert(0, lookup_level)
         users.add(await repositories.user.from_id(lookup_level.user_id))
 
