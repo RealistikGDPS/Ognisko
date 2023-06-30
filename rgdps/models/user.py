@@ -7,6 +7,7 @@ from typing import Mapping
 from typing import Optional
 
 from rgdps.constants.privacy import PrivacySetting
+from rgdps.constants.users import UserPrivileges
 
 
 @dataclass
@@ -15,6 +16,7 @@ class User:
     username: str
     email: str
     password: str
+    privileges: UserPrivileges
 
     message_privacy: PrivacySetting
     friend_privacy: PrivacySetting
@@ -53,6 +55,8 @@ class User:
             username=user_dict["username"],
             email=user_dict["email"],
             password=user_dict["password"],
+            # TODO: look into avoiding using bytes in mappings
+            privileges=UserPrivileges.from_bytes(user_dict["privileges"]),
             message_privacy=PrivacySetting(user_dict["message_privacy"]),
             friend_privacy=PrivacySetting(user_dict["friend_privacy"]),
             comment_privacy=PrivacySetting(user_dict["comment_privacy"]),
@@ -85,6 +89,7 @@ class User:
             "username": self.username,
             "email": self.email,
             "password": self.password,
+            "privileges": self.privileges.as_bytes(),
             "message_privacy": self.message_privacy.value,
             "friend_privacy": self.friend_privacy.value,
             "comment_privacy": self.comment_privacy.value,

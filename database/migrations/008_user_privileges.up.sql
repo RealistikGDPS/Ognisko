@@ -1,0 +1,1 @@
+ALTER TABLE `users` ADD COLUMN `privileges` BINARY(16) NOT NULL DEFAULT 0 AFTER `password`;

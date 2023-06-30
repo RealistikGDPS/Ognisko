@@ -11,7 +11,7 @@ from rgdps.state import services
 
 async def from_db(user_id: int) -> Optional[User]:
     user_db = await services.database.fetch_one(
-        "SELECT id, username, email, password, message_privacy, friend_privacy, "
+        "SELECT id, username, email, password, privileges, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
@@ -37,12 +37,12 @@ async def create(user: User) -> int:
     """
 
     user_id = await services.database.execute(
-        "INSERT INTO users (username, email, password, message_privacy, "
+        "INSERT INTO users (username, email, password, privileges, message_privacy, "
         "friend_privacy, comment_privacy, twitter_name, youtube_name, twitch_name, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, "
         "ship, ball, ufo, wave, robot, spider, explosion, glow, creator_points, "
-        "coins, user_coins, diamonds) VALUES (:username, :email, :password, :message_privacy, "
-        ":friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
+        "coins, user_coins, diamonds) VALUES (:username, :email, :password, :privileges, "
+        ":message_privacy, :friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
         ":twitch_name, :stars, :demons, :primary_colour, "
         ":secondary_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
         ":spider, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds)",
