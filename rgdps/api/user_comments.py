@@ -9,6 +9,7 @@ from rgdps.common.validators import Base64String
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.likes import LikeType
 from rgdps.constants.responses import GenericResponse
+from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.usecases import likes
 from rgdps.usecases import user_comments
@@ -43,7 +44,11 @@ async def view_user_comments(
 
 
 async def post_user_comment(
-    user: User = Depends(authenticate_dependency()),
+    user: User = Depends(
+        authenticate_dependency(
+            required_privileges=UserPrivileges.USER_CREATE_USER_COMMENTS,
+        ),
+    ),
     content: Base64String = Form(..., alias="comment"),
 ) -> str:
     result = await user_comments.create(user, content)
@@ -60,7 +65,9 @@ async def post_user_comment(
 
 # TODO: MOVE
 async def like_target(
-    user: User = Depends(authenticate_dependency()),
+    user: User = Depends(
+        authenticate_dependency(required_privileges=UserPrivileges.COMMENTS_LIKE),
+    ),
     target_type: LikeType = Form(..., alias="type"),
     target_id: int = Form(..., alias="itemID"),
     is_positive: bool = Form(..., alias="like"),

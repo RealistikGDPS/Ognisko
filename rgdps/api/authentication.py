@@ -6,6 +6,7 @@ from pydantic import EmailStr
 from rgdps import logger
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import GenericResponse
+from rgdps.constants.responses import LoginResponse
 from rgdps.constants.responses import RegisterResponse
 from rgdps.usecases import users
 
@@ -39,7 +40,11 @@ async def login_post(
     user = await users.authenticate(username, password)
     if isinstance(user, ServiceError):
         logger.info(f"Failed to login {username} due to {user!r}.")
-        return str(GenericResponse.FAIL)
+
+        if user is ServiceError.AUTH_NO_PRIVILEGE:
+            return str(LoginResponse.ACCOUNT_DISABLED)
+
+        return str(LoginResponse.FAIL)
 
     logger.info(f"{user} has logged in!")
 

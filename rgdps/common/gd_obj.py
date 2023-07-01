@@ -11,6 +11,7 @@ from rgdps.common.time import into_str_ts
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelSearchFlag
+from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.models.song import Song
 from rgdps.models.user import User
@@ -51,6 +52,13 @@ def create_profile(
     friend_status: FriendStatus = FriendStatus.NONE,
     rank: int = 0,
 ) -> GDSerialisable:
+
+    badge_level = 0
+    if user.privileges & UserPrivileges.USER_DISPLAY_ELDER_BADGE:
+        badge_level = 2
+    elif user.privileges & UserPrivileges.USER_DISPLAY_MOD_BADGE:
+        badge_level = 1
+
     return {
         1: user.username,
         2: user.id,
@@ -85,7 +93,7 @@ def create_profile(
         45: user.twitch_name or "",
         46: user.diamonds,
         48: user.explosion,
-        49: 0,  # TODO: Badge level with privileges.
+        49: badge_level,
         50: user.comment_privacy.value,
     }
 

@@ -39,6 +39,7 @@ DEFAULT_PRIVILEGES = (
     | UserPrivileges.FRIEND_REQUESTS_SEND
     | UserPrivileges.FRIEND_REQUESTS_ACCEPT
     | UserPrivileges.FRIEND_REQUESTS_DELETE_OWN
+    | UserPrivileges.COMMENTS_LIKE
 )
 
 
@@ -109,7 +110,8 @@ async def authenticate(
     if not await hashes.compare_bcrypt(user.password, password):
         return ServiceError.AUTH_PASSWORD_MISMATCH
 
-    # TODO: Privilege check
+    if not user.privileges & UserPrivileges.USER_AUTHENTICATE:
+        return ServiceError.AUTH_NO_PRIVILEGE
 
     return user
 
@@ -125,14 +127,21 @@ async def get_user_perspective(
     perspective: User,
 ) -> Union[UserPerspective, ServiceError]:
     # TODO: Perform Blocked Check
-    # TODO: Perform Privilege Check
     # TODO: Perform Friend Check
     # TODO: Friend Request Check
+    # TODO: Messages Check
 
     user = await repositories.user.from_id(user_id)
     if user is None:
         # TODO: Use something more concise.
         return ServiceError.PROFILE_USER_NOT_FOUND
+
+    if (
+        (not user.privileges & UserPrivileges.USER_PROFILE_PUBLIC)
+        and user.id != perspective.id
+        and (not perspective.privileges & UserPrivileges.USER_VIEW_PRIVATE_PROFILE)
+    ):
+        return ServiceError.PROFILE_USER_NOT_PUBLIC
 
     rank = await repositories.leaderboard.get_star_rank(user_id)
 

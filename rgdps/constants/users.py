@@ -50,6 +50,9 @@ class UserPrivileges(IntFlag):
     SERVER_RESYNC_SEARCH = 1 << 35
     SERVER_STOP = 1 << 36
 
+    USER_VIEW_PRIVATE_PROFILE = 1 << 37
+    COMMENTS_LIKE = 1 << 38
+
     def as_bytes(self) -> bytes:
         return self.to_bytes(16, "little", signed=False)
 

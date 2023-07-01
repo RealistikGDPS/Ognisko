@@ -12,6 +12,7 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelSearchType
 from rgdps.constants.responses import GenericResponse
+from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.usecases import levels
 from rgdps.usecases import songs
