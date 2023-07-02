@@ -13,6 +13,7 @@ from fastapi import HTTPException
 
 from rgdps import repositories
 from rgdps.common import hashes
+from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.privacy import PrivacySetting
@@ -44,6 +45,7 @@ DEFAULT_PRIVILEGES = (
 
 
 async def register(
+    ctx: Context,
     name: str,
     password: str,
     email: str,
@@ -53,9 +55,9 @@ async def register(
     elif not (6 <= len(password) <= 20):
         return RegisterResponse.PASSWORD_LENGTH_INVALID
 
-    if await repositories.user.check_email_exists(email):
+    if await repositories.user.check_email_exists(ctx, email):
         return RegisterResponse.EMAIL_EXISTS
-    elif await repositories.user.check_username_exists(name):
+    elif await repositories.user.check_username_exists(ctx, name):
         return RegisterResponse.USERNAME_EXISTS
 
     hashed_password = await hashes.hash_bcypt_async(password)
@@ -93,16 +95,17 @@ async def register(
         diamonds=0,
     )
 
-    user_id = await repositories.user.create(user)
+    user_id = await repositories.user.create(ctx, user)
     user.id = user_id
     return user
 
 
 async def authenticate(
+    ctx: Context,
     username: str,
     password: str,
 ) -> Union[User, ServiceError]:
-    user = await repositories.user.from_name(username)
+    user = await repositories.user.from_name(ctx, username)
 
     if user is None:
         return ServiceError.AUTH_NOT_FOUND
@@ -123,6 +126,7 @@ class UserPerspective(NamedTuple):
 
 
 async def get_user_perspective(
+    ctx: Context,
     user_id: int,
     perspective: User,
 ) -> Union[UserPerspective, ServiceError]:
@@ -131,7 +135,7 @@ async def get_user_perspective(
     # TODO: Friend Request Check
     # TODO: Messages Check
 
-    user = await repositories.user.from_id(user_id)
+    user = await repositories.user.from_id(ctx, user_id)
     if user is None:
         # TODO: Use something more concise.
         return ServiceError.PROFILE_USER_NOT_FOUND
@@ -143,7 +147,7 @@ async def get_user_perspective(
     ):
         return ServiceError.PROFILE_USER_NOT_PUBLIC
 
-    rank = await repositories.leaderboard.get_star_rank(user_id)
+    rank = await repositories.leaderboard.get_star_rank(ctx, user_id)
 
     return UserPerspective(
         user=user,
@@ -153,6 +157,7 @@ async def get_user_perspective(
 
 
 async def update_stats(
+    ctx: Context,
     user: User,
     stars: Optional[int] = None,
     demons: Optional[int] = None,
@@ -180,8 +185,6 @@ async def update_stats(
 ) -> Union[User, ServiceError]:
     # TODO: Validation
     # TODO: Anticheat checks on the user's gains
-    # TODO: Perform Privilege Check
-    # TODO: Rank calculations
     updated_user = User(
         id=user.id,
         username=user.username,
@@ -216,24 +219,25 @@ async def update_stats(
     )
 
     if user.privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC:
-        await repositories.leaderboard.set_star_count(user.id, updated_user.stars)
+        await repositories.leaderboard.set_star_count(ctx, user.id, updated_user.stars)
 
-    await repositories.user.update(updated_user)  # TODO: Partial update
+    await repositories.user.update(ctx, updated_user)  # TODO: Partial update
     return updated_user
 
 
 async def update_privileges(
+    ctx: Context,
     user: User,
     privileges: UserPrivileges,
 ) -> Union[User, ServiceError]:
     # Check if we should remove them from the leaderboard
     if not privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC:
-        await repositories.leaderboard.remove_star_count(user.id)
+        await repositories.leaderboard.remove_star_count(ctx, user.id)
 
     if not privileges & UserPrivileges.USER_CP_LEADERBOARD_PUBLIC:
         # TODO: Add CP leaderboard
         ...
 
     updated_user = user.copy()
-    await repositories.user.update(updated_user)
+    await repositories.user.update(ctx, updated_user)
     return updated_user

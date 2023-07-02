@@ -4,13 +4,17 @@ import urllib.parse
 from typing import Optional
 
 from rgdps.common import gd_obj
+from rgdps.common.context import Context
 from rgdps.constants.songs import SongSource
 from rgdps.models.song import Song
-from rgdps.state import services
 
 
-async def from_db(song_id: int, allow_blocked: bool = False) -> Optional[Song]:
-    song_db = await services.database.fetch_one(
+async def from_db(
+    ctx: Context,
+    song_id: int,
+    allow_blocked: bool = False,
+) -> Optional[Song]:
+    song_db = await ctx.mysql.fetch_one(
         "SELECT id, name, author_id, author, author_youtube, size, "
         "download_url, source, blocked FROM songs WHERE id = :song_id"
         + " AND blocked = 0"
@@ -27,8 +31,8 @@ async def from_db(song_id: int, allow_blocked: bool = False) -> Optional[Song]:
     return Song.from_mapping(song_db)
 
 
-async def create(song: Song) -> int:
-    return await services.database.execute(
+async def create(ctx: Context, song: Song) -> int:
+    return await ctx.mysql.execute(
         "INSERT INTO songs (name, author_id, author, author_youtube, size, "
         "download_url, source, blocked, id) VALUES "
         "(:name, :author_id, :author, :author_youtube, :size, "
@@ -37,9 +41,9 @@ async def create(song: Song) -> int:
     )
 
 
-async def from_boomlings(song_id: int) -> Optional[Song]:
+async def from_boomlings(ctx: Context, song_id: int) -> Optional[Song]:
     # May raise an exception in case of network issue.
-    song_api = await services.http.post(
+    song_api = await ctx.http.post(
         "http://www.boomlings.com/database/getGJSongInfo.php",
         data={
             "secret": "Wmfd2893gb7",
@@ -75,15 +79,19 @@ async def from_boomlings(song_id: int) -> Optional[Song]:
     )
 
 
-async def from_id(song_id: int, allow_blocked: bool = False) -> Optional[Song]:
+async def from_id(
+    ctx: Context,
+    song_id: int,
+    allow_blocked: bool = False,
+) -> Optional[Song]:
     # TODO: Implement song LRU Caching
-    song_db = await from_db(song_id, allow_blocked)
+    song_db = await from_db(ctx, song_id, allow_blocked)
     if song_db is not None:
         return song_db
 
-    song_boomlings = await from_boomlings(song_id)
+    song_boomlings = await from_boomlings(ctx, song_id)
     if song_boomlings is not None:
-        await create(song_boomlings)
+        await create(ctx, song_boomlings)
         return song_boomlings
 
     return None

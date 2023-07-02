@@ -7,7 +7,6 @@ import hashlib
 import bcrypt
 import xor_cipher
 
-from rgdps import state
 from rgdps.constants.xor import XorKeys
 
 
@@ -21,21 +20,6 @@ def hash_bcypt(plain: str) -> str:
 
 async def compare_bcrypt(hashed: str, plain: str) -> bool:
     return await asyncio.to_thread(_compare_bcrypt, hashed, plain)
-
-
-"""
-async def compare_bcrypt(hashed: str, plain: str) -> bool:
-    # TODO: Move cache logic
-    pw_cache = await state.repositories.password_cache.get(hashed)
-    if pw_cache is not None:
-        return pw_cache == plain
-
-    result = await _compare_bcrypt_async(hashed, plain)
-    if result:
-        await state.repositories.password_cache.set(hashed, plain)
-
-    return result
-"""
 
 
 async def hash_bcypt_async(plain: str) -> str:

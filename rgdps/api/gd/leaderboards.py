@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from fastapi import Depends
 from fastapi import Form
 
 from rgdps import logger
+from rgdps.api.context import HTTPContext
 from rgdps.common import gd_obj
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.leaderboards import LeaderboardType
@@ -11,12 +13,12 @@ from rgdps.usecases import leaderboards
 
 
 async def get_leaderboard(
-    # user: User = Depends(authenticate_dependency),
+    ctx: HTTPContext = Depends(),
     leaderboard_type: LeaderboardType = Form(..., alias="type"),
 ) -> str:
 
     if leaderboard_type == LeaderboardType.STAR:
-        leaderboard = await leaderboards.get_top_stars()
+        leaderboard = await leaderboards.get_top_stars(ctx)
     else:
         raise NotImplementedError
 

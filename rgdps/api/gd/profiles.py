@@ -4,19 +4,21 @@ from fastapi import Depends
 from fastapi import Form
 
 from rgdps import logger
+from rgdps.api.context import HTTPContext
+from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import GenericResponse
 from rgdps.models.user import User
 from rgdps.usecases import users
-from rgdps.usecases.auth import authenticate_dependency
 
 
 async def view_user_info(
+    ctx: HTTPContext = Depends(),
     target_id: int = Form(..., alias="targetAccountID"),
     user: User = Depends(authenticate_dependency()),
 ) -> str:
-    target = await users.get_user_perspective(target_id, user)
+    target = await users.get_user_perspective(ctx, target_id, user)
 
     if isinstance(target, ServiceError):
         logger.info(
@@ -33,6 +35,7 @@ async def view_user_info(
 
 
 async def update_user_info(
+    ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     stars: int = Form(...),
     demons: int = Form(...),
@@ -54,6 +57,7 @@ async def update_user_info(
 ) -> str:
 
     res = await users.update_stats(
+        ctx,
         user,
         stars=stars,
         demons=demons,
@@ -84,12 +88,14 @@ async def update_user_info(
 
 
 async def update_settings(
+    ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     youtube_name: str = Form(..., alias="yt"),
     twitter_name: str = Form(..., alias="twitter"),
     twitch_name: str = Form(..., alias="twitch"),
 ) -> str:
     result = await users.update_stats(
+        ctx,
         user,
         youtube_name=youtube_name,
         twitter_name=twitter_name,

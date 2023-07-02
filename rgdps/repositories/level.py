@@ -7,17 +7,16 @@ from typing import NamedTuple
 from typing import Optional
 
 from rgdps.common import data_utils
+from rgdps.common.context import Context
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
 from rgdps.models.level import Level
-from rgdps.state import services
 
 
-async def from_id(level_id: int) -> Optional[Level]:
-    # TODO: Replace with individual columns.
-    level_db = await services.database.fetch_one(
+async def from_id(ctx: Context, level_id: int) -> Optional[Level]:
+    level_db = await ctx.mysql.fetch_one(
         "SELECT id, name, user_id, description, custom_song_id, official_song_id, "
         "version, length, two_player, publicity, render_str, game_version, "
         "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
@@ -35,14 +34,14 @@ async def from_id(level_id: int) -> Optional[Level]:
     return Level.from_mapping(level_db)
 
 
-async def create(level: Level) -> int:
-    level_id = await create_sql(level)
-    await create_meili(level, level_id)
+async def create(ctx: Context, level: Level) -> int:
+    level_id = await create_sql(ctx, level)
+    await create_meili(ctx, level, level_id)
     return level_id
 
 
-async def create_sql(level: Level) -> int:
-    return await services.database.execute(
+async def create_sql(ctx: Context, level: Level) -> int:
+    return await ctx.mysql.execute(
         "INSERT INTO levels (name, user_id, description, custom_song_id, "
         "official_song_id, version, length, two_player, publicity, render_str, "
         "game_version, binary_version, upload_ts, update_ts, original_id, downloads, likes, "
@@ -106,29 +105,29 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> Level:
     return Level.from_mapping(level_dict)
 
 
-async def create_meili(level: Level, level_id: int) -> None:
+async def create_meili(ctx: Context, level: Level, level_id: int) -> None:
     # This is a bit hacky as we do not have the level ID in the level object yet.
     level_dict = _make_meili_dict(level)
     level_dict["id"] = level_id
 
-    index = services.meili.index("levels")
+    index = ctx.meili.index("levels")
     await index.add_documents([level_dict])
 
 
-async def update(level: Level) -> None:
+async def update(ctx: Context, level: Level) -> None:
     # In case sql fails, we do not want to update meili.
-    await update_sql(level)
-    await update_meili(level)
+    await update_sql(ctx, level)
+    await update_meili(ctx, level)
 
 
-async def update_meili(level: Level) -> None:
-    index = services.meili.index("levels")
+async def update_meili(ctx: Context, level: Level) -> None:
+    index = ctx.meili.index("levels")
     # Fun fact, this is EXACTLY the same as `add_documents`.
     await index.update_documents([_make_meili_dict(level)])
 
 
-async def update_sql(level: Level) -> None:
-    await services.database.execute(
+async def update_sql(ctx: Context, level: Level) -> None:
+    await ctx.mysql.execute(
         "UPDATE levels SET name = :name, user_id = :user_id, description = :description, "
         "custom_song_id = :custom_song_id, official_song_id = :official_song_id, "
         "version = :version, length = :length, two_player = :two_player, "
@@ -145,8 +144,8 @@ async def update_sql(level: Level) -> None:
     )
 
 
-async def delete_meili(level_id: int) -> None:
-    index = services.meili.index("levels")
+async def delete_meili(ctx: Context, level_id: int) -> None:
+    index = ctx.meili.index("levels")
     await index.delete_documents([str(level_id)])
 
 
@@ -156,6 +155,7 @@ class SearchResults(NamedTuple):
 
 
 async def search(
+    ctx: Context,
     page: int,
     page_size: int,
     query: Optional[str] = None,
@@ -250,7 +250,7 @@ async def search(
     filters.append(f"publicity = {LevelPublicity.PUBLIC.value}")
 
     offset = page * page_size
-    index = services.meili.index("levels")
+    index = ctx.meili.index("levels")
     results_db = await index.search(
         query,
         offset=offset,
@@ -266,10 +266,10 @@ async def search(
     return SearchResults(results, results_db.estimated_total_hits)
 
 
-async def all_ids() -> list[int]:
+async def all_ids(ctx: Context) -> list[int]:
     return [
         x["id"]
-        for x in await services.database.fetch_all(
+        for x in await ctx.mysql.fetch_all(
             "SELECT id FROM levels WHERE deleted = false",
         )
     ]

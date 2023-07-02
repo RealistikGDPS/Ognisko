@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import Optional
 
+from rgdps.common.context import Context
 from rgdps.constants.likes import LikeType
 from rgdps.models.like import Like
-from rgdps.state import services
 
 
-async def from_id(id: int) -> Optional[Like]:
-    like_db = await services.database.fetch_one(
+async def from_id(ctx: Context, id: int) -> Optional[Like]:
+    like_db = await ctx.mysql.fetch_one(
         "SELECT target_type, target_id, user_id, value FROM user_likes WHERE id = :id",
         {
             "id": id,
@@ -21,8 +21,8 @@ async def from_id(id: int) -> Optional[Like]:
     return Like.from_mapping(like_db)
 
 
-async def create(like: Like) -> int:
-    return await services.database.execute(
+async def create(ctx: Context, like: Like) -> int:
+    return await ctx.mysql.execute(
         "INSERT INTO user_likes (target_type, target_id, user_id, value) VALUES "
         "(:target_type, :target_id, :user_id, :value)",
         like.as_dict(include_id=False),
@@ -30,12 +30,13 @@ async def create(like: Like) -> int:
 
 
 async def exists_by_target_and_user(
+    ctx: Context,
     target_type: LikeType,
     target_id: int,
     user_id: int,
 ) -> bool:
     return (
-        await services.database.fetch_one(
+        await ctx.mysql.fetch_one(
             "SELECT id FROM user_likes WHERE target_type = :target_type AND target_id = :target_id AND user_id = :user_id",
             {
                 "target_type": target_type.value,
@@ -48,10 +49,11 @@ async def exists_by_target_and_user(
 
 
 async def sum_by_target(
+    ctx: Context,
     target_type: LikeType,
     target_id: int,
 ) -> int:
-    like_db = await services.database.fetch_one(
+    like_db = await ctx.mysql.fetch_one(
         "SELECT SUM(value) AS sum FROM user_likes WHERE target_type = :target_type "
         "AND target_id = :target_id",
         {
@@ -67,10 +69,11 @@ async def sum_by_target(
 
 
 async def update_value(
+    ctx: Context,
     like_id: int,
     value: int,
 ) -> None:
-    await services.database.execute(
+    await ctx.mysql.execute(
         "UPDATE likes SET value = :value WHERE id = :id",
         {
             "id": like_id,

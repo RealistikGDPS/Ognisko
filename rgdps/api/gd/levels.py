@@ -6,24 +6,25 @@ from fastapi import Depends
 from fastapi import Form
 
 from rgdps import logger
+from rgdps.api.context import HTTPContext
+from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelSearchType
 from rgdps.constants.responses import GenericResponse
-from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.usecases import levels
 from rgdps.usecases import songs
-from rgdps.usecases.auth import authenticate_dependency
 
 
 async def get_song_info(
+    ctx: HTTPContext = Depends(),
     song_id: int = Form(..., alias="songID"),
 ) -> str:
 
-    song = await songs.get(song_id)
+    song = await songs.get(ctx, song_id)
     if isinstance(song, ServiceError):
         logger.info(f"Failed to fetch song with error {song!r}.")
         return str(GenericResponse.FAIL)
@@ -33,6 +34,7 @@ async def get_song_info(
 
 
 async def upload_level(
+    ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     level_id: int = Form(..., alias="levelID"),
     name: str = Form(..., alias="levelName", max_length=32),  # TODO: Verify
@@ -57,6 +59,7 @@ async def upload_level(
 ) -> str:
 
     level = await levels.create_or_update(
+        ctx,
         user=user,
         level_id=level_id,
         name=name,
@@ -92,6 +95,7 @@ PAGE_SIZE = 10
 
 
 async def search_levels(
+    ctx: HTTPContext = Depends(),
     query: str = Form("", alias="str"),
     page: int = Form(0, alias="page", ge=0),
     search_type: LevelSearchType = Form(LevelSearchType.MOST_LIKED, alias="type"),
@@ -125,6 +129,7 @@ async def search_levels(
         followed_list_list = None
 
     level_res = await levels.search(
+        ctx,
         page=page,
         page_size=PAGE_SIZE,
         query=query,
@@ -169,10 +174,11 @@ async def search_levels(
 
 
 async def get_level(
+    ctx: HTTPContext = Depends(),
     level_id: int = Form(..., alias="levelID"),
 ) -> str:
 
-    level_res = await levels.get(level_id)
+    level_res = await levels.get(ctx, level_id)
 
     if isinstance(level_res, ServiceError):
         logger.info(f"Failed to fetch level with error {level_res!r}.")

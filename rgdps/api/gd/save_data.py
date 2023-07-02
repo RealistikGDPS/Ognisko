@@ -6,18 +6,20 @@ from fastapi import Request
 from fastapi.responses import FileResponse
 
 from rgdps import logger
+from rgdps.api.context import HTTPContext
+from rgdps.api.dependencies import password_authenticate_dependency
 from rgdps.config import config
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import GenericResponse
 from rgdps.models.user import User
 from rgdps.usecases import save_data
-from rgdps.usecases.auth import password_authenticate_dependency
 
 
 async def load_save_data(
+    ctx: HTTPContext = Depends(),
     user: User = Depends(password_authenticate_dependency()),
 ):
-    data_path = save_data.get_as_path(user)
+    data_path = save_data.get_as_path(ctx, user.id)
 
     if isinstance(data_path, ServiceError):
         logger.info(f"Failed to fetch save data with error {data_path!r}.")
@@ -27,14 +29,20 @@ async def load_save_data(
     return FileResponse(data_path)  # FIXME: The gd client doesnt like this.
 
 
-async def save_user_save_data(
-    req: Request,
+async def upload_save_data(
+    ctx: HTTPContext = Depends(),
     user: User = Depends(password_authenticate_dependency()),
     data: str = Form(..., alias="saveData"),  # Pain.
     game_version: int = Form(..., alias="gameVersion"),
     binary_version: int = Form(..., alias="binaryVersion"),
 ) -> str:
-    res = save_data.save(user, data, game_version, binary_version)
+    res = save_data.save(
+        ctx,
+        user.id,
+        data,
+        game_version,
+        binary_version,
+    )
 
     if isinstance(res, ServiceError):
         logger.info(f"Failed to write save data with error {res!r}.")

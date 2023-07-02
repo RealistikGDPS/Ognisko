@@ -8,5 +8,4 @@ from . import init_api
 from . import models
 from . import repositories
 from . import services
-from . import state
 from . import usecases

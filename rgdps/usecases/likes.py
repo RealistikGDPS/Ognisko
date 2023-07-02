@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Union
 
 from rgdps import repositories
+from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.likes import LikeType
 from rgdps.models.level import Level
@@ -11,81 +12,86 @@ from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
 
 
-async def recalculate_likes(
+async def recalculate(
+    ctx: Context,
     like_id: int,
-    user: User,
 ) -> Union[Like, ServiceError]:
-    # TODO: Privileges
-    like = await repositories.like.from_id(like_id)
+    like = await repositories.like.from_id(ctx, like_id)
 
     if like is None:
         return ServiceError.LIKES_INVALID_TARGET
 
     calced_value = await repositories.like.sum_by_target(
+        ctx,
         like.target_type,
         like.target_id,
     )
 
     like.value = calced_value
-    await repositories.like.update_value(like.id, like.value)
+    await repositories.like.update_value(ctx, like.id, like.value)
     return like
 
 
 async def like_comment(
-    user: User,
+    ctx: Context,
+    user_id: int,
     comment_id: int,
     value: int = 1,
 ) -> Union[UserComment, ServiceError]:
     # TODO: Privilege checks
-    comment = await repositories.user_comment.from_id(comment_id)
+    comment = await repositories.user_comment.from_id(ctx, comment_id)
 
     if comment is None:
         return ServiceError.LIKES_INVALID_TARGET
 
-    if comment.user_id == user.id:
+    if comment.user_id == user_id:
         return ServiceError.LIKES_OWN_TARGET
 
     if await repositories.like.exists_by_target_and_user(
+        ctx,
         LikeType.USER_COMMENT,
         comment_id,
-        user.id,
+        user_id,
     ):
         return ServiceError.LIKES_ALREADY_LIKED
 
     comment.likes += value
-    await repositories.user_comment.update(comment)
+    await repositories.user_comment.update(ctx, comment)
 
     return comment
 
 
 async def like_level(
-    user: User,
+    ctx: Context,
+    user_id: int,
     comment_id: int,
     value: int = 1,
 ) -> Union[Level, ServiceError]:
-    level = await repositories.level.from_id(comment_id)
+    level = await repositories.level.from_id(ctx, comment_id)
 
     if level is None:
         return ServiceError.LIKES_INVALID_TARGET
 
-    if level.user_id == user.id:
+    if level.user_id == user_id:
         return ServiceError.LIKES_OWN_TARGET
 
     if await repositories.like.exists_by_target_and_user(
+        ctx,
         LikeType.USER_COMMENT,
         comment_id,
-        user.id,
+        user_id,
     ):
         return ServiceError.LIKES_ALREADY_LIKED
 
     if await repositories.like.exists_by_target_and_user(
+        ctx,
         LikeType.USER_COMMENT,
         comment_id,
-        user.id,
+        user_id,
     ):
         return ServiceError.LIKES_ALREADY_LIKED
 
     level.likes += value
-    await repositories.level.update(level)
+    await repositories.level.update(ctx, level)
 
     return level

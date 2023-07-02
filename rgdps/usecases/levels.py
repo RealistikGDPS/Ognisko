@@ -6,18 +6,21 @@ from typing import Optional
 from typing import Union
 
 from rgdps import repositories
+from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
+from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.models.song import Song
 from rgdps.models.user import User
 
 
 async def create_or_update(
+    ctx: Context,
     user: User,
     level_id: int,
     name: str,
@@ -47,7 +50,7 @@ async def create_or_update(
         track_id = None
         song_id = custom_song_id
 
-        if not await repositories.song.from_id(song_id):
+        if not await repositories.song.from_id(ctx, song_id):
             return ServiceError.LEVELS_INVALID_CUSTOM_SONG
     else:
         song_id = None
@@ -60,12 +63,15 @@ async def create_or_update(
         publicity = LevelPublicity.PUBLIC
 
     # Check if we are updating or creating.
-    if level_id and (old_level := await repositories.level.from_id(level_id)):
+    if level_id and (old_level := await repositories.level.from_id(ctx, level_id)):
         # Update
         if old_level.user_id != user.id:
             return ServiceError.LEVELS_NO_UPDATE_PERMISSION
         if old_level.update_locked:
             return ServiceError.LEVELS_UPDATE_LOCKED
+
+        if not user.privileges & UserPrivileges.LEVEL_UPDATE:
+            return ServiceError.LEVELS_NO_UPDATE_PERMISSION
 
         # Apply new values to the old level.
         level = old_level
@@ -86,9 +92,11 @@ async def create_or_update(
         level.low_detail_mode = low_detail_mode
         level.building_time = building_time
         level.update_ts = datetime.utcnow()
-        await repositories.level.update(level)
-        repositories.level_data.create(level.id, level_data)
+        await repositories.level.update(ctx, level)
+        repositories.level_data.create(ctx, level.id, level_data)
     else:
+        if not user.privileges & UserPrivileges.LEVEL_UPLOAD:
+            return ServiceError.LEVELS_NO_UPDATE_PERMISSION
         level = Level(
             id=level_id,
             name=name,
@@ -123,8 +131,8 @@ async def create_or_update(
             update_locked=False,
             deleted=False,
         )
-        level.id = await repositories.level.create(level)
-        repositories.level_data.create(level.id, level_data)
+        level.id = await repositories.level.create(ctx, level)
+        repositories.level_data.create(ctx, level.id, level_data)
 
     return level
 
@@ -138,6 +146,7 @@ class SearchResponse(NamedTuple):
 
 
 async def search(
+    ctx: Context,
     page: int,
     page_size: int,
     query: Optional[str] = None,
@@ -162,11 +171,12 @@ async def search(
         and query.isnumeric()
         and page == 0
     ):
-        lookup_level = await repositories.level.from_id(int(query))
+        lookup_level = await repositories.level.from_id(ctx, int(query))
         if lookup_level:
             page_size -= 1
 
     levels_db = await repositories.level.search(
+        ctx,
         page=page,
         page_size=page_size,
         query=query,
@@ -186,18 +196,18 @@ async def search(
     songs = []
     users = set()
     for level in levels_db.results:
-        user = await repositories.user.from_id(level.user_id)
+        user = await repositories.user.from_id(ctx, level.user_id)
         assert user is not None, "User associated with level not found."
         users.add(user)
         if level.custom_song_id:
-            songs.append(await repositories.song.from_id(level.custom_song_id))
+            songs.append(await repositories.song.from_id(ctx, level.custom_song_id))
 
     if lookup_level:
         # Move to the top.
         if lookup_level in levels_db.results:
             levels_db.results.remove(lookup_level)
         levels_db.results.insert(0, lookup_level)
-        users.add(await repositories.user.from_id(lookup_level.user_id))
+        users.add(await repositories.user.from_id(ctx, lookup_level.user_id))
 
     return SearchResponse(
         levels=levels_db.results,
@@ -213,16 +223,16 @@ class LevelResponse(NamedTuple):
     data: str
 
 
-async def get(level_id: int) -> Union[LevelResponse, ServiceError]:
-    level = await repositories.level.from_id(level_id)
-    level_data = repositories.level_data.from_level_id(level_id)
+async def get(ctx: Context, level_id: int) -> Union[LevelResponse, ServiceError]:
+    level = await repositories.level.from_id(ctx, level_id)
+    level_data = repositories.level_data.from_level_id(ctx, level_id)
     if not (level and level_data):
         return ServiceError.LEVELS_NOT_FOUND
 
     # Handle stats updates
     level.downloads += 1
 
-    await repositories.level.update(level)
+    await repositories.level.update(ctx, level)
 
     return LevelResponse(
         level=level,
@@ -230,8 +240,8 @@ async def get(level_id: int) -> Union[LevelResponse, ServiceError]:
     )
 
 
-async def delete(level_id: int, user: User) -> Union[bool, ServiceError]:
-    level = await repositories.level.from_id(level_id)
+async def delete(ctx: Context, level_id: int, user: User) -> Union[bool, ServiceError]:
+    level = await repositories.level.from_id(ctx, level_id)
     if not level:
         return ServiceError.LEVELS_NOT_FOUND
 
@@ -240,23 +250,23 @@ async def delete(level_id: int, user: User) -> Union[bool, ServiceError]:
         return ServiceError.LEVELS_NO_DELETE_PERMISSION
 
     level.deleted = True
-    await repositories.level.update(level)
-    await repositories.level.delete_meili(level_id)
+    await repositories.level.update(ctx, level)
+    await repositories.level.delete_meili(ctx, level_id)
     return True
 
 
-async def synchronise_search() -> Union[bool, ServiceError]:
+async def synchronise_search(ctx: Context) -> Union[bool, ServiceError]:
     """Synchronise the search index with the backing database.
     Should be rarely used as its demanding on resources.
     """
 
-    levels = await repositories.level.all_ids()
+    levels = await repositories.level.all_ids(ctx)
 
     for level_id in levels:
-        level = await repositories.level.from_id(level_id)
+        level = await repositories.level.from_id(ctx, level_id)
         # It got deleted while we were iterating.
         if (not level) or level.deleted:
             continue
-        await repositories.level.update_meili(level)
+        await repositories.level.update_meili(ctx, level)
 
     return True

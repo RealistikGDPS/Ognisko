@@ -1,94 +1,50 @@
 from __future__ import annotations
 
-from typing import Awaitable
-from typing import Callable
-from typing import Optional
+from typing import Union
 
-from fastapi import Form
-from fastapi.exceptions import HTTPException
-
-from rgdps import logger
 from rgdps import repositories
-from rgdps.constants.responses import GenericResponse
+from rgdps.common.context import Context
+from rgdps.constants.errors import ServiceError
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.repositories import auth
 
-# TODO: add option to replicate https://github.com/RealistikDash/GDPyS/blob/9266cc57c3a4c5d1f51363aa3899ee3c09a23ee8/web/http.py#L338-L341
-# FastAPI dependency for seemless authentication.
-def authenticate_dependency(
-    account_id_alias: str = "accountID",
-    password_alias: str = "gjp",
-    required_privileges: Optional[UserPrivileges] = None,
-) -> Callable[[int, str], Awaitable[User]]:
-    async def wrapper(
-        account_id: int = Form(..., alias=account_id_alias),
-        gjp: str = Form(..., alias=password_alias),
-    ) -> User:
-        user = await repositories.user.from_id(account_id)
 
-        if user is None:
-            raise HTTPException(
-                status_code=200,
-                detail=str(GenericResponse.FAIL),
-            )
+async def authenticate(
+    ctx: Context,
+    user_id: int,
+    password: str,
+) -> Union[User, ServiceError]:
+    user = await repositories.user.from_id(ctx, user_id)
 
-        if not user.privileges & UserPrivileges.USER_AUTHENTICATE:
-            raise HTTPException(
-                status_code=200,
-                detail=str(GenericResponse.FAIL),
-            )
+    if user is None:
+        return ServiceError.AUTH_NOT_FOUND
 
-        if not await auth.compare_bcrypt_gjp(
-            user.password,
-            gjp,
-        ):
-            raise HTTPException(
-                status_code=200,
-                detail=str(GenericResponse.FAIL),
-            )
+    if not user.privileges & UserPrivileges.USER_AUTHENTICATE:
+        return ServiceError.AUTH_NO_PRIVILEGE
 
-        if required_privileges is not None:
-            if not (user.privileges & required_privileges) == required_privileges:
-                raise HTTPException(
-                    status_code=200,
-                    detail=str(GenericResponse.FAIL),
-                )
+    if not await auth.compare_bcrypt(
+        ctx,
+        user.password,
+        password,
+    ):
+        return ServiceError.AUTH_PASSWORD_MISMATCH
 
-        return user
-
-    return wrapper
+    return user
 
 
-def password_authenticate_dependency(
-    username_alias: str = "userName",
-    password_alias: str = "password",
-) -> Callable[[str, str], Awaitable[User]]:
-    async def wrapper(
-        username: str = Form(..., alias=username_alias),
-        password: str = Form(..., alias=password_alias),
-    ) -> User:
-        user = await repositories.user.from_name(username)
+async def authenticate_from_name(
+    ctx: Context,
+    username: str,
+    password: str,
+) -> Union[User, ServiceError]:
+    user = await repositories.user.from_name(ctx, username)
 
-        if user is None:
-            logger.debug(f"Authentication failed for user {username} (user not found)")
-            raise HTTPException(
-                status_code=200,
-                detail=str(GenericResponse.FAIL),
-            )
+    if user is None:
+        return ServiceError.AUTH_NOT_FOUND
 
-        if not await auth.compare_bcrypt(
-            user.password,
-            password,
-        ):
-            logger.debug(
-                f"Authentication failed for user {username} (password mismatch)",
-            )
-            raise HTTPException(
-                status_code=200,
-                detail=str(GenericResponse.FAIL),
-            )
-
-        return user
-
-    return wrapper
+    return await authenticate(
+        ctx,
+        user.id,
+        password,
+    )
