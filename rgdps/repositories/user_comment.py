@@ -7,11 +7,18 @@ from rgdps.common.context import Context
 from rgdps.models.user_comment import UserComment
 
 
-async def from_id(ctx: Context, comment_id: int) -> Optional[UserComment]:
+async def from_id(
+    ctx: Context,
+    comment_id: int,
+    include_deleted: bool = False,
+) -> Optional[UserComment]:
     comment_db = await ctx.mysql.fetch_one(
         "SELECT id, user_id, content, likes, post_ts, deleted "
-        "FROM user_comments WHERE id = :id",
-        {"id": comment_id},
+        "FROM user_comments WHERE id = :id AND deleted = :deleted",
+        {
+            "id": comment_id,
+            "deleted": include_deleted,
+        },
     )
 
     if comment_db is None:

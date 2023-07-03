@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from . import comment
 from . import level
 from . import like
 from . import song

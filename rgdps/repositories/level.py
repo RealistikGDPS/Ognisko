@@ -15,16 +15,21 @@ from rgdps.constants.levels import LevelSearchType
 from rgdps.models.level import Level
 
 
-async def from_id(ctx: Context, level_id: int) -> Optional[Level]:
+async def from_id(
+    ctx: Context,
+    level_id: int,
+    include_deleted: bool = False,
+) -> Optional[Level]:
     level_db = await ctx.mysql.fetch_one(
         "SELECT id, name, user_id, description, custom_song_id, official_song_id, "
         "version, length, two_player, publicity, render_str, game_version, "
         "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
         "search_flags, low_detail_mode, object_count, copy_password, building_time, "
-        "update_locked, deleted FROM levels WHERE id = :id",
+        "update_locked, deleted FROM levels WHERE id = :id AND deleted = :deleted",
         {
             "id": level_id,
+            "deleted": include_deleted,
         },
     )
 
@@ -266,10 +271,11 @@ async def search(
     return SearchResults(results, results_db.estimated_total_hits)
 
 
-async def all_ids(ctx: Context) -> list[int]:
+async def all_ids(ctx: Context, include_deleted: bool = False) -> list[int]:
     return [
         x["id"]
         for x in await ctx.mysql.fetch_all(
-            "SELECT id FROM levels WHERE deleted = false",
+            "SELECT id FROM levels WHERE deleted = :deleted",
+            {"deleted": include_deleted},
         )
     ]

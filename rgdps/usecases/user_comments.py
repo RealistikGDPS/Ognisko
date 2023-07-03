@@ -35,6 +35,7 @@ async def get_user(
         user_id,
         page,
         page_size,
+        include_deleted=False,
     )
 
     return UserCommentResponse(comments.comments, target_user, comments.total)
@@ -45,8 +46,6 @@ async def create(
     user: User,
     content: str,
 ) -> Union[UserComment, ServiceError]:
-    # TODO: Privilege checks
-
     if len(content) > 255:
         return ServiceError.COMMENTS_INVALID_CONTENT
 

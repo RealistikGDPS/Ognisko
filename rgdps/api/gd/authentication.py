@@ -14,7 +14,7 @@ from rgdps.usecases import users
 
 
 async def register_post(
-    # ctx: HTTPContext = Depends(),
+    ctx: HTTPContext = Depends(),
     username: str = Form(..., alias="userName", max_length=15),
     email: EmailStr = Form(...),
     password: str = Form(..., max_length=20),
