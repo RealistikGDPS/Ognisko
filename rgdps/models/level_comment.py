@@ -28,7 +28,7 @@ class LevelComment:
             deleted=mapping["deleted"],
         )
 
-    def to_mapping(self, *, include_id: bool = True) -> Mapping[str, Any]:
+    def as_dict(self, *, include_id: bool = True) -> dict[str, Any]:
         mapping = {
             "user_id": self.user_id,
             "level_id": self.level_id,
