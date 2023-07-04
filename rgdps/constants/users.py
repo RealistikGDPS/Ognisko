@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import IntEnum
 from enum import IntFlag
 
 
@@ -59,3 +60,9 @@ class UserPrivileges(IntFlag):
     @staticmethod
     def from_bytes(b: bytes) -> UserPrivileges:
         return UserPrivileges(int.from_bytes(b, "little", signed=False))
+
+
+class UserPrivacySetting(IntEnum):
+    PUBLIC = 0
+    FRIENDS = 1
+    PRIVATE = 2

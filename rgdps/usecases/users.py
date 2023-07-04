@@ -1,23 +1,17 @@
-# Usecases for users and accounts (as they usually heavily overlap).
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Awaitable
-from typing import Callable
 from typing import NamedTuple
 from typing import Optional
 from typing import Union
-
-from fastapi import Form
-from fastapi import HTTPException
 
 from rgdps import repositories
 from rgdps.common import hashes
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.friends import FriendStatus
-from rgdps.constants.privacy import PrivacySetting
 from rgdps.constants.responses import RegisterResponse
+from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 
@@ -85,9 +79,9 @@ async def register(
         spider=0,
         explosion=0,
         glow=False,
-        message_privacy=PrivacySetting.PUBLIC,
-        friend_privacy=PrivacySetting.PUBLIC,
-        comment_privacy=PrivacySetting.PUBLIC,
+        message_privacy=UserPrivacySetting.PUBLIC,
+        friend_privacy=UserPrivacySetting.PUBLIC,
+        comment_privacy=UserPrivacySetting.PUBLIC,
         youtube_name=None,
         twitter_name=None,
         twitch_name=None,
@@ -176,9 +170,9 @@ async def update_stats(
     explosion: Optional[int] = None,
     coins: Optional[int] = None,
     user_coins: Optional[int] = None,
-    message_privacy: Optional[PrivacySetting] = None,
-    friend_privacy: Optional[PrivacySetting] = None,
-    comment_privacy: Optional[PrivacySetting] = None,
+    message_privacy: Optional[UserPrivacySetting] = None,
+    friend_privacy: Optional[UserPrivacySetting] = None,
+    comment_privacy: Optional[UserPrivacySetting] = None,
     youtube_name: Optional[str] = None,
     twitter_name: Optional[str] = None,
     twitch_name: Optional[str] = None,

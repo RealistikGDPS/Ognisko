@@ -7,7 +7,7 @@ from typing import Any
 from typing import Mapping
 from typing import Optional
 
-from rgdps.constants.privacy import PrivacySetting
+from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
 
 
@@ -19,9 +19,9 @@ class User:
     password: str
     privileges: UserPrivileges
 
-    message_privacy: PrivacySetting
-    friend_privacy: PrivacySetting
-    comment_privacy: PrivacySetting
+    message_privacy: UserPrivacySetting
+    friend_privacy: UserPrivacySetting
+    comment_privacy: UserPrivacySetting
 
     youtube_name: Optional[str]
     twitter_name: Optional[str]
@@ -58,9 +58,9 @@ class User:
             password=user_dict["password"],
             # TODO: look into avoiding using bytes in mappings
             privileges=UserPrivileges.from_bytes(user_dict["privileges"]),
-            message_privacy=PrivacySetting(user_dict["message_privacy"]),
-            friend_privacy=PrivacySetting(user_dict["friend_privacy"]),
-            comment_privacy=PrivacySetting(user_dict["comment_privacy"]),
+            message_privacy=UserPrivacySetting(user_dict["message_privacy"]),
+            friend_privacy=UserPrivacySetting(user_dict["friend_privacy"]),
+            comment_privacy=UserPrivacySetting(user_dict["comment_privacy"]),
             youtube_name=user_dict["youtube_name"],
             twitter_name=user_dict["twitter_name"],
             twitch_name=user_dict["twitch_name"],

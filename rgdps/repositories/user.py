@@ -3,8 +3,6 @@ from __future__ import annotations
 from typing import Optional
 
 from rgdps.common.context import Context
-from rgdps.config import config
-from rgdps.constants.privacy import PrivacySetting
 from rgdps.models.user import User
 
 
