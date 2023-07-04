@@ -11,9 +11,14 @@ async def from_id(
     comment_id: int,
     include_deleted: bool = False,
 ) -> Optional[LevelComment]:
+
+    condition = ""
+    if not include_deleted:
+        condition = " AND NOT deleted"
+
     level_db = await ctx.mysql.fetch_one(
         "SELECT id, user_id, level_id, content, likes, post_ts, deleted "
-        "FROM level_comments WHERE id = :comment_id",
+        "FROM level_comments WHERE id = :comment_id" + condition,
         {
             "comment_id": comment_id,
         },

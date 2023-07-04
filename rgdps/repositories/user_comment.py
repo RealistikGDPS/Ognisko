@@ -12,12 +12,14 @@ async def from_id(
     comment_id: int,
     include_deleted: bool = False,
 ) -> Optional[UserComment]:
+    condition = ""
+    if not include_deleted:
+        condition = " AND NOT deleted"
     comment_db = await ctx.mysql.fetch_one(
         "SELECT id, user_id, content, likes, post_ts, deleted "
-        "FROM user_comments WHERE id = :id AND deleted = :deleted",
+        "FROM user_comments WHERE id = :id" + condition,
         {
             "id": comment_id,
-            "deleted": include_deleted,
         },
     )
 
@@ -27,16 +29,18 @@ async def from_id(
     return UserComment.from_mapping(comment_db)
 
 
-# XXX: This bool might be bad design?
 async def from_user_id(
     ctx: Context,
     user_id: int,
     include_deleted: bool = False,
 ) -> list[UserComment]:
+    condition = ""
+    if not include_deleted:
+        condition = " AND NOT deleted"
     comments_db = await ctx.mysql.fetch_all(
         "SELECT id, user_id, content, likes, post_ts, deleted FROM "
-        "user_comments WHERE user_id = :user_id AND deleted = :deleted",
-        {"user_id": user_id, "deleted": include_deleted},
+        "user_comments WHERE user_id = :user_id" + condition,
+        {"user_id": user_id},
     )
 
     return [UserComment.from_mapping(comment_db) for comment_db in comments_db]
@@ -54,13 +58,16 @@ async def from_user_id_paginated(
     page_size: int,
     include_deleted: bool = False,
 ) -> CommentPage:
+    condition = ""
+    if not include_deleted:
+        condition = "AND NOT deleted"
+
     comments_db = await ctx.mysql.fetch_all(
         "SELECT id, user_id, content, likes, post_ts, deleted FROM "
-        "user_comments WHERE user_id = :user_id AND deleted = :deleted "
+        f"user_comments WHERE user_id = :user_id {condition} "
         "ORDER BY id DESC LIMIT :limit OFFSET :offset",
         {
             "user_id": user_id,
-            "deleted": include_deleted,
             "limit": page_size,
             "offset": page * page_size,
         },

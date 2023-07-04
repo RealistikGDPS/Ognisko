@@ -10,4 +10,4 @@ CREATE TABLE `level_comments` (
 ) ENGINE = InnoDB;
 
 ALTER TABLE `level_comments` ADD INDEX(`user_id`);
-ALTER TABLE `level_comments` ADD INDEX(`level_id)
+ALTER TABLE `level_comments` ADD INDEX(`level_id`);
