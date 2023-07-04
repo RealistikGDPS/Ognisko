@@ -5,7 +5,6 @@ from typing import Union
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
-from rgdps.models.user import User
 
 
 def get_as_path(ctx: Context, user_id: int) -> Union[str, ServiceError]:

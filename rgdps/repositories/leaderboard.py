@@ -1,9 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from rgdps.common.context import Context
-from rgdps.constants.leaderboards import LeaderboardType
 
 
 async def get_star_rank(ctx: Context, user_id: int) -> int:

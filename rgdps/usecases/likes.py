@@ -8,7 +8,6 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.likes import LikeType
 from rgdps.models.level import Level
 from rgdps.models.like import Like
-from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
 
 
