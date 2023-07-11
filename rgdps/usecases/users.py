@@ -10,7 +10,6 @@ from rgdps.common import hashes
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.friends import FriendStatus
-from rgdps.constants.responses import RegisterResponse
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
@@ -43,16 +42,12 @@ async def register(
     name: str,
     password: str,
     email: str,
-) -> Union[User, RegisterResponse]:
-    if not (3 <= len(name) <= 15):
-        return RegisterResponse.USERNAME_LENGTH_INVALID
-    elif not (6 <= len(password) <= 20):
-        return RegisterResponse.PASSWORD_LENGTH_INVALID
+) -> Union[User, ServiceError]:
 
     if await repositories.user.check_email_exists(ctx, email):
-        return RegisterResponse.EMAIL_EXISTS
+        return ServiceError.USER_EMAIL_EXISTS
     elif await repositories.user.check_username_exists(ctx, name):
-        return RegisterResponse.USERNAME_EXISTS
+        return ServiceError.USER_USERNAME_EXISTS
 
     hashed_password = await hashes.hash_bcypt_async(password)
 
@@ -119,29 +114,23 @@ class UserPerspective(NamedTuple):
     friend_status: FriendStatus
 
 
-async def get_user_perspective(
+async def get(
     ctx: Context,
     user_id: int,
-    perspective: User,
+    is_own: bool = True,
 ) -> Union[UserPerspective, ServiceError]:
-    # TODO: Perform Blocked Check
     # TODO: Perform Friend Check
     # TODO: Friend Request Check
     # TODO: Messages Check
 
     user = await repositories.user.from_id(ctx, user_id)
     if user is None:
-        # TODO: Use something more concise.
-        return ServiceError.PROFILE_USER_NOT_FOUND
-
-    if (
-        (not user.privileges & UserPrivileges.USER_PROFILE_PUBLIC)
-        and user.id != perspective.id
-        and (not perspective.privileges & UserPrivileges.USER_VIEW_PRIVATE_PROFILE)
-    ):
-        return ServiceError.PROFILE_USER_NOT_PUBLIC
+        return ServiceError.USER_NOT_FOUND
 
     rank = await repositories.leaderboard.get_star_rank(ctx, user_id)
+
+    if is_own:
+        ...
 
     return UserPerspective(
         user=user,
@@ -152,7 +141,7 @@ async def get_user_perspective(
 
 async def update_stats(
     ctx: Context,
-    user: User,
+    user_id: int,
     stars: Optional[int] = None,
     demons: Optional[int] = None,
     display_type: Optional[int] = None,
@@ -176,9 +165,15 @@ async def update_stats(
     youtube_name: Optional[str] = None,
     twitter_name: Optional[str] = None,
     twitch_name: Optional[str] = None,
+    update_rank: bool = False,
 ) -> Union[User, ServiceError]:
     # TODO: Validation
     # TODO: Anticheat checks on the user's gains
+    user = await repositories.user.from_id(ctx, user_id)
+
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
     updated_user = User(
         id=user.id,
         username=user.username,
@@ -212,26 +207,32 @@ async def update_stats(
         creator_points=user.creator_points,
     )
 
-    if user.privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC:
+    if update_rank:
         await repositories.leaderboard.set_star_count(ctx, user.id, updated_user.stars)
 
-    await repositories.user.update(ctx, updated_user)  # TODO: Partial update
+    await repositories.user.update(ctx, updated_user)
     return updated_user
 
 
 async def update_privileges(
     ctx: Context,
-    user: User,
+    user_id: int,
     privileges: UserPrivileges,
 ) -> Union[User, ServiceError]:
+
+    user = await repositories.user.from_id(ctx, user_id)
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
     # Check if we should remove them from the leaderboard
     if not privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC:
-        await repositories.leaderboard.remove_star_count(ctx, user.id)
+        await repositories.leaderboard.remove_star_count(ctx, user_id)
 
     if not privileges & UserPrivileges.USER_CP_LEADERBOARD_PUBLIC:
         # TODO: Add CP leaderboard
         ...
 
     updated_user = user.copy()
+    updated_user.privileges = privileges
     await repositories.user.update(ctx, updated_user)
     return updated_user

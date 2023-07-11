@@ -28,7 +28,7 @@ async def get_user(
     target_user = await repositories.user.from_id(ctx, user_id)
 
     if target_user is None:
-        return ServiceError.PROFILE_USER_NOT_FOUND
+        return ServiceError.USER_NOT_FOUND
 
     comments = await repositories.user_comment.from_user_id_paginated(
         ctx,

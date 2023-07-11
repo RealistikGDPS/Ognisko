@@ -3,13 +3,12 @@ from __future__ import annotations
 from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
-from . import authentication
 from . import leaderboards
 from . import levels
 from . import misc
-from . import profiles
 from . import save_data
 from . import user_comments
+from . import users
 from rgdps.config import config
 
 router = APIRouter(
@@ -19,7 +18,7 @@ router = APIRouter(
 
 router.add_api_route(
     "/accounts/registerGJAccount.php",
-    authentication.register_post,
+    users.register_post,
     methods=["POST"],
 )
 
@@ -30,19 +29,19 @@ router.add_api_route(
 
 router.add_api_route(
     "/getGJUserInfo20.php",
-    profiles.view_user_info,
+    users.user_info_get,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/accounts/loginGJAccount.php",
-    authentication.login_post,
+    users.login_post,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/updateGJUserScore22.php",
-    profiles.update_user_info,
+    users.user_info_post,
     methods=["POST"],
 )
 
@@ -58,10 +57,10 @@ router.add_api_route(
     methods=["POST"],
 )
 
-# It may be possible to reuse `profiles.update_user_info`
+# It may be possible to reuse `profiles.user_info_post`
 router.add_api_route(
     "/updateGJAccSettings20.php",
-    profiles.update_settings,
+    users.user_settings_post,
     methods=["POST"],
 )
 

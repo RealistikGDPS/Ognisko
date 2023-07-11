@@ -7,10 +7,13 @@ class ServiceError(str, Enum):
     AUTH_NOT_FOUND = "auth.not_found"
     AUTH_PASSWORD_MISMATCH = "auth.password_mismatch"
     AUTH_NO_PRIVILEGE = "auth.no_privilege"
-    PROFILE_USER_BLOCKED = "profile.user_blocked"
-    PROFILE_USER_NOT_FOUND = "profile.user_not_found"
-    PROFILE_BLOCKED_BY_USER = "profile.blocked_by_user"
-    PROFILE_USER_NOT_PUBLIC = "profile.user_not_public"
+
+    USER_EMAIL_EXISTS = "user.email_exists"
+    USER_USERNAME_EXISTS = "user.username_exists"
+    USER_IS_BLOCKED = "user.is_blocked"
+    USER_NOT_FOUND = "user.not_found"
+    USER_BLOCKED_BY_USER = "user.blocked_by_user"
+    USER_PROFILE_PRIVATE = "user.profile_private"
 
     COMMENTS_INVALID_CONTENT = "comments.invalid_content"
     COMMENTS_NOT_FOUND = "comments.not_found"
