@@ -41,45 +41,45 @@ router.add_api_route(
 
 router.add_api_route(
     "/updateGJUserScore22.php",
-    users.user_info_post,
+    users.user_info_update,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/uploadGJAccComment20.php",
-    user_comments.post_user_comment,
+    user_comments.user_comments_post,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/getGJAccountComments20.php",
-    user_comments.view_user_comments,
+    user_comments.user_comments_get,
     methods=["POST"],
 )
 
-# It may be possible to reuse `profiles.user_info_post`
+# It may be possible to reuse `profiles.user_info_update`
 router.add_api_route(
     "/updateGJAccSettings20.php",
-    users.user_settings_post,
+    users.user_settings_update,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/getGJSongInfo.php",
-    levels.get_song_info,
+    levels.song_info_get,
     methods=["POST"],
 )
 
 # Geometry Dash forces these 2 to be prefixed with /database
 router.add_api_route(
     "/database/accounts/syncGJAccountNew.php",
-    save_data.load_save_data,
+    save_data.save_data_get,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/database/accounts/backupGJAccountNew.php",
-    save_data.upload_save_data,
+    save_data.save_data_post,
     methods=["POST"],
 )
 
@@ -91,36 +91,36 @@ router.add_api_route(
 
 router.add_api_route(
     "/uploadGJLevel21.php",
-    levels.upload_level,
+    levels.level_post,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/getGJLevels21.php",
-    levels.search_levels,
+    levels.levels_get,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/downloadGJLevel22.php",
-    levels.get_level,
+    levels.level_get,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/getGJScores20.php",
-    leaderboards.get_leaderboard,
+    leaderboards.leaderboard_get,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/likeGJItem211.php",
-    user_comments.like_target,
+    user_comments.like_target_post,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/deleteGJAccComment20.php",
-    user_comments.delete_user_comment,
+    user_comments.user_comment_delete,
     methods=["POST"],
 )

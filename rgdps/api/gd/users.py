@@ -5,11 +5,11 @@ from fastapi import Form
 from pydantic import EmailStr
 
 from rgdps import logger
+from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.constants.errors import ServiceError
-from rgdps.constants.responses import GenericResponse
 from rgdps.constants.responses import LoginResponse
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
@@ -21,7 +21,7 @@ async def register_post(
     username: str = Form(..., alias="userName", min_length=3, max_length=15),
     email: EmailStr = Form(...),
     password: str = Form(..., min_length=6, max_length=20),
-) -> str:
+):
     user = await users.register(
         ctx,
         name=username,
@@ -29,13 +29,13 @@ async def register_post(
         email=email,
     )
 
-    if isinstance(user, RegisterResponse):
+    if isinstance(user, ServiceError):
         logger.info(f"Failed to register {username} due to {user!r}.")
         return str(user)
 
     logger.info(f"{user} has registered!")
 
-    return str(GenericResponse.SUCCESS)
+    return responses.success()
 
 
 async def login_post(
@@ -43,16 +43,16 @@ async def login_post(
     username: str = Form(..., alias="userName", max_length=15),
     password: str = Form(..., max_length=20),
     _: str = Form(..., alias="udid"),
-) -> str:
+):
 
     user = await users.authenticate(ctx, username, password)
     if isinstance(user, ServiceError):
         logger.info(f"Failed to login {username} due to {user!r}.")
 
         if user is ServiceError.AUTH_NO_PRIVILEGE:
-            return str(LoginResponse.ACCOUNT_DISABLED)
+            return responses.code(LoginResponse.ACCOUNT_DISABLED)
 
-        return str(LoginResponse.FAIL)
+        return responses.fail()
 
     logger.info(f"{user} has logged in!")
 
@@ -63,7 +63,7 @@ async def user_info_get(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     target_id: int = Form(..., alias="targetAccountID"),
-) -> str:
+):
     is_own = target_id == user.id
     target = await users.get(ctx, target_id, is_own)
 
@@ -72,7 +72,7 @@ async def user_info_get(
             f"Requested to view info of non-existent account {target_id} "
             f"with error {target!r}.",
         )
-        return str(GenericResponse.FAIL)
+        return responses.fail()
 
     # TODO: Move to its own function.
     if (
@@ -80,7 +80,7 @@ async def user_info_get(
         and (not target.user.privileges & UserPrivileges.USER_PROFILE_PUBLIC)
         and (not user.privileges & UserPrivileges.USER_VIEW_PRIVATE_PROFILE)
     ):
-        return str(GenericResponse.FAIL)
+        return responses.fail()
 
     logger.info(f"Successfully viewed the profile of {target.user}.")
 
@@ -89,7 +89,7 @@ async def user_info_get(
     )
 
 
-async def user_info_post(
+async def user_info_update(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     stars: int = Form(...),
@@ -109,7 +109,7 @@ async def user_info_post(
     explosion: int = Form(..., alias="accExplosion"),
     coins: int = Form(...),
     user_coins: int = Form(..., alias="userCoins"),
-) -> str:
+):
 
     res = await users.update_stats(
         ctx,
@@ -136,20 +136,20 @@ async def user_info_post(
 
     if isinstance(res, ServiceError):
         logger.info(f"Failed to update profile of {user} with error {res!r}.")
-        return str(GenericResponse.FAIL)
+        return responses.fail()
 
     logger.info(f"Successfully updated the profile of {user}.")
 
     return str(user.id)
 
 
-async def user_settings_post(
+async def user_settings_update(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     youtube_name: str = Form(..., alias="yt"),
     twitter_name: str = Form(..., alias="twitter"),
     twitch_name: str = Form(..., alias="twitch"),
-) -> str:
+):
     result = await users.update_stats(
         ctx,
         user.id,
@@ -162,7 +162,7 @@ async def user_settings_post(
         logger.info(
             f"Failed to update settings of {user} with error {result!r}.",
         )
-        return str(GenericResponse.FAIL)
+        return responses.fail()
 
     logger.info(f"Successfully updated settings of {user}.")
-    return str(GenericResponse.SUCCESS)
+    return responses.success()

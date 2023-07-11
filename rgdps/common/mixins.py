@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from rgdps.common.protocols import HasIntValue
+from rgdps.common.typing import HasIntValue
 
 
 class IntEnumStringMixin:

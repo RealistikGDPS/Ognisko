@@ -44,7 +44,6 @@ async def create_or_update(
     building_time: int,
 ) -> Union[Level, ServiceError]:
     # TODO: Validation
-    # TODO: Permission checks
     # TODO: Description validation
     if custom_song_id:
         track_id = None
