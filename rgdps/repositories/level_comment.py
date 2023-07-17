@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import NamedTuple
 from typing import Optional
 
 from rgdps.common.context import Context

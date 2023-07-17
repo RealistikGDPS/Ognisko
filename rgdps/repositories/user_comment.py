@@ -46,19 +46,15 @@ async def from_user_id(
     return [UserComment.from_mapping(comment_db) for comment_db in comments_db]
 
 
-class CommentPage(NamedTuple):
-    comments: list[UserComment]
-    total: int
-
-
 async def from_user_id_paginated(
     ctx: Context,
     user_id: int,
     page: int,
     page_size: int,
     include_deleted: bool = False,
-) -> CommentPage:
+) -> list[UserComment]:
     condition = ""
+    # FIXME: Unused
     if not include_deleted:
         condition = "AND NOT deleted"
 
@@ -73,17 +69,19 @@ async def from_user_id_paginated(
         },
     )
 
-    comments = [UserComment.from_mapping(comment_db) for comment_db in comments_db]
+    return [UserComment.from_mapping(comment_db) for comment_db in comments_db]
 
-    total = await ctx.mysql.fetch_val(
-        "SELECT COUNT(*) FROM user_comments WHERE user_id = :user_id "
-        "AND deleted = 0",
+
+async def get_user_comment_count(
+    ctx: Context,
+    user_id: int,
+    include_deleted: bool = False,
+) -> int:
+    return await ctx.mysql.fetch_val(
+        "SELECT COUNT(*) FROM user_comments WHERE user_id = :user_id " "AND deleted = 0"
+        if not include_deleted
+        else "",
         {"user_id": user_id},
-    )
-
-    return CommentPage(
-        comments=comments,
-        total=total,
     )
 
 

@@ -17,8 +17,6 @@ class UserCommentResponse(NamedTuple):
     total: int
 
 
-# Perspective variant is not necessary as the related endpoints don't support
-# authentication.
 async def get_user(
     ctx: Context,
     user_id: int,
@@ -38,7 +36,12 @@ async def get_user(
         include_deleted=False,
     )
 
-    return UserCommentResponse(comments.comments, target_user, comments.total)
+    comment_count = await repositories.user_comment.get_user_comment_count(
+        ctx,
+        user_id,
+    )
+
+    return UserCommentResponse(comments, target_user, comment_count)
 
 
 async def create(

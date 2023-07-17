@@ -21,7 +21,7 @@ from rgdps.models.user import User
 
 async def create_or_update(
     ctx: Context,
-    user: User,
+    user_id: int,
     level_id: int,
     name: str,
     custom_song_id: int,
@@ -64,13 +64,10 @@ async def create_or_update(
     # Check if we are updating or creating.
     if level_id and (old_level := await repositories.level.from_id(ctx, level_id)):
         # Update
-        if old_level.user_id != user.id:
+        if old_level.user_id != user_id:
             return ServiceError.LEVELS_NO_UPDATE_PERMISSION
         if old_level.update_locked:
             return ServiceError.LEVELS_UPDATE_LOCKED
-
-        if not user.privileges & UserPrivileges.LEVEL_UPDATE:
-            return ServiceError.LEVELS_NO_UPDATE_PERMISSION
 
         # Apply new values to the old level.
         level = old_level
@@ -94,12 +91,10 @@ async def create_or_update(
         await repositories.level.update(ctx, level)
         repositories.level_data.create(ctx, level.id, level_data)
     else:
-        if not user.privileges & UserPrivileges.LEVEL_UPLOAD:
-            return ServiceError.LEVELS_NO_UPDATE_PERMISSION
         level = Level(
             id=level_id,
             name=name,
-            user_id=user.id,
+            user_id=user_id,
             description=description,
             custom_song_id=song_id,
             official_song_id=track_id,

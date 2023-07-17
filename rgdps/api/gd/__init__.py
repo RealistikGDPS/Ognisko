@@ -4,6 +4,7 @@ from fastapi import APIRouter
 from fastapi.responses import PlainTextResponse
 
 from . import leaderboards
+from . import level_comments
 from . import levels
 from . import misc
 from . import save_data
