@@ -27,7 +27,6 @@ RUN chmod +x /app/scripts/*
 
 # Copy the application
 COPY rgdps /app/rgdps
-COPY main.py /app/
 
 # Run the application
 EXPOSE 80

@@ -2,4 +2,6 @@
 set -euo pipefail
 
 echo "Starting server..."
-exec python main.py
+exec uvicorn rgdps.main:asgi_app \
+    --host $HTTP_HOST \
+    --port $HTTP_PORT
