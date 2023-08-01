@@ -18,6 +18,7 @@ class ServiceError(str, Enum):
     COMMENTS_INVALID_CONTENT = "comments.invalid_content"
     COMMENTS_NOT_FOUND = "comments.not_found"
     COMMENTS_INVALID_OWNER = "comments.invalid_owner"
+    COMMENTS_TARGET_NOT_FOUND = "comments.target_not_found"
 
     LIKES_ALREADY_LIKED = "likes.already_liked"
     LIKES_OWN_TARGET = "likes.own_target"

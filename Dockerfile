@@ -13,8 +13,8 @@ RUN wget https://github.com/golang-migrate/migrate/releases/download/v4.15.2/mig
     rm migrate.linux-amd64.tar.gz
 
 # Python Dependencies
-COPY requirements/requirements.txt .
-RUN pip install -r requirements.txt
+COPY requirements/main.txt .
+RUN pip install -r main.txt
 
 # Move migrations
 COPY database /app/database

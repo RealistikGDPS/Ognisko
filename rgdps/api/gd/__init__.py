@@ -125,3 +125,9 @@ router.add_api_route(
     user_comments.user_comment_delete,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/uploadGJComment21.php",
+    level_comments.create_comment_post,
+    methods=["POST"],
+)

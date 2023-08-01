@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import NamedTuple
+from datetime import datetime
 from typing import Optional
 
 from rgdps.common.context import Context
@@ -31,12 +31,30 @@ async def from_id(
     return LevelComment.from_mapping(level_db)
 
 
-async def create(ctx: Context, comment: LevelComment) -> int:
-    return await ctx.mysql.execute(
+async def create(
+    ctx: Context,
+    user_id: int,
+    level_id: int,
+    content: str,
+    likes: int = 0,
+    post_ts: Optional[datetime] = None,
+    deleted: bool = False,
+) -> LevelComment:
+    comment = LevelComment(
+        id=0,
+        user_id=user_id,
+        level_id=level_id,
+        content=content,
+        likes=likes,
+        post_ts=post_ts or datetime.now(),
+        deleted=deleted,
+    )
+    comment.id = await ctx.mysql.execute(
         "INSERT INTO level_comments (user_id, level_id, content, likes, post_ts, deleted) "
         "VALUES (:user_id, :level_id, :content, :likes, :post_ts, :deleted)",
         comment.as_dict(include_id=False),
     )
+    return comment
 
 
 async def update(ctx: Context, comment: LevelComment) -> None:

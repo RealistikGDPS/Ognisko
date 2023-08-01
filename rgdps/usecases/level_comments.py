@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from typing import Union
+
 from rgdps import repositories
 from rgdps.common.context import Context
+from rgdps.constants.errors import ServiceError
 from rgdps.models.level_comment import LevelComment
 
 
@@ -17,4 +20,23 @@ async def get_level(
         page,
         page_size,
         include_deleted=False,
+    )
+
+
+async def create(
+    ctx: Context,
+    user_id: int,
+    level_id: int,
+    content: str,
+) -> Union[LevelComment, ServiceError]:
+    # TODO: Spam protection
+    level = repositories.level.from_id(ctx, level_id=level_id)
+    if level is None:
+        return ServiceError.COMMENTS_TARGET_NOT_FOUND
+
+    return await repositories.level_comment.create(
+        ctx,
+        user_id=user_id,
+        level_id=level_id,
+        content=content,
     )
