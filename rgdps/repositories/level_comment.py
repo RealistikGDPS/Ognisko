@@ -3,6 +3,9 @@ from __future__ import annotations
 from datetime import datetime
 
 from rgdps.common.context import Context
+from rgdps.common.typing import is_set
+from rgdps.common.typing import UNSET
+from rgdps.common.typing import Unset
 from rgdps.models.level_comment import LevelComment
 
 
@@ -56,9 +59,50 @@ async def create(
     return comment
 
 
-async def update(ctx: Context, comment: LevelComment) -> None:
+async def update_full(ctx: Context, comment: LevelComment) -> None:
     await ctx.mysql.execute(
         "UPDATE level_comments SET user_id = :user_id, level_id = :level_id, content = :content, "
         "likes = :likes, post_ts = :post_ts, deleted = :deleted WHERE id = :id",
         comment.as_dict(),
     )
+
+
+async def update_partial(
+    ctx: Context,
+    comment_id: int,
+    user_id: int | Unset = UNSET,
+    level_id: int | Unset = UNSET,
+    content: str | Unset = UNSET,
+    likes: int | Unset = UNSET,
+    post_ts: datetime | Unset = UNSET,
+    deleted: bool | Unset = UNSET,
+) -> None:
+
+    changed_data = {}
+
+    if is_set(user_id):
+        changed_data["user_id"] = user_id
+    if is_set(level_id):
+        changed_data["level_id"] = level_id
+    if is_set(content):
+        changed_data["content"] = content
+    if is_set(likes):
+        changed_data["likes"] = likes
+    if is_set(post_ts):
+        changed_data["post_ts"] = post_ts
+    if is_set(likes):
+        changed_data["likes"] = likes
+    if is_set(deleted):
+        changed_data["deleted"] = deleted
+
+    if not changed_data:
+        return
+
+    # Query construction from dict
+    query = "UPDATE level_comments SET "
+    query += " ".join(f"{name} = :{name}" for name in changed_data.keys())
+    query += " WHERE id = :id"
+
+    changed_data["id"] = comment_id
+
+    await ctx.mysql.execute(query, changed_data)
