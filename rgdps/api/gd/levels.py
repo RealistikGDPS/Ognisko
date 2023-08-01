@@ -60,7 +60,7 @@ async def level_post(
 
     level = await levels.create_or_update(
         ctx,
-        user=user,
+        user_id=user.id,
         level_id=level_id,
         name=name,
         custom_song_id=custom_song_id,
