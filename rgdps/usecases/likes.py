@@ -29,7 +29,7 @@ async def recalculate(
     return like
 
 
-async def like_comment(
+async def like_user_comment(
     ctx: Context,
     user_id: int,
     comment_id: int,
@@ -89,6 +89,6 @@ async def like_level(
         return ServiceError.LIKES_ALREADY_LIKED
 
     level.likes += value
-    await repositories.level.update(ctx, level)
+    await repositories.level.update_full(ctx, level)
 
     return level

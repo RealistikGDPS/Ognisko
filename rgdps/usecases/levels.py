@@ -86,7 +86,7 @@ async def create_or_update(
         level.low_detail_mode = low_detail_mode
         level.building_time = building_time
         level.update_ts = datetime.utcnow()
-        await repositories.level.update(ctx, level)
+        await repositories.level.update_full(ctx, level)
         repositories.level_data.create(ctx, level.id, level_data)
     else:
         level = Level(
@@ -224,7 +224,7 @@ async def get(ctx: Context, level_id: int) -> LevelResponse | ServiceError:
     # Handle stats updates
     level.downloads += 1
 
-    await repositories.level.update(ctx, level)
+    await repositories.level.update_full(ctx, level)
 
     return LevelResponse(
         level=level,
@@ -242,7 +242,7 @@ async def delete(ctx: Context, level_id: int, user: User) -> bool | ServiceError
         return ServiceError.LEVELS_NO_DELETE_PERMISSION
 
     level.deleted = True
-    await repositories.level.update(ctx, level)
+    await repositories.level.update_full(ctx, level)
     await repositories.level.delete_meili(ctx, level_id)
     return True
 
@@ -259,6 +259,6 @@ async def synchronise_search(ctx: Context) -> bool | ServiceError:
         # It got deleted while we were iterating.
         if (not level) or level.deleted:
             continue
-        await repositories.level.update_meili(ctx, level)
+        await repositories.level.update_meili_full(ctx, level)
 
     return True

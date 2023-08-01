@@ -76,7 +76,7 @@ async def update_partial(
     likes: int | Unset = UNSET,
     post_ts: datetime | Unset = UNSET,
     deleted: bool | Unset = UNSET,
-) -> None:
+) -> LevelComment | None:
 
     changed_data = {}
 
@@ -106,3 +106,5 @@ async def update_partial(
     changed_data["id"] = comment_id
 
     await ctx.mysql.execute(query, changed_data)
+
+    return await from_id(ctx, comment_id)

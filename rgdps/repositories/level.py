@@ -4,6 +4,7 @@ import time
 from datetime import datetime
 from typing import Any
 from typing import NamedTuple
+from enum import IntFlag
 
 from rgdps.common import data_utils
 from rgdps.common.context import Context
@@ -73,6 +74,18 @@ def _dt_as_unix_ts(dt: datetime) -> int:
 def _unix_ts_as_dt(unix_ts: int) -> datetime:
     return datetime.fromtimestamp(unix_ts)
 
+def _split_flag(flag: Any) -> dict[str, int]:
+    if not issubclass(flag, IntFlag):
+        raise TypeError("Given flag must be a subclass of `enum.IntFlag`.")
+    
+    flag_type = type(flag)
+    res = {}
+
+    for value in flag_type:
+        res[flag.name] = bool(flag & value)
+
+    return res
+
 
 def _make_meili_dict(level: Level) -> dict[str, Any]:
     level_dict = level.as_dict(include_id=True)
@@ -80,9 +93,7 @@ def _make_meili_dict(level: Level) -> dict[str, Any]:
     level_dict["update_ts"] = _dt_as_unix_ts(level_dict["update_ts"])
 
     # Split up bitwise enums as meili does not support bitwise operations.
-    level_dict["epic"] = bool(level_dict["search_flags"] & LevelSearchFlag.EPIC)
-    level_dict["magic"] = bool(level_dict["search_flags"] & LevelSearchFlag.MAGIC)
-    level_dict["awarded"] = bool(level_dict["search_flags"] & LevelSearchFlag.AWARDED)
+    level_dict |= _split_flag(level_dict["search_flags"])
 
     return level_dict
 
@@ -121,19 +132,18 @@ async def create_meili(ctx: Context, level: Level, level_id: int) -> None:
     await index.add_documents([level_dict])
 
 
-async def update(ctx: Context, level: Level) -> None:
+async def update_full(ctx: Context, level: Level) -> None:
     # In case sql fails, we do not want to update meili.
-    await update_sql(ctx, level)
-    await update_meili(ctx, level)
+    await update_sql_full(ctx, level)
+    await update_meili_full(ctx, level)
 
 
-async def update_meili(ctx: Context, level: Level) -> None:
+async def update_meili_full(ctx: Context, level: Level) -> None:
     index = ctx.meili.index("levels")
-    # Fun fact, this is EXACTLY the same as `add_documents`.
-    await index.update_documents([_make_meili_dict(level)])
+    await index.add_documents([_make_meili_dict(level)])
 
 
-async def update_sql(ctx: Context, level: Level) -> None:
+async def update_sql_full(ctx: Context, level: Level) -> None:
     await ctx.mysql.execute(
         "UPDATE levels SET name = :name, user_id = :user_id, description = :description, "
         "custom_song_id = :custom_song_id, official_song_id = :official_song_id, "
