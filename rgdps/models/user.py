@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 from typing import Mapping
-from typing import Optional
 
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
@@ -23,9 +22,9 @@ class User:
     friend_privacy: UserPrivacySetting
     comment_privacy: UserPrivacySetting
 
-    youtube_name: Optional[str]
-    twitter_name: Optional[str]
-    twitch_name: Optional[str]
+    youtube_name: str | None
+    twitter_name: str | None
+    twitch_name: str | None
 
     register_ts: datetime
 

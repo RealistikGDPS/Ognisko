@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Union
-
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
@@ -14,7 +12,7 @@ from rgdps.models.user_comment import UserComment
 async def recalculate(
     ctx: Context,
     like_id: int,
-) -> Union[Like, ServiceError]:
+) -> Like | ServiceError:
     like = await repositories.like.from_id(ctx, like_id)
 
     if like is None:
@@ -36,7 +34,7 @@ async def like_comment(
     user_id: int,
     comment_id: int,
     value: int = 1,
-) -> Union[UserComment, ServiceError]:
+) -> UserComment | ServiceError:
     # TODO: Privilege checks
     comment = await repositories.user_comment.from_id(ctx, comment_id)
 
@@ -65,7 +63,7 @@ async def like_level(
     user_id: int,
     comment_id: int,
     value: int = 1,
-) -> Union[Level, ServiceError]:
+) -> Level | ServiceError:
     level = await repositories.level.from_id(ctx, comment_id)
 
     if level is None:

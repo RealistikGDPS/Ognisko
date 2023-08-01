@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from rgdps.common.context import Context
 from rgdps.constants.likes import LikeType
 from rgdps.models.like import Like
 
 
-async def from_id(ctx: Context, id: int) -> Optional[Like]:
+async def from_id(ctx: Context, id: int) -> Like | None:
     like_db = await ctx.mysql.fetch_one(
         "SELECT target_type, target_id, user_id, value FROM user_likes WHERE id = :id",
         {

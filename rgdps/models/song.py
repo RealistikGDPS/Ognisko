@@ -3,7 +3,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 from typing import Mapping
-from typing import Optional
 
 from rgdps.constants.songs import SongSource
 
@@ -14,7 +13,7 @@ class Song:
     name: str
     author_id: int
     author: str
-    author_youtube: Optional[str]
+    author_youtube: str | None
     size: float
     download_url: str
     source: SongSource

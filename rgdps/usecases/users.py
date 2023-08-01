@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import NamedTuple
-from typing import Optional
-from typing import Union
 
 from rgdps import repositories
 from rgdps.common import hashes
@@ -42,7 +40,7 @@ async def register(
     name: str,
     password: str,
     email: str,
-) -> Union[User, ServiceError]:
+) -> User | ServiceError:
 
     if await repositories.user.check_email_exists(ctx, email):
         return ServiceError.USER_EMAIL_EXISTS
@@ -93,7 +91,7 @@ async def authenticate(
     ctx: Context,
     username: str,
     password: str,
-) -> Union[User, ServiceError]:
+) -> User | ServiceError:
     user = await repositories.user.from_name(ctx, username)
 
     if user is None:
@@ -118,7 +116,7 @@ async def get(
     ctx: Context,
     user_id: int,
     is_own: bool = True,
-) -> Union[UserPerspective, ServiceError]:
+) -> UserPerspective | ServiceError:
     # TODO: Perform Friend Check
     # TODO: Friend Request Check
     # TODO: Messages Check
@@ -142,31 +140,31 @@ async def get(
 async def update_stats(
     ctx: Context,
     user_id: int,
-    stars: Optional[int] = None,
-    demons: Optional[int] = None,
-    display_type: Optional[int] = None,
-    diamonds: Optional[int] = None,
-    primary_colour: Optional[int] = None,
-    secondary_colour: Optional[int] = None,
-    icon: Optional[int] = None,
-    ship: Optional[int] = None,
-    ball: Optional[int] = None,
-    ufo: Optional[int] = None,
-    wave: Optional[int] = None,
-    robot: Optional[int] = None,
-    spider: Optional[int] = None,
-    glow: Optional[bool] = None,
-    explosion: Optional[int] = None,
-    coins: Optional[int] = None,
-    user_coins: Optional[int] = None,
-    message_privacy: Optional[UserPrivacySetting] = None,
-    friend_privacy: Optional[UserPrivacySetting] = None,
-    comment_privacy: Optional[UserPrivacySetting] = None,
-    youtube_name: Optional[str] = None,
-    twitter_name: Optional[str] = None,
-    twitch_name: Optional[str] = None,
+    stars: int | None = None,
+    demons: int | None = None,
+    display_type: int | None = None,
+    diamonds: int | None = None,
+    primary_colour: int | None = None,
+    secondary_colour: int | None = None,
+    icon: int | None = None,
+    ship: int | None = None,
+    ball: int | None = None,
+    ufo: int | None = None,
+    wave: int | None = None,
+    robot: int | None = None,
+    spider: int | None = None,
+    glow: bool | None = None,
+    explosion: int | None = None,
+    coins: int | None = None,
+    user_coins: int | None = None,
+    message_privacy: UserPrivacySetting | None = None,
+    friend_privacy: UserPrivacySetting | None = None,
+    comment_privacy: UserPrivacySetting | None = None,
+    youtube_name: str | None = None,
+    twitter_name: str | None = None,
+    twitch_name: str | None = None,
     update_rank: bool = False,
-) -> Union[User, ServiceError]:
+) -> User | ServiceError:
     # TODO: Validation
     # TODO: Anticheat checks on the user's gains
     user = await repositories.user.from_id(ctx, user_id)
@@ -218,7 +216,7 @@ async def update_privileges(
     ctx: Context,
     user_id: int,
     privileges: UserPrivileges,
-) -> Union[User, ServiceError]:
+) -> User | ServiceError:
 
     user = await repositories.user.from_id(ctx, user_id)
     if user is None:

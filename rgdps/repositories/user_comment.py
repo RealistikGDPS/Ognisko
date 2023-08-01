@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-from typing import NamedTuple
-from typing import Optional
-
 from rgdps.common.context import Context
 from rgdps.models.user_comment import UserComment
 
@@ -11,7 +8,7 @@ async def from_id(
     ctx: Context,
     comment_id: int,
     include_deleted: bool = False,
-) -> Optional[UserComment]:
+) -> UserComment | None:
     condition = ""
     if not include_deleted:
         condition = " AND NOT deleted"

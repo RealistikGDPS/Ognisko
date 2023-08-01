@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 from typing import Mapping
-from typing import Optional
 
 from databases import Database
 from databases import DatabaseURL
@@ -20,26 +19,26 @@ class MySQLService:
     async def fetch_one(
         self,
         query: str,
-        values: Optional[dict[str, Any]] = None,
-    ) -> Optional[Mapping[str, Any]]:
+        values: dict[str, Any] | None = None,
+    ) -> Mapping[str, Any] | None:
         res = await self._pool.fetch_one(query, values)  # type: ignore
         return res._mapping if res is not None else None
 
     async def fetch_all(
         self,
         query: str,
-        values: Optional[dict[str, Any]] = None,
+        values: dict[str, Any] | None = None,
     ) -> list[Mapping[str, Any]]:
         res = await self._pool.fetch_all(query, values)  # type: ignore
         return [res._mapping for res in res]
 
-    async def execute(self, query: str, values: Optional[dict[str, Any]] = None) -> Any:
+    async def execute(self, query: str, values: dict[str, Any] | None = None) -> Any:
         return await self._pool.execute(query, values)  # type: ignore
 
     async def fetch_val(
         self,
         query: str,
-        values: Optional[dict[str, Any]] = None,
+        values: dict[str, Any] | None = None,
     ) -> Any:
         res = await self._pool.fetch_val(query, values)  # type: ignore
         return res

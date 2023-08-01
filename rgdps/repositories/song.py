@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import urllib.parse
-from typing import Optional
 
 from rgdps.common import gd_obj
 from rgdps.common.context import Context
@@ -13,7 +12,7 @@ async def from_db(
     ctx: Context,
     song_id: int,
     allow_blocked: bool = False,
-) -> Optional[Song]:
+) -> Song | None:
     song_db = await ctx.mysql.fetch_one(
         "SELECT id, name, author_id, author, author_youtube, size, "
         "download_url, source, blocked FROM songs WHERE id = :song_id"
@@ -41,7 +40,7 @@ async def create(ctx: Context, song: Song) -> int:
     )
 
 
-async def from_boomlings(ctx: Context, song_id: int) -> Optional[Song]:
+async def from_boomlings(ctx: Context, song_id: int) -> Song | None:
     # May raise an exception in case of network issue.
     song_api = await ctx.http.post(
         "http://www.boomlings.com/database/getGJSongInfo.php",
@@ -83,7 +82,7 @@ async def from_id(
     ctx: Context,
     song_id: int,
     allow_blocked: bool = False,
-) -> Optional[Song]:
+) -> Song | None:
     # TODO: Implement song LRU Caching
     song_db = await from_db(ctx, song_id, allow_blocked)
     if song_db is not None:

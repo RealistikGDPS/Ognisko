@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import logging
-from typing import Union
 
 import structlog
 
 logger = structlog.get_logger()
 
 
-def init_logging(log_level: Union[str, int]) -> None:
+def init_logging(log_level: str | int) -> None:
     logging.basicConfig(level=log_level)
 
 

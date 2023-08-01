@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import Optional
 
 from rgdps.common.context import Context
 from rgdps.models.level_comment import LevelComment
@@ -11,7 +10,7 @@ async def from_id(
     ctx: Context,
     comment_id: int,
     include_deleted: bool = False,
-) -> Optional[LevelComment]:
+) -> LevelComment | None:
 
     condition = ""
     if not include_deleted:
@@ -37,7 +36,7 @@ async def create(
     level_id: int,
     content: str,
     likes: int = 0,
-    post_ts: Optional[datetime] = None,
+    post_ts: datetime | None = None,
     deleted: bool = False,
 ) -> LevelComment:
     comment = LevelComment(

@@ -3,9 +3,7 @@ from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
 from typing import Generic
-from typing import Optional
 from typing import TypeVar
-from typing import Union
 
 __all__ = (
     "AbstractAsyncCache",
@@ -14,12 +12,12 @@ __all__ = (
 )
 
 T = TypeVar("T")
-KeyType = Union[str, int]
+KeyType = str | int
 
 
 class AbstractCache(ABC, Generic[T]):
     @abstractmethod
-    def get(self, key: KeyType) -> Optional[T]:
+    def get(self, key: KeyType) -> T | None:
         ...
 
     @abstractmethod
@@ -33,7 +31,7 @@ class AbstractCache(ABC, Generic[T]):
 
 class AbstractAsyncCache(ABC, Generic[T]):
     @abstractmethod
-    async def get(self, key: KeyType) -> Optional[T]:
+    async def get(self, key: KeyType) -> T | None:
         ...
 
     @abstractmethod

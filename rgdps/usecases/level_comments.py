@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Union
-
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
@@ -28,7 +26,7 @@ async def create(
     user_id: int,
     level_id: int,
     content: str,
-) -> Union[LevelComment, ServiceError]:
+) -> LevelComment | ServiceError:
     # TODO: Spam protection
     level = repositories.level.from_id(ctx, level_id=level_id)
     if level is None:

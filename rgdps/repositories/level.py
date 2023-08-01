@@ -4,7 +4,6 @@ import time
 from datetime import datetime
 from typing import Any
 from typing import NamedTuple
-from typing import Optional
 
 from rgdps.common import data_utils
 from rgdps.common.context import Context
@@ -19,7 +18,7 @@ async def from_id(
     ctx: Context,
     level_id: int,
     include_deleted: bool = False,
-) -> Optional[Level]:
+) -> Level | None:
     condition = ""
     if not include_deleted:
         condition = " AND NOT deleted"
@@ -166,18 +165,18 @@ async def search(
     ctx: Context,
     page: int,
     page_size: int,
-    query: Optional[str] = None,
-    search_type: Optional[LevelSearchType] = None,
-    level_lengths: Optional[list[LevelLength]] = None,
-    completed_levels: Optional[list[int]] = None,
+    query: str | None = None,
+    search_type: LevelSearchType | None = None,
+    level_lengths: list[LevelLength] | None = None,
+    completed_levels: list[int] | None = None,
     featured: bool = False,
     original: bool = False,
     two_player: bool = False,
     unrated: bool = False,
     rated: bool = False,
-    song_id: Optional[int] = None,
-    custom_song_id: Optional[int] = None,
-    followed_list: Optional[list[int]] = None,
+    song_id: int | None = None,
+    custom_song_id: int | None = None,
+    followed_list: list[int] | None = None,
 ) -> SearchResults:
     # Create the filters.
     filters = []

@@ -4,7 +4,6 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 from typing import Mapping
-from typing import Optional
 
 from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
@@ -19,8 +18,8 @@ class Level:
     name: str
     user_id: int
     description: str
-    custom_song_id: Optional[int]
-    official_song_id: Optional[int]
+    custom_song_id: int | None
+    official_song_id: int | None
     version: int
     length: LevelLength
     two_player: bool
@@ -30,14 +29,14 @@ class Level:
     binary_version: int
     upload_ts: datetime
     update_ts: datetime
-    original_id: Optional[int]
+    original_id: int | None
 
     # Statistics
     downloads: int
     likes: int
     stars: int
     difficulty: LevelDifficulty
-    demon_difficulty: Optional[LevelDemonDifficulty]
+    demon_difficulty: LevelDemonDifficulty | None
     coins: int
     coins_verified: bool
     requested_stars: int

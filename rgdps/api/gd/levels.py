@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from fastapi import Depends
 from fastapi import Form
 
@@ -100,15 +98,15 @@ async def levels_get(
     page: int = Form(0, alias="page", ge=0),
     search_type: LevelSearchType = Form(LevelSearchType.MOST_LIKED, alias="type"),
     level_lengths: str = Form(..., alias="len"),
-    completed_levels: Optional[str] = Form(None, alias="completedLevels"),
+    completed_levels: str | None = Form(None, alias="completedLevels"),
     featured: bool = Form(...),
     original: bool = Form(...),
     two_player: bool = Form(..., alias="twoPlayer"),
     unrated: bool = Form(False, alias="noStar"),
     rated: bool = Form(False, alias="star"),
-    song_id: Optional[int] = Form(None, alias="song"),
-    custom_song_id: Optional[int] = Form(None, alias="customSong"),
-    followed_list: Optional[str] = Form(None, alias="followed"),
+    song_id: int | None = Form(None, alias="song"),
+    custom_song_id: int | None = Form(None, alias="customSong"),
+    followed_list: str | None = Form(None, alias="followed"),
 ):
 
     if level_lengths != "-":

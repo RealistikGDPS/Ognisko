@@ -4,7 +4,6 @@ import pickle
 from datetime import timedelta
 from typing import Any
 from typing import Callable
-from typing import Optional
 from typing import TypeVar
 
 from redis.asyncio import Redis
@@ -62,7 +61,7 @@ class SimpleRedisCache(AbstractAsyncCache[T]):
             ex=self._expiry,
         )
 
-    async def get(self, key: KeyType) -> Optional[T]:
+    async def get(self, key: KeyType) -> T | None:
         data = await self._redis.get(self.__create_key(key))
         if data is None:
             return None

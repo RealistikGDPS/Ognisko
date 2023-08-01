@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import NamedTuple
-from typing import Union
 
 from rgdps import repositories
 from rgdps.common.context import Context
@@ -22,7 +21,7 @@ async def get_user(
     user_id: int,
     page: int = 0,
     page_size: int = 10,
-) -> Union[UserCommentResponse, ServiceError]:
+) -> UserCommentResponse | ServiceError:
     target_user = await repositories.user.from_id(ctx, user_id)
 
     if target_user is None:
@@ -48,7 +47,7 @@ async def create(
     ctx: Context,
     user: User,
     content: str,
-) -> Union[UserComment, ServiceError]:
+) -> UserComment | ServiceError:
     if len(content) > 255:
         return ServiceError.COMMENTS_INVALID_CONTENT
 
@@ -70,7 +69,7 @@ async def delete(
     ctx: Context,
     user: User,
     comment_id: int,
-) -> Union[UserComment, ServiceError]:
+) -> UserComment | ServiceError:
     comment = await repositories.user_comment.from_id(ctx, comment_id)
 
     if comment is None:

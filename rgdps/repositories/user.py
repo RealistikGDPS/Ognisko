@@ -1,12 +1,10 @@
 from __future__ import annotations
 
-from typing import Optional
-
 from rgdps.common.context import Context
 from rgdps.models.user import User
 
 
-async def from_db(ctx: Context, user_id: int) -> Optional[User]:
+async def from_db(ctx: Context, user_id: int) -> User | None:
     user_db = await ctx.mysql.fetch_one(
         "SELECT id, username, email, password, privileges, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
@@ -49,7 +47,7 @@ async def create(ctx: Context, user: User) -> int:
     return user_id
 
 
-async def from_id(ctx: Context, user_id: int) -> Optional[User]:
+async def from_id(ctx: Context, user_id: int) -> User | None:
     cache_user = await ctx.user_cache.get(user_id)
     if cache_user is not None:
         return cache_user
@@ -97,7 +95,7 @@ async def check_username_exists(ctx: Context, username: str) -> bool:
     )
 
 
-async def from_name(ctx: Context, username: str) -> Optional[User]:
+async def from_name(ctx: Context, username: str) -> User | None:
     user_id = await ctx.mysql.fetch_val(
         "SELECT id FROM users WHERE username = :username",
         {

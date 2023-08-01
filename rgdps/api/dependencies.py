@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from typing import Awaitable
 from typing import Callable
-from typing import Optional
 
 from fastapi import Depends
 from fastapi import Form
@@ -21,7 +20,7 @@ from rgdps.models.user import User
 def authenticate_dependency(
     user_id_alias: str = "accountID",
     password_alias: str = "gjp",
-    required_privileges: Optional[UserPrivileges] = None,
+    required_privileges: UserPrivileges | None = None,
 ) -> Callable[[HTTPContext, int, str], Awaitable[User]]:
     async def wrapper(
         ctx: HTTPContext = Depends(),
@@ -63,7 +62,7 @@ def authenticate_dependency(
 def password_authenticate_dependency(
     username_alias: str = "userName",
     password_alias: str = "password",
-    required_privileges: Optional[UserPrivileges] = None,
+    required_privileges: UserPrivileges | None = None,
 ) -> Callable[[HTTPContext, str, str], Awaitable[User]]:
     async def wrapper(
         ctx: HTTPContext = Depends(),

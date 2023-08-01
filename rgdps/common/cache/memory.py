@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import Optional
 from typing import TypeVar
 
 from .base import AbstractAsyncCache
@@ -31,7 +30,7 @@ class SimpleMemoryCache(AbstractCache[T]):
     def __init__(self) -> None:
         self._cache: dict[str, T] = {}
 
-    def get(self, key: KeyType) -> Optional[T]:
+    def get(self, key: KeyType) -> T | None:
         # We are returning a copy to reflect the behaviour of the database
         # based caches.
         obj_db = self._cache.get(_ensure_key_type(key))
@@ -58,7 +57,7 @@ class LRUMemoryCache(AbstractCache[T]):
         self._capacity = capacity
         self._cache: dict[str, T] = {}
 
-    def get(self, key: KeyType) -> Optional[T]:
+    def get(self, key: KeyType) -> T | None:
         key_str = _ensure_key_type(key)
         value = self._cache.get(key_str)
         if value is not None:
@@ -90,7 +89,7 @@ class SimpleAsyncMemoryCache(AbstractAsyncCache[T]):
     def __init__(self) -> None:
         self._cache: dict[str, T] = {}
 
-    async def get(self, key: KeyType) -> Optional[T]:
+    async def get(self, key: KeyType) -> T | None:
         return self._cache.get(_ensure_key_type(key))
 
     async def set(self, key: KeyType, value: T) -> None:
@@ -110,7 +109,7 @@ class LRUAsyncMemoryCache(AbstractAsyncCache[T]):
         self._capacity = capacity
         self._cache: dict[str, T] = {}
 
-    async def get(self, key: KeyType) -> Optional[T]:
+    async def get(self, key: KeyType) -> T | None:
         key_str = _ensure_key_type(key)
         value = self._cache.get(key_str)
         if value is not None:

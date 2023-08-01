@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import NamedTuple
-from typing import Optional
-from typing import Union
 
 from rgdps import repositories
 from rgdps.common.context import Context
@@ -42,7 +40,7 @@ async def create_or_update(
     binary_version: int,
     low_detail_mode: bool,
     building_time: int,
-) -> Union[Level, ServiceError]:
+) -> Level | ServiceError:
     # TODO: Validation
     # TODO: Description validation
     if custom_song_id:
@@ -143,19 +141,19 @@ async def search(
     ctx: Context,
     page: int,
     page_size: int,
-    query: Optional[str] = None,
-    search_type: Optional[LevelSearchType] = None,
-    level_lengths: Optional[list[LevelLength]] = None,
-    completed_levels: Optional[list[int]] = None,
+    query: str | None = None,
+    search_type: LevelSearchType | None = None,
+    level_lengths: list[LevelLength] | None = None,
+    completed_levels: list[int] | None = None,
     featured: bool = False,
     original: bool = False,
     two_player: bool = False,
     unrated: bool = False,
     rated: bool = False,
-    song_id: Optional[int] = None,
-    custom_song_id: Optional[int] = None,
-    followed_list: Optional[list[int]] = None,
-) -> Union[SearchResponse, ServiceError]:
+    song_id: int | None = None,
+    custom_song_id: int | None = None,
+    followed_list: list[int] | None = None,
+) -> SearchResponse | ServiceError:
     # Allow for a level to be looked up by ID while
     # allowing level names consisting of numbers.
     lookup_level = None
@@ -217,7 +215,7 @@ class LevelResponse(NamedTuple):
     data: str
 
 
-async def get(ctx: Context, level_id: int) -> Union[LevelResponse, ServiceError]:
+async def get(ctx: Context, level_id: int) -> LevelResponse | ServiceError:
     level = await repositories.level.from_id(ctx, level_id)
     level_data = repositories.level_data.from_level_id(ctx, level_id)
     if not (level and level_data):
@@ -234,7 +232,7 @@ async def get(ctx: Context, level_id: int) -> Union[LevelResponse, ServiceError]
     )
 
 
-async def delete(ctx: Context, level_id: int, user: User) -> Union[bool, ServiceError]:
+async def delete(ctx: Context, level_id: int, user: User) -> bool | ServiceError:
     level = await repositories.level.from_id(ctx, level_id)
     if not level:
         return ServiceError.LEVELS_NOT_FOUND
@@ -249,7 +247,7 @@ async def delete(ctx: Context, level_id: int, user: User) -> Union[bool, Service
     return True
 
 
-async def synchronise_search(ctx: Context) -> Union[bool, ServiceError]:
+async def synchronise_search(ctx: Context) -> bool | ServiceError:
     """Synchronise the search index with the backing database.
     Should be rarely used as its demanding on resources.
     """

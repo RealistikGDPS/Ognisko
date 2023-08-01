@@ -34,4 +34,4 @@ repos:
         additional_dependencies: [black==21.11b1]
 
 default_language_version:
-    python: python3.9
+    python: python3.10

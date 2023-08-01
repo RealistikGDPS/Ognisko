@@ -2,9 +2,7 @@ from __future__ import annotations
 
 import base64
 from typing import Callable
-from typing import Optional
 from typing import TypeVar
-from typing import Union
 
 from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
@@ -17,7 +15,7 @@ from rgdps.models.song import Song
 from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
 
-GDSerialisable = dict[Union[int, str], Union[int, str, float]]
+GDSerialisable = dict[int | str, int | str | float]
 
 
 def dumps(obj: GDSerialisable, sep: str = ":") -> str:

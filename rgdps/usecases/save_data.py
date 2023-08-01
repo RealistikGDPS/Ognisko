@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-from typing import Union
-
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 
 
-def get_as_path(ctx: Context, user_id: int) -> Union[str, ServiceError]:
+def get_as_path(ctx: Context, user_id: int) -> str | ServiceError:
     """NOTE: This only returns the path to the file as save data can reasonably
     exceed 200MB.
     """
@@ -20,7 +18,7 @@ def get_as_path(ctx: Context, user_id: int) -> Union[str, ServiceError]:
     return path
 
 
-def get(ctx: Context, user_id: int) -> Union[str, ServiceError]:
+def get(ctx: Context, user_id: int) -> str | ServiceError:
     """NOTE: This is memory expensive, with saves reasonably exceeding 200MB.
     Please use `get_as_path` when possible."""
     data = repositories.save_data.from_user_id(ctx, user_id)
@@ -37,7 +35,7 @@ def save(
     data: str,
     game_version: int,
     binary_version: int,
-) -> Union[None, ServiceError]:
+) -> None | ServiceError:
     # TODO: Data parsing
 
     # the 'a' are a placeholder for mappack strings and completed levels.
