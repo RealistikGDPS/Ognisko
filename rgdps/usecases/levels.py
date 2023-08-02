@@ -34,7 +34,7 @@ async def create_or_update(
     length: LevelLength,
     version: int,
     description: str,
-    original: int,
+    original: int | None,
     official_song_id: int,
     game_version: int,
     binary_version: int,
@@ -68,29 +68,36 @@ async def create_or_update(
             return ServiceError.LEVELS_UPDATE_LOCKED
 
         # Apply new values to the old level.
-        level = old_level
-        level.name = name
-        level.custom_song_id = song_id
-        level.official_song_id = track_id
-        level.two_player = two_player
-        level.coins = coins
-        level.publicity = publicity
-        level.render_str = render_str
-        level.requested_stars = requested_stars
-        level.length = length
-        level.version = version
-        level.description = description
-        level.original_id = original
-        level.game_version = game_version
-        level.binary_version = binary_version
-        level.low_detail_mode = low_detail_mode
-        level.building_time = building_time
-        level.update_ts = datetime.utcnow()
-        await repositories.level.update_full(ctx, level)
+        level = await repositories.level.update_partial(
+            ctx,
+            level_id=level_id,
+            name=name,
+            custom_song_id=song_id,
+            official_song_id=track_id,
+            two_player=two_player,
+            coins=coins,
+            publicity=publicity,
+            render_str=render_str,
+            requested_stars=requested_stars,
+            length=length,
+            version=version,
+            description=description,
+            original_id=original,
+            game_version=game_version,
+            binary_version=binary_version,
+            low_detail_mode=low_detail_mode,
+            building_time=building_time,
+            update_ts=datetime.now(),
+        )
+
+        # Should never happen.
+        if level is None:
+            return ServiceError.LEVELS_NOT_FOUND
+
         repositories.level_data.create(ctx, level.id, level_data)
     else:
-        level = Level(
-            id=level_id,
+        level = await repositories.level.create(
+            ctx,
             name=name,
             user_id=user_id,
             description=description,
@@ -103,27 +110,15 @@ async def create_or_update(
             render_str=render_str,
             game_version=game_version,
             binary_version=binary_version,
-            upload_ts=datetime.now(),
-            update_ts=datetime.now(),
-            original_id=original or None,
-            downloads=0,
-            likes=0,
-            stars=0,
-            difficulty=LevelDifficulty.NA,
-            demon_difficulty=None,
-            coins=coins,
-            coins_verified=False,
+            original_id=original,
             requested_stars=requested_stars,
-            feature_order=0,
-            search_flags=LevelSearchFlag.NONE,
             low_detail_mode=low_detail_mode,
             object_count=object_count,
+            coins=coins,
             copy_password=copy_password,
             building_time=building_time,
-            update_locked=False,
-            deleted=False,
         )
-        level.id = await repositories.level.create(ctx, level)
+
         repositories.level_data.create(ctx, level.id, level_data)
 
     return level

@@ -100,7 +100,7 @@ async def update_partial(
 
     # Query construction from dict
     query = "UPDATE level_comments SET "
-    query += " ".join(f"{name} = :{name}" for name in changed_data.keys())
+    query += ", ".join(f"{name} = :{name}" for name in changed_data.keys())
     query += " WHERE id = :id"
 
     changed_data["id"] = comment_id

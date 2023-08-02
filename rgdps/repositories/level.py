@@ -47,10 +47,84 @@ async def from_id(
     return Level.from_mapping(level_db)
 
 
-async def create(ctx: Context, level: Level) -> int:
-    level_id = await create_sql(ctx, level)
-    await create_meili(ctx, level, level_id)
-    return level_id
+async def create(
+    ctx: Context,
+    name: str,
+    user_id: int,
+    description: str = "",
+    custom_song_id: int | None = None,
+    official_song_id: int | None = 1,
+    version: int = 1,
+    length: LevelLength = LevelLength.TINY,
+    two_player: bool = False,
+    publicity: LevelPublicity = LevelPublicity.PUBLIC,
+    render_str: str = "",
+    game_version: int = 22,
+    binary_version: int = 34,
+    upload_ts: datetime | None = None,
+    update_ts: datetime | None = None,
+    original_id: int | None = None,
+    downloads: int = 0,
+    likes: int = 0,
+    stars: int = 0,
+    difficulty: LevelDifficulty = LevelDifficulty.NA,
+    demon_difficulty: LevelDemonDifficulty| None = None,
+    coins: int = 0,
+    coins_verified: bool = False,
+    requested_stars: int = 0,
+    feature_order: int = 0,
+    search_flags: LevelSearchFlag = LevelSearchFlag.NONE,
+    low_detail_mode: bool = False,
+    object_count: int = 0,
+    copy_password: int = 0,
+    building_time: int = 0,
+    update_locked: bool = False,
+    deleted: bool = False,
+) -> Level:
+    if upload_ts is None:
+        upload_ts = datetime.now()
+    if update_ts is None:
+        update_ts = datetime.now()
+
+    
+    level = Level(
+        id=0,
+        name=name,
+        user_id=user_id,
+        description=description,
+        custom_song_id=custom_song_id,
+        official_song_id=official_song_id,
+        version=version,
+        length=length,
+        two_player=two_player,
+        publicity=publicity,
+        render_str=render_str,
+        game_version=game_version,
+        binary_version=binary_version,
+        upload_ts=upload_ts,
+        update_ts=update_ts,
+        original_id=original_id,
+        downloads=downloads,
+        likes=likes,
+        stars=stars,
+        difficulty=difficulty,
+        demon_difficulty=demon_difficulty,
+        coins=coins,
+        coins_verified=coins_verified,
+        requested_stars=requested_stars,
+        feature_order=feature_order,
+        search_flags=search_flags,
+        low_detail_mode=low_detail_mode,
+        object_count=object_count,
+        copy_password=copy_password,
+        building_time=building_time,
+        update_locked=update_locked,
+        deleted=deleted,
+    )
+
+    level.id = await create_sql(ctx, level)
+    await create_meili(ctx, level, level.id)
+    return level
 
 
 async def create_sql(ctx: Context, level: Level) -> int:
@@ -80,15 +154,18 @@ def _unix_ts_as_dt(unix_ts: int) -> datetime:
     return datetime.fromtimestamp(unix_ts)
 
 
-def _make_meili_dict(level: Level) -> dict[str, Any]:
-    level_dict = level.as_dict(include_id=True)
-    level_dict["upload_ts"] = _dt_as_unix_ts(level_dict["upload_ts"])
-    level_dict["update_ts"] = _dt_as_unix_ts(level_dict["update_ts"])
+def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
+    if "upload_ts" in level_dict:
+        level_dict["upload_ts"] = _dt_as_unix_ts(level_dict["upload_ts"])
+
+    if "update_ts" in level_dict:
+        level_dict["update_ts"] = _dt_as_unix_ts(level_dict["update_ts"])
 
     # Split up bitwise enums as meili does not support bitwise operations.
-    level_dict["epic"] = bool(level_dict["search_flags"] & LevelSearchFlag.EPIC)
-    level_dict["magic"] = bool(level_dict["search_flags"] & LevelSearchFlag.MAGIC)
-    level_dict["awarded"] = bool(level_dict["search_flags"] & LevelSearchFlag.AWARDED)
+    if "search_flags" in level_dict:
+        level_dict["epic"] = bool(level_dict["search_flags"] & LevelSearchFlag.EPIC)
+        level_dict["magic"] = bool(level_dict["search_flags"] & LevelSearchFlag.MAGIC)
+        level_dict["awarded"] = bool(level_dict["search_flags"] & LevelSearchFlag.AWARDED)
 
     return level_dict
 
@@ -119,9 +196,7 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> Level:
 
 
 async def create_meili(ctx: Context, level: Level, level_id: int) -> None:
-    # This is a bit hacky as we do not have the level ID in the level object yet.
-    level_dict = _make_meili_dict(level)
-    level_dict["id"] = level_id
+    level_dict = _make_meili_dict(level.as_dict(include_id=True))
 
     index = ctx.meili.index("levels")
     await index.add_documents([level_dict])
@@ -135,7 +210,7 @@ async def update_full(ctx: Context, level: Level) -> None:
 
 async def update_meili_full(ctx: Context, level: Level) -> None:
     index = ctx.meili.index("levels")
-    await index.add_documents([_make_meili_dict(level)])
+    await index.add_documents([_make_meili_dict(level.as_dict(include_id=True))])
 
 
 async def update_sql_full(ctx: Context, level: Level) -> None:
@@ -168,7 +243,7 @@ async def update_sql_partial(
     length: LevelLength | Unset = UNSET,
     two_player: bool | Unset = UNSET,
     publicity: LevelPublicity | Unset = UNSET,
-    render_string: str | Unset = UNSET,
+    render_str: str | Unset = UNSET,
     game_version: int | Unset = UNSET,
     binary_version: int | Unset = UNSET,
     upload_ts: datetime | Unset = UNSET,
@@ -206,13 +281,13 @@ async def update_sql_partial(
     if is_set(version):
         changed_data["version"] = version
     if is_set(length):
-        changed_data["length"] = length
+        changed_data["length"] = length.value
     if is_set(two_player):
         changed_data["two_player"] = two_player
     if is_set(publicity):
-        changed_data["publicity"] = publicity
-    if is_set(render_string):
-        changed_data["render_string"] = render_string
+        changed_data["publicity"] = publicity.value
+    if is_set(render_str):
+        changed_data["render_str"] = render_str
     if is_set(game_version):
         changed_data["game_version"] = game_version
     if is_set(binary_version):
@@ -230,9 +305,12 @@ async def update_sql_partial(
     if is_set(stars):
         changed_data["stars"] = stars
     if is_set(difficulty):
-        changed_data["difficulty"] = difficulty
+        changed_data["difficulty"] = difficulty.value
     if is_set(demon_difficulty):
-        changed_data["demon_difficulty"] = demon_difficulty
+        if demon_difficulty is None:
+            changed_data["demon_difficulty"] = None
+        else:
+            changed_data["demon_difficulty"] = demon_difficulty.value
     if is_set(coins):
         changed_data["coins"] = coins
     if is_set(coins_verified):
@@ -242,7 +320,7 @@ async def update_sql_partial(
     if is_set(feature_order):
         changed_data["feature_order"] = feature_order
     if is_set(search_flags):
-        changed_data["search_flags"] = search_flags
+        changed_data["search_flags"] = search_flags.value
     if is_set(low_detail_mode):
         changed_data["low_detail_mode"] = low_detail_mode
     if is_set(object_count):
@@ -257,7 +335,7 @@ async def update_sql_partial(
         changed_data["deleted"] = deleted
 
     query = "UPDATE levels SET "
-    query += " ".join(f"{name} = :{name}," for name in changed_data.keys())
+    query += ", ".join(f"{name} = :{name}" for name in changed_data.keys())
     query += " WHERE id = :id"
 
     changed_data["id"] = level_id
@@ -278,7 +356,7 @@ async def update_meili_partial(
     length: LevelLength | Unset = UNSET,
     two_player: bool | Unset = UNSET,
     publicity: LevelPublicity | Unset = UNSET,
-    render_string: str | Unset = UNSET,
+    render_str: str | Unset = UNSET,
     game_version: int | Unset = UNSET,
     binary_version: int | Unset = UNSET,
     upload_ts: datetime | Unset = UNSET,
@@ -318,13 +396,13 @@ async def update_meili_partial(
     if is_set(version):
         changed_data["version"] = version
     if is_set(length):
-        changed_data["length"] = length
+        changed_data["length"] = length.value
     if is_set(two_player):
         changed_data["two_player"] = two_player
     if is_set(publicity):
-        changed_data["publicity"] = publicity
-    if is_set(render_string):
-        changed_data["render_string"] = render_string
+        changed_data["publicity"] = publicity.value
+    if is_set(render_str):
+        changed_data["render_str"] = render_str
     if is_set(game_version):
         changed_data["game_version"] = game_version
     if is_set(binary_version):
@@ -342,9 +420,12 @@ async def update_meili_partial(
     if is_set(stars):
         changed_data["stars"] = stars
     if is_set(difficulty):
-        changed_data["difficulty"] = difficulty
+        changed_data["difficulty"] = difficulty.value
     if is_set(demon_difficulty):
-        changed_data["demon_difficulty"] = demon_difficulty
+        if demon_difficulty is None:
+            changed_data["demon_difficulty"] = None
+        else:
+            changed_data["demon_difficulty"] = demon_difficulty.value
     if is_set(coins):
         changed_data["coins"] = coins
     if is_set(coins_verified):
@@ -354,7 +435,7 @@ async def update_meili_partial(
     if is_set(feature_order):
         changed_data["feature_order"] = feature_order
     if is_set(search_flags):
-        changed_data["search_flags"] = search_flags
+        changed_data["search_flags"] = search_flags.value
     if is_set(low_detail_mode):
         changed_data["low_detail_mode"] = low_detail_mode
     if is_set(object_count):
@@ -367,6 +448,8 @@ async def update_meili_partial(
         changed_data["update_locked"] = update_locked
     if is_set(deleted):
         changed_data["deleted"] = deleted
+
+    changed_data = _make_meili_dict(changed_data)
 
     await ctx.meili.index("levels").update_documents([changed_data])
 
@@ -383,7 +466,7 @@ async def update_partial(
     length: LevelLength | Unset = UNSET,
     two_player: bool | Unset = UNSET,
     publicity: LevelPublicity | Unset = UNSET,
-    render_string: str | Unset = UNSET,
+    render_str: str | Unset = UNSET,
     game_version: int | Unset = UNSET,
     binary_version: int | Unset = UNSET,
     upload_ts: datetime | Unset = UNSET,
@@ -418,7 +501,7 @@ async def update_partial(
         length=length,
         two_player=two_player,
         publicity=publicity,
-        render_string=render_string,
+        render_str=render_str,
         game_version=game_version,
         binary_version=binary_version,
         upload_ts=upload_ts,
@@ -457,7 +540,7 @@ async def update_partial(
         length=length,
         two_player=two_player,
         publicity=publicity,
-        render_string=render_string,
+        render_str=render_str,
         game_version=game_version,
         binary_version=binary_version,
         upload_ts=upload_ts,
