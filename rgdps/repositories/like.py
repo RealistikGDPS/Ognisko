@@ -19,12 +19,27 @@ async def from_id(ctx: Context, id: int) -> Like | None:
     return Like.from_mapping(like_db)
 
 
-async def create(ctx: Context, like: Like) -> int:
-    return await ctx.mysql.execute(
+async def create(
+    ctx: Context,
+    target_type: LikeType,
+    target_id: int,
+    user_id: int,
+    value: int,
+) -> Like:
+    like = Like(
+        id=0,
+        target_type=target_type,
+        target_id=target_id,
+        user_id=user_id,
+        value=value,
+    )
+    like.id = await ctx.mysql.execute(
         "INSERT INTO user_likes (target_type, target_id, user_id, value) VALUES "
         "(:target_type, :target_id, :user_id, :value)",
         like.as_dict(include_id=False),
     )
+
+    return like
 
 
 async def exists_by_target_and_user(

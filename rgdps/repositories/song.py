@@ -30,7 +30,7 @@ async def from_db(
     return Song.from_mapping(song_db)
 
 
-async def create(ctx: Context, song: Song) -> int:
+async def create_old(ctx: Context, song: Song) -> int:
     return await ctx.mysql.execute(
         "INSERT INTO songs (name, author_id, author, author_youtube, size, "
         "download_url, source, blocked, id) VALUES "
@@ -39,6 +39,47 @@ async def create(ctx: Context, song: Song) -> int:
         song.as_dict(include_id=True),
     )
 
+async def create(
+    ctx: Context,
+    name: str,
+    author_id: int,
+    author: str,
+    download_url: str,
+    author_youtube: str | None = None,
+    size: float = 0.0,
+    source: SongSource = SongSource.CUSTOM,
+    blocked: bool = False,
+    song_id: int | None = None,
+) -> Song:
+    
+    song = Song(
+        id=0,
+        name=name,
+        author_id=author_id,
+        author=author,
+        author_youtube=author_youtube,
+        size=size,
+        download_url=download_url,
+        source=source,
+        blocked=blocked,
+    )
+    
+    query = "INSERT INTO songs (name, author_id, author, author_youtube, size, "
+    query += "download_url, source, blocked"
+    if song_id is not None:
+        query += ", id"
+    query += ") VALUES (:name, :author_id, :author, :author_youtube, :size, "
+    query += ":download_url, :source, :blocked"
+    if song_id is not None:
+        query += ", :id"
+    query += ")"
+
+    song.id = await ctx.mysql.execute(
+        query,
+        song.as_dict(include_id=song_id is not None),
+    )
+
+    return song
 
 async def from_boomlings(ctx: Context, song_id: int) -> Song | None:
     # May raise an exception in case of network issue.
@@ -90,7 +131,7 @@ async def from_id(
 
     song_boomlings = await from_boomlings(ctx, song_id)
     if song_boomlings is not None:
-        await create(ctx, song_boomlings)
+        await create_old(ctx, song_boomlings)
         return song_boomlings
 
     return None

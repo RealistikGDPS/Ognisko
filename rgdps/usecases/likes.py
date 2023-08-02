@@ -35,7 +35,6 @@ async def like_user_comment(
     comment_id: int,
     value: int = 1,
 ) -> UserComment | ServiceError:
-    # TODO: Privilege checks
     comment = await repositories.user_comment.from_id(ctx, comment_id)
 
     if comment is None:
@@ -52,6 +51,13 @@ async def like_user_comment(
     ):
         return ServiceError.LIKES_ALREADY_LIKED
 
+    await repositories.like.create(
+        ctx,
+        LikeType.USER_COMMENT,
+        comment_id,
+        user_id,
+        value,
+    )
     comment.likes += value
     await repositories.user_comment.update(ctx, comment)
 
@@ -88,7 +94,21 @@ async def like_level(
     ):
         return ServiceError.LIKES_ALREADY_LIKED
 
+    await repositories.like.create(
+        ctx,
+        LikeType.LEVEL,
+        level.id,
+        user_id,
+        value,
+    )
     level.likes += value
-    await repositories.level.update_full(ctx, level)
+    level = await repositories.level.update_partial(
+        ctx,
+        level.id,
+        likes=level.likes,
+    )
 
+    if level is None:
+        return ServiceError.LIKES_INVALID_TARGET
+    
     return level
