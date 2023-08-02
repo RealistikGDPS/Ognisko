@@ -51,7 +51,6 @@ async def create(
     if len(content) > 255:
         return ServiceError.COMMENTS_INVALID_CONTENT
 
-    # TODO: Charset check
     comment = await repositories.user_comment.create(
         ctx,
         user_id=user_id,

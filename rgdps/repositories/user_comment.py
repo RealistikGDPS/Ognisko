@@ -113,7 +113,6 @@ async def create(
     return comment
 
 
-# TODO: Partial Update
 async def update(ctx: Context, comment: UserComment) -> None:
     await ctx.mysql.execute(
         "UPDATE user_comments SET user_id = :user_id, content = :content, "

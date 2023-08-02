@@ -1,5 +1,3 @@
-# Thanks mister Wylie!
-# TODO: The names feel weird, rename
 from __future__ import annotations
 
 from enum import IntEnum
@@ -38,12 +36,13 @@ class LevelDemonDifficulty(IntEnum):
     EXTREME = 6
 
 
+# Ideas:
+# Listed only for friends
 class LevelPublicity(IntEnum):
     PUBLIC = 0
     # Levels only accessible through direct ID.
     GLOBAL_UNLISTED = 1
     FRIENDS_UNLISTED = 2
-    # TODO: Maybe a listed friends version
 
 
 class LevelSearchType(IntEnum):

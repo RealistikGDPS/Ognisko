@@ -18,7 +18,9 @@ async def get_top_stars(ctx: Context) -> list[User] | ServiceError:
 
     for user_id in top_user_ids:
         user = await repositories.user.from_id(ctx, user_id)
-        assert user is not None, "Leaderboard user does not exist."
+        if user is None:
+            continue
+        
         res.append(user)
 
     return res

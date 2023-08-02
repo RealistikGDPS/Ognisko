@@ -41,8 +41,6 @@ async def create_or_update(
     low_detail_mode: bool,
     building_time: int,
 ) -> Level | ServiceError:
-    # TODO: Validation
-    # TODO: Description validation
     if custom_song_id:
         track_id = None
         song_id = custom_song_id
