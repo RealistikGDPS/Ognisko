@@ -80,26 +80,15 @@ def _unix_ts_as_dt(unix_ts: int) -> datetime:
     return datetime.fromtimestamp(unix_ts)
 
 
-def _split_flag(flag: Any) -> dict[str, int]:
-    if not issubclass(flag, IntFlag):
-        raise TypeError("Given flag must be a subclass of `enum.IntFlag`.")
-
-    flag_type = type(flag)
-    res = {}
-
-    for value in flag_type:
-        res[flag.name] = bool(flag & value)
-
-    return res
-
-
 def _make_meili_dict(level: Level) -> dict[str, Any]:
     level_dict = level.as_dict(include_id=True)
     level_dict["upload_ts"] = _dt_as_unix_ts(level_dict["upload_ts"])
     level_dict["update_ts"] = _dt_as_unix_ts(level_dict["update_ts"])
 
     # Split up bitwise enums as meili does not support bitwise operations.
-    level_dict |= _split_flag(level_dict["search_flags"])
+    level_dict["epic"] = bool(level_dict["search_flags"] & LevelSearchFlag.EPIC)
+    level_dict["magic"] = bool(level_dict["search_flags"] & LevelSearchFlag.MAGIC)
+    level_dict["awarded"] = bool(level_dict["search_flags"] & LevelSearchFlag.AWARDED)
 
     return level_dict
 
