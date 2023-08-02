@@ -131,3 +131,9 @@ router.add_api_route(
     level_comments.create_comment_post,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/requestUserAccess.php",
+    users.request_status_get,
+    methods=["POST"],
+)

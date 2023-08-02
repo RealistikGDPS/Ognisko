@@ -9,6 +9,7 @@ from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.users import UserPrivacySetting
+from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 
@@ -234,3 +235,20 @@ async def update_privileges(
     updated_user.privileges = privileges
     await repositories.user.update(ctx, updated_user)
     return updated_user
+
+
+async def request_status(
+    ctx: Context,
+    user_id: int,
+) -> UserPrivilegeLevel | ServiceError:
+    user = await repositories.user.from_id(ctx, user_id)
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    if user.privileges & UserPrivileges.USER_REQUEST_MODERATOR:
+        return UserPrivilegeLevel.MODERATOR
+
+    elif user.privileges & UserPrivileges.USER_REQUEST_ELDER:
+        return UserPrivilegeLevel.ELDER_MODERATOR
+
+    return UserPrivilegeLevel.NONE

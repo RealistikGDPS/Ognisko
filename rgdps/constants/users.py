@@ -3,6 +3,8 @@ from __future__ import annotations
 from enum import IntEnum
 from enum import IntFlag
 
+from rgdps.common.mixins import IntEnumStringMixin
+
 
 # 128-bit integer
 class UserPrivileges(IntFlag):
@@ -66,3 +68,13 @@ class UserPrivacySetting(IntEnum):
     PUBLIC = 0
     FRIENDS = 1
     PRIVATE = 2
+
+
+class UserPrivilegeLevel(IntEnumStringMixin, IntEnum):
+    """Enum for determining whether a user should be displayed as a
+    moderator, elder moderator, or neither.
+    """
+
+    NONE = 0
+    MODERATOR = 1
+    ELDER_MODERATOR = 2

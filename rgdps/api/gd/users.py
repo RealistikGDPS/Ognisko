@@ -11,6 +11,7 @@ from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import LoginResponse
+from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.usecases import users
@@ -166,3 +167,23 @@ async def user_settings_update(
 
     logger.info(f"Successfully updated settings of {user}.")
     return responses.success()
+
+
+async def request_status_get(
+    ctx: HTTPContext = Depends(),
+    user: User = Depends(authenticate_dependency()),
+):
+    result = await users.request_status(ctx, user.id)
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            f"Failed to get request status of {user} with error {result!r}.",
+        )
+        return responses.fail()
+
+    logger.info(f"Successfully got request status of {user}.")
+
+    if result is UserPrivilegeLevel.NONE:
+        return responses.fail()
+
+    return str(result)
