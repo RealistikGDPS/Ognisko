@@ -45,23 +45,18 @@ async def get_user(
 
 async def create(
     ctx: Context,
-    user: User,
+    user_id: int,
     content: str,
 ) -> UserComment | ServiceError:
     if len(content) > 255:
         return ServiceError.COMMENTS_INVALID_CONTENT
 
     # TODO: Charset check
-    comment = UserComment(
-        id=0,
-        user_id=user.id,
+    comment = await repositories.user_comment.create(
+        ctx,
+        user_id=user_id,
         content=content,
-        likes=0,
-        post_ts=datetime.now(),
-        deleted=False,
     )
-    comment.id = await repositories.user_comment.create(ctx, comment)
-
     return comment
 
 

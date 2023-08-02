@@ -1,7 +1,10 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from rgdps.common.context import Context
 from rgdps.models.user_comment import UserComment
+from rgdps.common.typing import UNSET, Unset, is_set
 
 
 async def from_id(
@@ -82,12 +85,30 @@ async def get_user_comment_count(
     )
 
 
-async def create(ctx: Context, comment: UserComment) -> int:
-    return await ctx.mysql.execute(
+async def create(
+    ctx: Context,
+    user_id: int,
+    content: str,
+    likes: int = 0,
+    post_ts: datetime | None = None,
+    deleted: bool = False,
+) -> UserComment:
+    comment = UserComment(
+        id=0,
+        user_id=user_id,
+        content=content,
+        likes=likes,
+        post_ts=post_ts or datetime.now(),
+        deleted=deleted,
+    )
+
+    comment.id = await ctx.mysql.execute(
         "INSERT INTO user_comments (user_id, content, likes, post_ts, deleted) "
         "VALUES (:user_id, :content, :likes, :post_ts, :deleted)",
         comment.as_dict(include_id=False),
     )
+
+    return comment
 
 
 # TODO: Partial Update
@@ -97,3 +118,40 @@ async def update(ctx: Context, comment: UserComment) -> None:
         "likes = :likes, post_ts = :post_ts, deleted = :deleted WHERE id = :id",
         comment.as_dict(include_id=True),
     )
+
+
+async def update_partial(
+    ctx: Context,
+    comment_id: int,
+    user_id: Unset | int = UNSET,
+    content: Unset | str = UNSET,
+    likes: Unset | int = UNSET,
+    post_ts: Unset | datetime = UNSET,
+    deleted: Unset | bool = UNSET,
+) -> UserComment | None:
+    
+    changed_data = {}
+
+    if is_set(user_id):
+        changed_data["user_id"] = user_id
+    if is_set(content):
+        changed_data["content"] = content
+    if is_set(likes):
+        changed_data["likes"] = likes
+    if is_set(post_ts):
+        changed_data["post_ts"] = post_ts
+    if is_set(deleted):
+        changed_data["deleted"] = deleted
+
+    if not changed_data:
+        return None
+    
+    query = "UPDATE user_comments SET "
+    query += ", ".join(f"{key} = :{key}" for key in changed_data.keys())
+    query += " WHERE id = :id"
+
+    changed_data["id"] = comment_id
+
+    await ctx.mysql.execute(query, changed_data)
+
+    return await from_id(ctx, comment_id)

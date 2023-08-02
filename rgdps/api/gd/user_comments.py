@@ -51,7 +51,7 @@ async def user_comments_post(
     ),
     content: Base64String = Form(..., alias="comment"),
 ):
-    result = await user_comments.create(ctx, user, content)
+    result = await user_comments.create(ctx, user.id, content)
 
     if isinstance(result, ServiceError):
         logger.info(

@@ -96,7 +96,7 @@ async def update_partial(
         changed_data["deleted"] = deleted
 
     if not changed_data:
-        return
+        return await from_id(ctx, comment_id)
 
     # Query construction from dict
     query = "UPDATE level_comments SET "

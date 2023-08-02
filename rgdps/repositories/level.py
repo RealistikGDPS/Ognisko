@@ -334,6 +334,9 @@ async def update_sql_partial(
     if is_set(deleted):
         changed_data["deleted"] = deleted
 
+    if not changed_data:
+        return await from_id(ctx, level_id)
+
     query = "UPDATE levels SET "
     query += ", ".join(f"{name} = :{name}" for name in changed_data.keys())
     query += " WHERE id = :id"
