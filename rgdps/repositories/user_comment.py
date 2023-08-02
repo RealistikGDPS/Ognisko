@@ -3,8 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 
 from rgdps.common.context import Context
+from rgdps.common.typing import is_set
+from rgdps.common.typing import UNSET
+from rgdps.common.typing import Unset
 from rgdps.models.user_comment import UserComment
-from rgdps.common.typing import UNSET, Unset, is_set
 
 
 async def from_id(
@@ -129,7 +131,7 @@ async def update_partial(
     post_ts: Unset | datetime = UNSET,
     deleted: Unset | bool = UNSET,
 ) -> UserComment | None:
-    
+
     changed_data = {}
 
     if is_set(user_id):
@@ -145,7 +147,7 @@ async def update_partial(
 
     if not changed_data:
         return None
-    
+
     query = "UPDATE user_comments SET "
     query += ", ".join(f"{key} = :{key}" for key in changed_data.keys())
     query += " WHERE id = :id"

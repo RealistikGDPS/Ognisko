@@ -68,7 +68,7 @@ async def create(
     likes: int = 0,
     stars: int = 0,
     difficulty: LevelDifficulty = LevelDifficulty.NA,
-    demon_difficulty: LevelDemonDifficulty| None = None,
+    demon_difficulty: LevelDemonDifficulty | None = None,
     coins: int = 0,
     coins_verified: bool = False,
     requested_stars: int = 0,
@@ -86,7 +86,6 @@ async def create(
     if update_ts is None:
         update_ts = datetime.now()
 
-    
     level = Level(
         id=0,
         name=name,
@@ -165,7 +164,9 @@ def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     if "search_flags" in level_dict:
         level_dict["epic"] = bool(level_dict["search_flags"] & LevelSearchFlag.EPIC)
         level_dict["magic"] = bool(level_dict["search_flags"] & LevelSearchFlag.MAGIC)
-        level_dict["awarded"] = bool(level_dict["search_flags"] & LevelSearchFlag.AWARDED)
+        level_dict["awarded"] = bool(
+            level_dict["search_flags"] & LevelSearchFlag.AWARDED,
+        )
 
     return level_dict
 

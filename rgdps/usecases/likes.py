@@ -110,5 +110,5 @@ async def like_level(
 
     if level is None:
         return ServiceError.LIKES_INVALID_TARGET
-    
+
     return level

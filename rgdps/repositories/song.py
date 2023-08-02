@@ -39,6 +39,7 @@ async def create_old(ctx: Context, song: Song) -> int:
         song.as_dict(include_id=True),
     )
 
+
 async def create(
     ctx: Context,
     name: str,
@@ -51,7 +52,7 @@ async def create(
     blocked: bool = False,
     song_id: int | None = None,
 ) -> Song:
-    
+
     song = Song(
         id=0,
         name=name,
@@ -63,7 +64,7 @@ async def create(
         source=source,
         blocked=blocked,
     )
-    
+
     query = "INSERT INTO songs (name, author_id, author, author_youtube, size, "
     query += "download_url, source, blocked"
     if song_id is not None:
@@ -80,6 +81,7 @@ async def create(
     )
 
     return song
+
 
 async def from_boomlings(ctx: Context, song_id: int) -> Song | None:
     # May raise an exception in case of network issue.
