@@ -76,7 +76,12 @@ async def like_target_post(
 
     result = None
     if target_type is LikeType.USER_COMMENT:
-        result = await likes.like_user_comment(ctx, user.id, target_id, int(is_positive))
+        result = await likes.like_user_comment(
+            ctx,
+            user.id,
+            target_id,
+            int(is_positive),
+        )
     elif target_type is LikeType.LEVEL:
         result = await likes.like_level(ctx, user.id, target_id, int(is_positive))
 

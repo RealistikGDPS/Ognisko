@@ -27,6 +27,9 @@ class Unset:
     def __repr__(self) -> str:
         return "Unset"
 
+    def __bool__(self) -> bool:
+        return False
+
 
 UNSET = Unset()
 
