@@ -20,10 +20,8 @@ RUN pip install -r main.txt
 COPY database /app/database
 
 # Move scripts to /app
-RUN apt update && apt install default-mysql-client curl dos2unix -y
+RUN apt update && apt install default-mysql-client curl -y
 COPY scripts /app/scripts
-RUN dos2unix /app/scripts/*
-RUN chmod +x /app/scripts/*
 
 # Copy the application
 COPY rgdps /app/rgdps
