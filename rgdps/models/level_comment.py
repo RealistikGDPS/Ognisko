@@ -12,6 +12,7 @@ class LevelComment:
     user_id: int
     level_id: int
     content: str
+    percent: int
     likes: int
     post_ts: datetime
     deleted: bool
@@ -23,6 +24,7 @@ class LevelComment:
             user_id=mapping["user_id"],
             level_id=mapping["level_id"],
             content=mapping["content"],
+            percent=mapping["percent"],
             likes=mapping["likes"],
             post_ts=mapping["post_ts"],
             deleted=mapping["deleted"],
@@ -33,6 +35,7 @@ class LevelComment:
             "user_id": self.user_id,
             "level_id": self.level_id,
             "content": self.content,
+            "percent": self.percent,
             "likes": self.likes,
             "post_ts": self.post_ts,
             "deleted": self.deleted,

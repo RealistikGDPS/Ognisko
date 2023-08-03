@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 from typing import Callable
+from typing import overload
 from typing import TypeVar
 
 from rgdps.common import hashes
@@ -11,6 +12,7 @@ from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
+from rgdps.models.level_comment import LevelComment
 from rgdps.models.song import Song
 from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
@@ -18,8 +20,19 @@ from rgdps.models.user_comment import UserComment
 GDSerialisable = dict[int | str, int | str | float]
 
 
-def dumps(obj: GDSerialisable, sep: str = ":") -> str:
+def _serialise_gd_object(obj: GDSerialisable, sep: str = ":") -> str:
     return sep.join(str(key) + sep + str(value) for key, value in obj.items())
+
+
+def dumps(
+    obj: GDSerialisable | list[GDSerialisable],
+    sep: str = ":",
+    list_sep: str = ":",
+) -> str:
+    if isinstance(obj, list):
+        return list_sep.join(_serialise_gd_object(gd_obj, sep) for gd_obj in obj)
+    else:
+        return _serialise_gd_object(obj, sep)
 
 
 VT = TypeVar("VT")
@@ -65,11 +78,11 @@ def create_profile(
         6: rank,
         7: user.id,
         8: user.creator_points,
-        9: user.display_type,
+        9: user.icon,
         10: user.primary_colour,
         11: user.secondary_colour,
         13: user.coins,
-        14: user.icon,
+        14: user.display_type,
         15: 0,
         16: user.id,
         17: user.user_coins,
@@ -103,6 +116,38 @@ def create_user_comment(comment: UserComment) -> GDSerialisable:
         6: comment.id,
         9: into_str_ts(comment.post_ts),
         12: "0,0,0",  # TODO: Colour system (privilege bound)
+    }
+
+
+def create_level_comment(comment: LevelComment, user: User) -> GDSerialisable:
+    badge_level = 0
+    if user.privileges & UserPrivileges.USER_DISPLAY_ELDER_BADGE:
+        badge_level = 2
+    elif user.privileges & UserPrivileges.USER_DISPLAY_MOD_BADGE:
+        badge_level = 1
+
+    return {
+        2: base64.b64encode(comment.content.encode()).decode(),
+        3: user.id,
+        4: comment.likes,
+        6: comment.id,
+        8: user.id,
+        9: into_str_ts(comment.post_ts),
+        10: comment.percent or 0,
+        11: badge_level,
+        12: "0,0,0",  # TODO: Colour system (privilege bound)
+    }
+
+
+def create_level_comment_author_string(user: User) -> GDSerialisable:
+    return {
+        1: user.username,
+        9: user.icon,
+        10: user.primary_colour,
+        11: user.secondary_colour,
+        14: user.display_type,
+        15: 2 if user.glow else 0,
+        16: user.id,
     }
 
 

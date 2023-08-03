@@ -37,6 +37,7 @@ async def create(
     user_id: int,
     level_id: int,
     content: str,
+    percent: int,
     likes: int = 0,
     post_ts: datetime | None = None,
     deleted: bool = False,
@@ -46,13 +47,14 @@ async def create(
         user_id=user_id,
         level_id=level_id,
         content=content,
+        percent=percent,
         likes=likes,
         post_ts=post_ts or datetime.now(),
         deleted=deleted,
     )
     comment.id = await ctx.mysql.execute(
-        "INSERT INTO level_comments (user_id, level_id, content, likes, post_ts, deleted) "
-        "VALUES (:user_id, :level_id, :content, :likes, :post_ts, :deleted)",
+        "INSERT INTO level_comments (user_id, level_id, content, percent, likes, post_ts, deleted) "
+        "VALUES (:user_id, :level_id, :content, :percent, :likes, :post_ts, :deleted)",
         comment.as_dict(include_id=False),
     )
     return comment
@@ -72,6 +74,7 @@ async def update_partial(
     user_id: int | Unset = UNSET,
     level_id: int | Unset = UNSET,
     content: str | Unset = UNSET,
+    percent: int | Unset = UNSET,
     likes: int | Unset = UNSET,
     post_ts: datetime | Unset = UNSET,
     deleted: bool | Unset = UNSET,
@@ -84,6 +87,8 @@ async def update_partial(
         changed_data["level_id"] = level_id
     if is_set(content):
         changed_data["content"] = content
+    if is_set(percent):
+        changed_data["percent"] = percent
     if is_set(likes):
         changed_data["likes"] = likes
     if is_set(post_ts):
@@ -106,3 +111,43 @@ async def update_partial(
     await ctx.mysql.execute(query, changed_data)
 
     return await from_id(ctx, comment_id)
+
+
+async def from_level_id_paginated(
+    ctx: Context,
+    level_id: int,
+    page: int,
+    page_size: int,
+    include_deleted: bool = False,
+) -> list[LevelComment]:
+    condition = ""
+    # FIXME: Unused
+    if not include_deleted:
+        condition = "AND NOT deleted"
+
+    comments_db = await ctx.mysql.fetch_all(
+        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
+        f"level_comments WHERE level_id = :level_id {condition} "
+        "ORDER BY id DESC LIMIT :limit OFFSET :offset",
+        {
+            "level_id": level_id,
+            "limit": page_size,
+            "offset": page * page_size,
+        },
+    )
+
+    return [LevelComment.from_mapping(comment_db) for comment_db in comments_db]
+
+
+async def get_level_comment_count(
+    ctx: Context,
+    level_id: int,
+    include_deleted: bool = False,
+) -> int:
+    return await ctx.mysql.fetch_val(
+        "SELECT COUNT(*) FROM level_comments WHERE level_id = :level_id "
+        "AND deleted = 0"
+        if not include_deleted
+        else "",
+        {"level_id": level_id},
+    )
