@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-import time
-
 from fastapi import Depends
 from fastapi import Form
 
@@ -203,7 +201,5 @@ async def suggest_level_stars(
     stars: int = Form(...),
     feature: bool = Form(...),
 ):
-    feature_order = int(time.time()) if feature else 0
-
     await levels.suggest_stars(ctx, level_id=level_id, stars=stars, feature=feature)
     return responses.success()
