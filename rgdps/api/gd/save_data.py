@@ -19,14 +19,15 @@ async def save_data_get(
     ctx: HTTPContext = Depends(),
     user: User = Depends(password_authenticate_dependency()),
 ):
-    data_path = save_data.get_as_path(ctx, user.id)
+    # TODO: Streaming
+    data = await save_data.get(ctx, user.id)
 
-    if isinstance(data_path, ServiceError):
-        logger.info(f"Failed to fetch save data with error {data_path!r}.")
+    if isinstance(data, ServiceError):
+        logger.info(f"Failed to fetch save data with error {data!r}.")
         return responses.fail()
 
-    logger.info(f"Successfully fetched save data {data_path}.")
-    return FileResponse(data_path)  # FIXME: The gd client doesnt like this.
+    logger.info(f"Successfully fetched save data.")
+    return data
 
 
 async def save_data_post(
@@ -36,7 +37,7 @@ async def save_data_post(
     game_version: int = Form(..., alias="gameVersion"),
     binary_version: int = Form(..., alias="binaryVersion"),
 ):
-    res = save_data.save(
+    res = await save_data.save(
         ctx,
         user.id,
         data,
