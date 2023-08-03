@@ -56,7 +56,7 @@ services:
       - S3_ACCESS_KEY=${S3_ACCESS_KEY}
       - S3_SECRET_KEY=${S3_SECRET_KEY}
     volumes:
-      # - .:/app
+      - .:/app
       - ${RGDPS_LEVELS_DIR}:/data/levels
       - ${RGDPS_SAVES_DIR}:/data/saves
 
