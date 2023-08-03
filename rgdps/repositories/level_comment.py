@@ -14,7 +14,6 @@ async def from_id(
     comment_id: int,
     include_deleted: bool = False,
 ) -> LevelComment | None:
-
     condition = ""
     if not include_deleted:
         condition = " AND NOT deleted"
@@ -77,7 +76,6 @@ async def update_partial(
     post_ts: datetime | Unset = UNSET,
     deleted: bool | Unset = UNSET,
 ) -> LevelComment | None:
-
     changed_data = {}
 
     if is_set(user_id):
