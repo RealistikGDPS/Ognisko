@@ -137,3 +137,9 @@ router.add_api_route(
     users.request_status_get,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/getGJComments21.php",
+    level_comments.level_comments_get,
+    methods=["POST"],
+)

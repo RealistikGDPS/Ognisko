@@ -24,7 +24,12 @@ async def user_comments_get(
     page: int = Form(..., alias="page"),
     ctx: HTTPContext = Depends(),
 ):
-    result = await user_comments.get_user(ctx, target_id, page)
+    result = await user_comments.get_user(
+        ctx,
+        target_id,
+        page,
+        PAGE_SIZE,
+    )
 
     if isinstance(result, ServiceError):
         logger.info(
@@ -38,7 +43,7 @@ async def user_comments_get(
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
 
-    logger.info(f"Successfully viewed comments of {target_id}.")
+    logger.info(f"Successfully viewed comments for user ID {target_id}.")
     return response
 
 
