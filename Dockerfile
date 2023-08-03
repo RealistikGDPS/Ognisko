@@ -3,7 +3,8 @@ FROM python:3.10
 ENV PYTHONUNBUFFERED=1
 ENV USE_ENV_CONFIG=1
 
-WORKDIR /app
+# Apt dependencies
+RUN apt update && apt install default-mysql-client curl -y
 
 # Setup Go Migrate
 RUN wget https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz && \
@@ -16,16 +17,10 @@ RUN wget https://github.com/golang-migrate/migrate/releases/download/v4.15.2/mig
 COPY requirements/main.txt .
 RUN pip install -r main.txt
 
-# Move migrations
-COPY database /app/database
-
-# Move scripts to /app
-RUN apt update && apt install default-mysql-client curl -y
-COPY scripts /app/scripts
-
-# Copy the application
-COPY rgdps /app/rgdps
+COPY . /app
+WORKDIR /app
 
 # Run the application
 EXPOSE 80
-CMD ["/app/scripts/bootstrap.sh"]
+
+ENTRYPOINT ["/app/scripts/bootstrap.sh"]

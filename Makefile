@@ -1,6 +1,6 @@
 #!/usr/bin/make
 build:
-	docker build -t realistikgdps .
+	docker build -t realistikgdps:latest .
 
 run:
 	docker-compose up \
