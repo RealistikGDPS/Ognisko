@@ -3,6 +3,8 @@ from __future__ import annotations
 from urllib.parse import quote
 
 import httpx
+from aiobotocore.config import AioConfig
+from aiobotocore.session import get_session
 from databases import DatabaseURL
 from fastapi import FastAPI
 from fastapi import status
@@ -81,6 +83,7 @@ def init_mysql(app: FastAPI) -> None:
     @app.on_event("startup")
     async def on_startup() -> None:
         await app.state.mysql.connect()
+        logger.info("Connected to the MySQL database.")
 
     @app.on_event("shutdown")
     async def on_shutdown() -> None:
@@ -95,6 +98,7 @@ def init_redis(app: FastAPI) -> None:
     @app.on_event("startup")
     async def on_startup() -> None:
         await app.state.redis.initialize()
+        logger.info("Connected to the Redis database.")
 
     @app.on_event("shutdown")
     async def on_shutdown() -> None:
@@ -111,6 +115,33 @@ def init_meili(app: FastAPI) -> None:
     @app.on_event("startup")
     async def startup() -> None:
         await app.state.meili.health()
+        logger.info("Connected to the MeiliSearch database.")
+
+
+def init_s3_storage(app: FastAPI) -> None:
+    s3_creator = get_session().create_client(
+        "s3",
+        region_name=config.s3_region,
+        endpoint_url=config.s3_endpoint,
+        aws_access_key_id=config.s3_access_key,
+        aws_secret_access_key=config.s3_secret_key,
+        config=AioConfig(
+            read_timeout=5,
+        ),
+    )
+
+    @app.on_event("startup")
+    async def startup() -> None:
+        app.state.s3 = await s3_creator.__aenter__()
+        logger.info("Connected to S3.")
+
+    @app.on_event("shutdown")
+    async def shutdown() -> None:
+        await app.state.s3.__aexit__(None, None, None)
+
+
+def init_local_storage(app: FastAPI) -> None:
+    logger.info("Initialising local storage.")
 
 
 def init_http(app: FastAPI) -> None:
@@ -125,6 +156,8 @@ def init_cache_stateful(app: FastAPI) -> None:
     app.state.user_cache = SimpleAsyncMemoryCache()
     app.state.password_cache = SimpleAsyncMemoryCache()
 
+    logger.info("Initialised stateful caching.")
+
 
 def init_cache_stateless(app: FastAPI) -> None:
     app.state.user_cache = SimpleRedisCache(
@@ -137,6 +170,8 @@ def init_cache_stateless(app: FastAPI) -> None:
         deserialise=lambda x: x.decode(),
         serialise=lambda x: x.encode(),
     )
+
+    logger.info("Initialised stateless caching.")
 
 
 def init_routers(app: FastAPI) -> None:
@@ -157,6 +192,11 @@ def init_api() -> FastAPI:
     init_redis(app)
     init_meili(app)
     init_http(app)
+
+    if config.s3_enabled:
+        init_s3_storage(app)
+    else:
+        init_local_storage(app)
 
     if config.srv_stateless:
         init_cache_stateless(app)

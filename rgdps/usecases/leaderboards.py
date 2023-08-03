@@ -20,7 +20,7 @@ async def get_top_stars(ctx: Context) -> list[User] | ServiceError:
         user = await repositories.user.from_id(ctx, user_id)
         if user is None:
             continue
-        
+
         res.append(user)
 
     return res

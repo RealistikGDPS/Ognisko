@@ -31,6 +31,12 @@ class Config:
     meili_host: str = "localhost"
     meili_port: int = 7700
     meili_key: str = "master_key"
+    s3_enabled: bool = False
+    s3_bucket: str = "rgdps"
+    s3_region: str = ""
+    s3_endpoint: str = ""
+    s3_access_key: str = ""
+    s3_secret_key: str = ""
 
 
 def read_config_json() -> dict[str, Any]:
@@ -77,18 +83,27 @@ def load_json_config() -> Config:
     return config
 
 
+def _env_is_true(value: str | None) -> bool:
+    if not isinstance(value, str):
+        return False
+
+    return value.lower() in ("true", "1")
+
+
 def load_env_config() -> Config:
     conf = Config()
 
     for key, cast in get_type_hints(conf).items():
         if (env_value := os.environ.get(key.upper())) is not None:
+            if cast is bool:
+                env_value = _env_is_true(env_value)
             setattr(conf, key, cast(env_value))
 
     return conf
 
 
 def load_config() -> Config:
-    if os.environ.get("USE_ENV_CONFIG") == "1":
+    if _env_is_true(os.environ.get("USE_ENV_CONFIG")):
         return load_env_config()
     return load_json_config()
 

@@ -50,6 +50,12 @@ services:
       - MEILI_KEY=${MEILI_KEY}
       - SERVICE_READINESS_TIMEOUT=${SERVICE_READINESS_TIMEOUT}
       - SRV_NAME=${SRV_NAME}
+      - S3_ENABLED=${S3_ENABLED}
+      - S3_BUCKET=${S3_BUCKET}
+      - S3_REGION=${S3_REGION}
+      - S3_ENDPOINT=${S3_ENDPOINT}
+      - S3_ACCESS_KEY=${S3_ACCESS_KEY}
+      - S3_SECRET_KEY=${S3_SECRET_KEY}
     volumes:
       - ${RGDPS_LEVELS_DIR}:/data/levels
       - ${RGDPS_SAVES_DIR}:/data/saves

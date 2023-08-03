@@ -92,7 +92,7 @@ async def create_or_update(
         if level is None:
             return ServiceError.LEVELS_NOT_FOUND
 
-        repositories.level_data.create(ctx, level.id, level_data)
+        await repositories.level_data.create(ctx, level.id, level_data)
     else:
         level = await repositories.level.create(
             ctx,
@@ -117,7 +117,7 @@ async def create_or_update(
             building_time=building_time,
         )
 
-        repositories.level_data.create(ctx, level.id, level_data)
+        await repositories.level_data.create(ctx, level.id, level_data)
 
     return level
 
@@ -210,7 +210,7 @@ class LevelResponse(NamedTuple):
 
 async def get(ctx: Context, level_id: int) -> LevelResponse | ServiceError:
     level = await repositories.level.from_id(ctx, level_id)
-    level_data = repositories.level_data.from_level_id(ctx, level_id)
+    level_data = await repositories.level_data.from_level_id(ctx, level_id)
     if not (level and level_data):
         return ServiceError.LEVELS_NOT_FOUND
 

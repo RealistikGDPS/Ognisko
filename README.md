@@ -5,6 +5,11 @@ The Python-based backend for RealistikGDPS, made as an expandable solution for a
 This is a modern Python implementation of the Geometry Dash server protocol meant to power my Geometry Dash Private server.
 It is written in asynchronous, modern Python and is meant as a replacement for our current [PHP based infrastructure](https://github.com/Cvolton/GMDprivateServer).
 
+## Interesting Features
+- Fully Dockerised, allowing for easy setup
+- MeiliSearch, allowing for typo tolerance
+- S3 support, allowing for flexible storage solutions
+
 ## How to set up?
 - Ensure Docker and Make are installed on your system.
 - Create a copy of the `.env.example` file named `.env` and adjust it to your liking.

@@ -1,3 +1,4 @@
+aiobotocore[s3] == 2.5.2
 bcrypt == 4.0.1
 cryptograpy
 databases[asyncmy] == 0.7.0
@@ -8,6 +9,7 @@ meilisearch-python-async == 1.4.2
 python-multipart
 redis == 4.6.0
 structlog==23.1.0
+types-aiobotocore[s3] == 2.5.2
 uvicorn == 0.22.0
 uvloop == 0.17.0; sys_platform != "win32"
 xor-cipher == 3.0.1
