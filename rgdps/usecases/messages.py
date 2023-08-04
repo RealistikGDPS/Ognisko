@@ -39,7 +39,7 @@ async def create(
     subject: str,
     content: str,
 ) -> Message | ServiceError:
-    recipient = await repositories.user.from_id(ctx, recipient_user_id):
+    recipient = await repositories.user.from_id(ctx, recipient_user_id)
     if recipient is None:
         return ServiceError.MESSAGES_INVALID_RECIPIENT
 
