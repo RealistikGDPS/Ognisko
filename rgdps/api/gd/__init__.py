@@ -6,6 +6,7 @@ from fastapi.responses import PlainTextResponse
 from . import leaderboards
 from . import level_comments
 from . import levels
+from . import messages
 from . import misc
 from . import save_data
 from . import user_comments
@@ -141,5 +142,17 @@ router.add_api_route(
 router.add_api_route(
     "/getGJComments21.php",
     level_comments.level_comments_get,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/getGJMessages20.php",
+    messages.messages_get,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/uploadGJMessage20.php",
+    messages.message_post,
     methods=["POST"],
 )

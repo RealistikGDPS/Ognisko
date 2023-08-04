@@ -34,3 +34,5 @@ class ServiceError(str, Enum):
     LEVELS_UPDATE_LOCKED = "levels.update_locked"
     LEVELS_NO_DELETE_PERMISSION = "levels.no_delete_permission"
     LEVELS_NO_UPLOAD_PERMISSION = "levels.no_upload_permission"
+
+    MESSAGES_INVALID_RECIPIENT = "messages.invalid_recipient"

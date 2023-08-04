@@ -13,6 +13,8 @@ from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.models.level_comment import LevelComment
+from rgdps.models.message import Message
+from rgdps.models.message import MessageDirection
 from rgdps.models.song import Song
 from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
@@ -45,7 +47,6 @@ def loads(
     key_cast: Callable[[str], KT] = int,
     value_cast: Callable[[str], VT] = str,
 ) -> dict[KT, VT]:
-
     data_split = data.split(sep)
 
     if len(data_split) % 2 != 0:
@@ -63,7 +64,6 @@ def create_profile(
     friend_status: FriendStatus = FriendStatus.NONE,
     rank: int = 0,
 ) -> GDSerialisable:
-
     badge_level = 0
     if user.privileges & UserPrivileges.USER_DISPLAY_ELDER_BADGE:
         badge_level = 2
@@ -206,6 +206,23 @@ def create_level(level: Level, level_data: str) -> GDSerialisable:
     }
 
 
+def create_message(
+    message: Message,
+    message_direction: MessageDirection,
+) -> GDSerialisable:
+    return {
+        1: message.id,
+        2: message.sender_user_id,
+        3: message.recipient_user_id,
+        4: message.subject,
+        5: message.content,
+        6: message.recipient_username,
+        7: into_str_ts(message.post_ts),
+        8: message.seen_ts is not None,
+        9: 0 if message_direction is MessageDirection.RECEIVED else 1,
+    }
+
+
 def create_level_security_str(level: Level) -> str:
     level_id_str = str(level.id)
 
@@ -247,7 +264,7 @@ def create_level_metadata_security_str_hashed(level: Level) -> str:
 
 
 def create_pagination_info(total: int, page: int, page_size: int) -> str:
-    offset = page * page_size
+    offset = page * page_size  # NOTE: page starts at 0
     return f"{total}:{offset}:{page_size}"
 
 
