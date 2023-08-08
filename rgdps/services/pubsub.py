@@ -85,7 +85,10 @@ class RedisPubsubRouter:
         return decorator
 
     def merge(self, other: RedisPubsubRouter) -> None:
-        self._routes |= other._routes
+        for channel, handler in other.route_map().items():
+            if channel in self._routes:
+                logger.warning("Overwriting existing route for {channel}.")
+            self._routes[channel] = handler
 
     def route_map(self) -> dict[bytes, RedisHandler]:
         return self._routes

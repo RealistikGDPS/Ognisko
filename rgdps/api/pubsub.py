@@ -10,7 +10,7 @@ router = RedisPubsubRouter()
 
 @router.register("rgdps:ping")
 async def ping_handler(ctx: Context, data: bytes) -> None:
-    logger.debug(f"Redis ping received. {ctx.meili!r}")
+    logger.debug(f"Redis ping received with data: {data}")
 
 
 @router.register("rgdps:levels:sync_meili")
