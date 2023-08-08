@@ -72,3 +72,13 @@ services:
     environment:
       - MEILI_MASTER_KEY=${MEILI_KEY}
       - MEILI_HTTP_ADDR=0.0.0.0:${MEILI_PORT}
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=${SQL_HOST}
+      - UPLOAD_LIMIT=500M
+    depends_on:
+      - mysql

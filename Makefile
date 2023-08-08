@@ -11,3 +11,6 @@ run:
 
 shell:
 	docker run -it --net=host --entrypoint /bin/bash realistikgdps:latest
+
+pma:
+	docker-compose up phpmyadmin
