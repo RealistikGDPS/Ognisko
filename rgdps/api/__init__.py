@@ -19,6 +19,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from . import context
 from . import dependencies
 from . import gd
+from . import pubsub
 from . import responses
 from rgdps import logger
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
@@ -26,6 +27,7 @@ from rgdps.common.cache.redis import SimpleRedisCache
 from rgdps.config import config
 from rgdps.constants.responses import GenericResponse
 from rgdps.services.mysql import MySQLService
+from rgdps.services.pubsub import listen_pubsubs
 
 
 def init_events(app: FastAPI) -> None:
@@ -98,6 +100,12 @@ def init_redis(app: FastAPI) -> None:
     @app.on_event("startup")
     async def on_startup() -> None:
         await app.state.redis.initialize()
+        shared_ctx = context.PubsubContext(app)
+        await listen_pubsubs(
+            shared_ctx,
+            app.state.redis,
+            pubsub.router,
+        )
         logger.info("Connected to the Redis database.")
 
     @app.on_event("shutdown")

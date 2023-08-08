@@ -2,6 +2,7 @@
 from typing import TYPE_CHECKING
 
 import httpx
+from fastapi import FastAPI
 from fastapi import Request
 from meilisearch_python_async import Client as MeiliClient
 from redis.asyncio import Redis
@@ -17,32 +18,39 @@ if TYPE_CHECKING:
 
 class HTTPContext(Context):
     def __init__(self, request: Request) -> None:
-        self.request = request
+        self.app = request.app
 
     @property
     def mysql(self) -> MySQLService:
-        return self.request.app.state.mysql
+        return self.app.state.mysql
 
     @property
     def redis(self) -> Redis:
-        return self.request.app.state.redis
+        return self.app.state.redis
 
     @property
     def meili(self) -> MeiliClient:
-        return self.request.app.state.meili
+        return self.app.state.meili
 
     @property
     def s3(self) -> S3Client | None:
-        return self.request.app.state.s3
+        return self.app.state.s3
 
     @property
     def user_cache(self) -> "AbstractAsyncCache[User]":
-        return self.request.app.state.user_cache
+        return self.app.state.user_cache
 
     @property
     def password_cache(self) -> AbstractAsyncCache[str]:
-        return self.request.app.state.password_cache
+        return self.app.state.password_cache
 
     @property
     def http(self) -> httpx.AsyncClient:
-        return self.request.app.state.http
+        return self.app.state.http
+
+
+class PubsubContext(HTTPContext):
+    """A shared context for pubsub handlers."""
+
+    def __init__(self, app: FastAPI) -> None:
+        self.app = app
