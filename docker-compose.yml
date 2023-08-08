@@ -22,6 +22,8 @@ services:
     command: redis-server
     ports:
       - "6379:6379"
+    volumes:
+      - ${REDIS_DIR}:/data
 
   realistikgdps:
     image: realistikgdps:latest
@@ -66,7 +68,7 @@ services:
     ports:
       - "${MEILI_PORT}:${MEILI_PORT}"
     volumes:
-      - ./meilisearch:/data.ms
+      - ${MEILI_DIR}:/data.ms
     environment:
       - MEILI_MASTER_KEY=${MEILI_KEY}
       - MEILI_HTTP_ADDR=0.0.0.0:${MEILI_PORT}
