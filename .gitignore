@@ -133,6 +133,6 @@ data/
 .fleet/
 
 # Docker stuff
-mysql/
-meilisearch/
-redis/
+mysql_data/
+meilisearch_data/
+redis_data/
