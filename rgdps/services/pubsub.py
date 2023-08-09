@@ -42,7 +42,7 @@ async def _listen_router(
                         + traceback.format_exc(),
                     )
 
-            # FIXME: This is a hack to prevent the event loop from blocking.
+            # NOTE: This is a hack to prevent the event loop from blocking.
             await asyncio.sleep(0.1)
 
 
