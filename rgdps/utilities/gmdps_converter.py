@@ -1,5 +1,11 @@
+#!/usr/bin/env python3.10
+import os
+
+print(os.getcwd())
+
 # The database converter for the GMDPS database.
 # Please see the README for more information.
+import asyncio
 import base64
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
@@ -409,4 +415,11 @@ async def main() -> int:
     context = await get_context()
 
     logger.info("Successfully connected!")
+
+    logger.info("Migration complete!")
+    # TODO: Look into a better approach to stop docker
+    # from restarting the container.
+    while True:
+        await asyncio.sleep(100)
+
     return 0
