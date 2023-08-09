@@ -14,6 +14,7 @@ from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 
 
+# FIXME: Moved to repository
 DEFAULT_PRIVILEGES = (
     UserPrivileges.USER_AUTHENTICATE
     | UserPrivileges.USER_PROFILE_PUBLIC
@@ -83,7 +84,7 @@ async def register(
         diamonds=0,
     )
 
-    user_id = await repositories.user.create(ctx, user)
+    user_id = await repositories.user.create_old(ctx, user)
     user.id = user_id
     return user
 
@@ -209,7 +210,7 @@ async def update_stats(
     if update_rank:
         await repositories.leaderboard.set_star_count(ctx, user.id, updated_user.stars)
 
-    await repositories.user.update(ctx, updated_user)
+    await repositories.user.update_old(ctx, updated_user)
     return updated_user
 
 
@@ -233,7 +234,7 @@ async def update_privileges(
 
     updated_user = user.copy()
     updated_user.privileges = privileges
-    await repositories.user.update(ctx, updated_user)
+    await repositories.user.update_old(ctx, updated_user)
     return updated_user
 
 
