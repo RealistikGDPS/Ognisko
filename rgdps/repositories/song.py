@@ -50,11 +50,11 @@ async def create(
     size: float = 0.0,
     source: SongSource = SongSource.CUSTOM,
     blocked: bool = False,
-    song_id: int | None = None,
+    song_id: int = 0,
 ) -> Song:
 
     song = Song(
-        id=0,
+        id=song_id,
         name=name,
         author_id=author_id,
         author=author,
@@ -66,9 +66,7 @@ async def create(
     )
 
     query = "INSERT INTO songs (name, author_id, author, author_youtube, size, "
-    query += "download_url, source, blocked"
-    if song_id is not None:
-        query += ", id"
+    query += "download_url, source, blocked, id)"
     query += ") VALUES (:name, :author_id, :author, :author_youtube, :size, "
     query += ":download_url, :source, :blocked"
     if song_id is not None:
@@ -78,6 +76,14 @@ async def create(
     song.id = await ctx.mysql.execute(
         query,
         song.as_dict(include_id=song_id is not None),
+    )
+
+    song.id = await ctx.mysql.execute(
+        "INSERT INTO songs (id, name, author_id, author, author_youtube, size, "
+        "download_url, source, blocked) VALUES "
+        "(:id, :name, :author_id, :author, :author_youtube, :size, "
+        ":download_url, :source, :blocked)",
+        song.as_dict(include_id=True),
     )
 
     return song

@@ -41,9 +41,10 @@ async def create(
     likes: int = 0,
     post_ts: datetime | None = None,
     deleted: bool = False,
+    comment_id: int = 0,
 ) -> LevelComment:
     comment = LevelComment(
-        id=0,
+        id=comment_id,
         user_id=user_id,
         level_id=level_id,
         content=content,
@@ -53,8 +54,8 @@ async def create(
         deleted=deleted,
     )
     comment.id = await ctx.mysql.execute(
-        "INSERT INTO level_comments (user_id, level_id, content, percent, likes, post_ts, deleted) "
-        "VALUES (:user_id, :level_id, :content, :percent, :likes, :post_ts, :deleted)",
+        "INSERT INTO level_comments (id, user_id, level_id, content, percent, likes, post_ts, deleted) "
+        "VALUES (:id, :user_id, :level_id, :content, :percent, :likes, :post_ts, :deleted)",
         comment.as_dict(include_id=False),
     )
     return comment

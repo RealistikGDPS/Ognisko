@@ -36,7 +36,7 @@ class UserComment:
         }
 
         if include_id:
-            res["id"] = self.id
+            res["id"] = self.id or None
 
         return res
 
