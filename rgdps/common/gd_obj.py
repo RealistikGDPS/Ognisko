@@ -1,8 +1,8 @@
 from __future__ import annotations
 
+import urllib.parse
 from typing import Callable
 from typing import TypeVar
-from urllib.parse import quote
 
 from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
@@ -158,7 +158,7 @@ def create_song(song: Song) -> GDSerialisable:
         4: song.author,
         5: song.size,
         7: song.author_youtube or "",
-        10: quote(song.download_url, safe=""),
+        10: urllib.parse.quote(song.download_url, safe=""),
     }
 
 

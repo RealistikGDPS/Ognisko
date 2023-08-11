@@ -14,9 +14,8 @@ echo "Waiting for SQL to become available..."
 ./scripts/ensure_meili.sh
 ./scripts/migrate.sh up
 
-echo $APP_COMPONENT
-if [ $APP_COMPONENT = "gdps" ]; then
-  exec /app/scripts/run_gdps.sh
+if [ $APP_COMPONENT = "api" ]; then
+  exec /app/scripts/run_api.sh
 elif [ $APP_COMPONENT = "converter" ]; then
   exec /app/scripts/run_converter.sh
 else

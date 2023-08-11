@@ -12,8 +12,7 @@ import asyncio
 import base64
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-from urllib.parse import quote
-from urllib.parse import unquote
+import urllib.parse
 import traceback
 
 import httpx
@@ -147,7 +146,7 @@ async def get_context() -> ConverterContext:
     database_url = DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
             username=config.sql_user,
-            password=quote(config.sql_pass),
+            password=urllib.parse.quote(config.sql_pass),
             host=config.sql_host,
             port=config.sql_port,
             db=config.sql_db,
@@ -160,7 +159,7 @@ async def get_context() -> ConverterContext:
     old_database_url = DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
             username=OLD_DB_USER,
-            password=quote(config.sql_pass),
+            password=urllib.parse.quote(config.sql_pass),
             host=config.sql_host,
             port=config.sql_port,
             db=OLD_DB,
@@ -207,7 +206,7 @@ async def convert_songs(ctx: ConverterContext) -> None:
 
     for song in old_songs:
         # GMDPS stores the download URL as a URL-encoded string.
-        download_url = unquote(song["download"])
+        download_url = urllib.parse.unquote(song["download"])
         # GMDPS lets reuploaded songs bypass the name limit?
         song_name = song["name"][:32]
         # Size is varchar(100)....
