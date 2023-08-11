@@ -45,7 +45,7 @@ if TYPE_CHECKING:
 
 
 # TODO: Customisable (without affecting the actual config)
-OLD_DB = "old_rgdps"
+OLD_DB = "old_gdps"
 OLD_DB_USER = "root"
 
 # Matches CVGDPS defaults.
