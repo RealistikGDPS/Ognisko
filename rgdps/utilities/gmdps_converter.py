@@ -1,7 +1,10 @@
 #!/usr/bin/env python3.10
-import os
+from __future__ import annotations
 
-print(os.getcwd())
+import sys
+
+# This is a hack to allow the script to be run from the root directory.
+sys.path.append(".")
 
 # The database converter for the GMDPS database.
 # Please see the README for more information.
@@ -31,15 +34,17 @@ from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
+from rgdps.services.mysql import MySQLService
+from rgdps.models.user import User
 
 if TYPE_CHECKING:
-    from rgdps.models.user import User
     from rgdps.common.cache.base import AbstractAsyncCache
-    from rgdps.services.mysql import MySQLService
 
 
 # TODO: Customisable (without affecting the actual config)
 OLD_DB = "old_rgdps"
+OLD_DB_USER = "root"
+
 # Matches CVGDPS defaults.
 DEFAULT_PRIVILEGES = (
     UserPrivileges.USER_AUTHENTICATE
@@ -151,7 +156,7 @@ async def get_context() -> ConverterContext:
 
     old_database_url = DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
-            username=config.sql_user,
+            username=OLD_DB_USER,
             password=quote(config.sql_pass),
             host=config.sql_host,
             port=config.sql_port,
@@ -423,3 +428,7 @@ async def main() -> int:
         await asyncio.sleep(100)
 
     return 0
+
+
+if __name__ == "__main__":
+    sys.exit(asyncio.run(main()))
