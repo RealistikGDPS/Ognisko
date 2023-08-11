@@ -125,7 +125,7 @@ async def create(
         youtube_name=youtube_name,
         twitter_name=twitter_name,
         twitch_name=twitch_name,
-        register_ts=register_ts or datetime.now(),
+        register_ts=register_ts,
         stars=stars,
         demons=demons,
         primary_colour=primary_colour,
@@ -327,3 +327,7 @@ async def from_name(ctx: Context, username: str) -> User | None:
         return None
 
     return await from_id(ctx, user_id)
+
+
+async def get_count(ctx: Context) -> int:
+    return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM users")

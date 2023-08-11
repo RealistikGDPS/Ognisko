@@ -702,3 +702,7 @@ async def all_ids(ctx: Context, include_deleted: bool = False) -> list[int]:
     return [
         x["id"] for x in await ctx.mysql.fetch_all("SELECT id FROM levels" + condition)
     ]
+
+
+async def get_count(ctx: Context) -> int:
+    return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM levels")

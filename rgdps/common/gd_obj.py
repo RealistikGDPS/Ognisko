@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import base64
 from typing import Callable
-from typing import overload
 from typing import TypeVar
+from urllib.parse import quote
 
 from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
@@ -111,7 +110,7 @@ def create_profile(
 
 def create_user_comment(comment: UserComment) -> GDSerialisable:
     return {
-        2: base64.b64encode(comment.content.encode()).decode(),
+        2: hashes.encode_base64(comment.content),
         4: comment.likes,
         6: comment.id,
         9: into_str_ts(comment.post_ts),
@@ -127,7 +126,7 @@ def create_level_comment(comment: LevelComment, user: User) -> GDSerialisable:
         badge_level = 1
 
     return {
-        2: base64.b64encode(comment.content.encode()).decode(),
+        2: hashes.encode_base64(comment.content),
         3: user.id,
         4: comment.likes,
         6: comment.id,
@@ -159,14 +158,14 @@ def create_song(song: Song) -> GDSerialisable:
         4: song.author,
         5: song.size,
         7: song.author_youtube or "",
-        10: song.download_url,
+        10: quote(song.download_url, safe=""),
     }
 
 
 def create_level_minimal(level: Level) -> GDSerialisable:
     """Minimal level data for level search."""
 
-    description_b64 = base64.b64encode(level.description.encode()).decode()
+    description_b64 = hashes.encode_base64(level.description)
     return {
         1: level.id,
         2: level.name,

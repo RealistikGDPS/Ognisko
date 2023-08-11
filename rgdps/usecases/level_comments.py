@@ -48,7 +48,7 @@ async def get_level(
             LevelCommentResponse(comment, user_perspective.user),
         )
 
-    comment_count = await repositories.level_comment.get_level_comment_count(
+    comment_count = await repositories.level_comment.get_count_from_level(
         ctx,
         level_id,
     )

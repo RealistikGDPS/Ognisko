@@ -14,6 +14,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 from urllib.parse import quote
 from urllib.parse import unquote
+import traceback
 
 import httpx
 from databases import DatabaseURL
@@ -26,6 +27,7 @@ from rgdps import repositories
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.context import Context
 from rgdps.common.time import from_unix_ts
+from rgdps.common import hashes
 from rgdps.config import config
 from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
@@ -34,6 +36,7 @@ from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
+from rgdps.constants.songs import SongSource
 from rgdps.services.mysql import MySQLService
 from rgdps.models.user import User
 
@@ -204,11 +207,27 @@ async def convert_songs(ctx: ConverterContext) -> None:
 
     for song in old_songs:
         # GMDPS stores the download URL as a URL-encoded string.
-        download_url = unquote(song["downloadURL"])
+        download_url = unquote(song["download"])
         # GMDPS lets reuploaded songs bypass the name limit?
         song_name = song["name"][:32]
         # Size is varchar(100)....
-        size = float(song["size"])
+        try:
+            size = float(song["size"])
+        except ValueError:
+            logger.warning(f"Song {song_name} (ID {song['ID']}) has an invalid size.")
+            size = 0.0
+
+        if "ngfiles" in download_url:
+            source = SongSource.BOOMLINGS
+        else:
+            source = SongSource.CUSTOM
+
+        if len(download_url) > 256:
+            logger.warning(
+                f"Skipping song {song_name} (ID {song['ID']}) because the "
+                "download URL is too long.",
+            )
+            continue
 
         await repositories.song.create(
             ctx,
@@ -219,12 +238,13 @@ async def convert_songs(ctx: ConverterContext) -> None:
             download_url=download_url,
             size=size,
             blocked=song["isDisabled"] > 0,
+            source=source,
         )
 
 
 async def convert_user_comments(ctx: ConverterContext) -> None:
     old_comments = await ctx.old_sql.fetch_all(
-        "SELECT * FROM accomments",
+        "SELECT * FROM acccomments",
     )
 
     for comment in old_comments:
@@ -236,7 +256,7 @@ async def convert_user_comments(ctx: ConverterContext) -> None:
             continue
 
         post_ts = from_unix_ts(comment["timestamp"])
-        content = base64.b64decode(comment["comment"]).decode()[:256]
+        content = hashes.decode_base64(comment["comment"])[:256]
 
         await repositories.user_comment.create(
             ctx,
@@ -262,7 +282,7 @@ async def convert_level_comments(ctx: ConverterContext) -> None:
             continue
 
         post_ts = from_unix_ts(comment["timestamp"])
-        content = base64.b64decode(comment["comment"]).decode()[:256]
+        content = hashes.decode_base64(comment["comment"])[:256]
 
         await repositories.level_comment.create(
             ctx,
@@ -312,39 +332,43 @@ async def convert_users(ctx: ConverterContext) -> None:
             elif role["actionRequestMod"] == 1:
                 privileges |= UserPrivileges.USER_REQUEST_MODERATOR
 
-        await repositories.user.create(
-            ctx,
-            user_id=user_id,
-            username=user["username"],
-            password=user["password"],
-            email=user["email"],
-            privileges=privileges,
-            message_privacy=UserPrivacySetting(user["mS"]),
-            friend_privacy=UserPrivacySetting(user["frS"]),
-            comment_privacy=UserPrivacySetting(user["cS"]),
-            youtube_name=user["youtubeurl"],
-            twitter_name=user["twitter"],
-            twitch_name=user["twitch"],
-            register_ts=from_unix_ts(user["registerDate"]),
-            stars=user["stars"],
-            demons=user["demons"],
-            primary_colour=user["color1"],
-            secondary_colour=user["color2"],
-            display_type=user["iconType"],
-            icon=user["icon"],
-            ship=user["accShip"],
-            ball=user["accBall"],
-            ufo=user["accBird"],
-            wave=user["accDart"],
-            robot=user["accRobot"],
-            spider=user["accSpider"],
-            explosion=user["accExplosion"],
-            glow=user["accGlow"],
-            creator_points=user["creatorPoints"],
-            coins=user["coins"],
-            user_coins=user["userCoins"],
-            diamonds=user["diamonds"],
-        )
+        # CBA with data out of range errors.
+        try:
+            await repositories.user.create(
+                ctx,
+                user_id=user_id,
+                username=user["username"],
+                password=user["password"],
+                email=user["email"],
+                privileges=privileges,
+                message_privacy=UserPrivacySetting(user["mS"]),
+                friend_privacy=UserPrivacySetting(user["frS"]),
+                comment_privacy=UserPrivacySetting(user["cS"]),
+                youtube_name=user["youtubeurl"][:25],
+                twitter_name=user["twitter"][:15],
+                twitch_name=user["twitch"][:25],
+                register_ts=from_unix_ts(user["registerDate"]),
+                stars=user["stars"],
+                demons=user["demons"],
+                primary_colour=user["color1"],
+                secondary_colour=user["color2"],
+                display_type=user["iconType"],
+                icon=user["icon"],
+                ship=user["accShip"],
+                ball=user["accBall"],
+                ufo=user["accBird"],
+                wave=user["accDart"],
+                robot=user["accRobot"],
+                spider=user["accSpider"],
+                explosion=user["accExplosion"],
+                glow=user["accGlow"],
+                creator_points=user["creatorPoints"],
+                coins=user["coins"],
+                user_coins=user["userCoins"],
+                diamonds=user["diamonds"],
+            )
+        except Exception:
+            logger.error(f"Failed to convert user {user_id}\n" + traceback.format_exc())
 
 
 async def convert_levels(ctx: ConverterContext) -> None:
@@ -358,7 +382,7 @@ async def convert_levels(ctx: ConverterContext) -> None:
         if account_id is None:
             continue
 
-        description = base64.b64decode(level["levelDesc"]).decode()
+        description = hashes.decode_base64(level["levelDesc"])[:256]
 
         publicity = LevelPublicity.PUBLIC
         if level["unlisted"] > 0:
@@ -373,28 +397,36 @@ async def convert_levels(ctx: ConverterContext) -> None:
         if level["starEpic"] > 0:
             search_flag |= LevelSearchFlag.EPIC
 
+        if not level["songID"]:
+            custom_song_id = None
+            official_song_id = level["audioTrack"]
+        else:
+            custom_song_id = level["songID"]
+            official_song_id = None
+
         await repositories.level.create(
             ctx,
             level_id=level["levelID"],
-            name=level["levelName"],
+            name=level["levelName"][:32],
             user_id=account_id,
             description=description,
             version=level["levelVersion"],
             length=LevelLength(level["levelLength"]),
-            official_song_id=level["audioTrack"] or None,
+            official_song_id=official_song_id,
+            custom_song_id=custom_song_id,
             copy_password=level["password"],
             original_id=level["original"],
             two_player=level["twoPlayer"] > 0,
-            custom_song_id=level["customSongID"] or None,
-            object_count=level["objects"],
+            object_count=abs(level["objects"]),
             coins=level["coins"],
             requested_stars=level["requestedStars"],
             render_str=level["extraString"],
-            difficulty=LevelDifficulty(level["levelDifficulty"]),
+            difficulty=LevelDifficulty(level["starDifficulty"]),
             downloads=level["downloads"],
             likes=level["likes"],
             stars=level["starStars"],
-            upload_ts=from_unix_ts(level["uploadDate"]),
+            # NOTE: Only upload ts is varchar.
+            upload_ts=from_unix_ts(int(level["uploadDate"])),
             update_ts=from_unix_ts(level["updateDate"]),
             coins_verified=level["starCoins"] > 0,
             feature_order=level["starFeatured"],
@@ -406,20 +438,50 @@ async def convert_levels(ctx: ConverterContext) -> None:
         )
 
 
-CONVERSIONS = [
-    convert_songs,
-    convert_users,
-    convert_levels,
-    convert_user_comments,
-    convert_level_comments,
-]
-
-
 async def main() -> int:
     logger.info("Starting the GMDPS -> RealistikGDPS converter.")
-    context = await get_context()
+    ctx = await get_context()
 
     logger.info("Successfully connected!")
+
+    try:
+        if not await repositories.song.get_count(ctx):
+            logger.info("Converting songs...")
+            await convert_songs(ctx)
+        else:
+            logger.info("Skipping song conversion, songs already exist.")
+
+        if not await repositories.user.get_count(ctx):
+            logger.info("Converting users...")
+            await convert_users(ctx)
+        else:
+            logger.info("Skipping user conversion, users already exist.")
+
+        if not await repositories.level.get_count(ctx):
+            logger.info("Converting levels...")
+            await convert_levels(ctx)
+        else:
+            logger.info("Skipping level conversion, levels already exist.")
+
+        if not await repositories.user_comment.get_count(ctx):
+            logger.info("Converting user comments...")
+            await convert_user_comments(ctx)
+        else:
+            logger.info(
+                "Skipping user comment conversion, user comments already exist.",
+            )
+
+        if not await repositories.level_comment.get_count(ctx):
+            logger.info("Converting level comments...")
+            await convert_level_comments(ctx)
+        else:
+            logger.info(
+                "Skipping level comment conversion, level comments already exist.",
+            )
+    except Exception:
+        logger.error(
+            "Failed to convert data with exception:\n" + traceback.format_exc(),
+        )
 
     logger.info("Migration complete!")
     # TODO: Look into a better approach to stop docker
