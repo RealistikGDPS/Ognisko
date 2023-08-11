@@ -47,7 +47,7 @@ def decode_gjp(gjp: str) -> str:
     """
 
     return xor_cipher.cyclic_xor_unsafe(
-        data=base64.b64decode(gjp.encode()),
+        data=base64.urlsafe_b64decode(gjp.encode()),
         key=XorKeys.GJP,
     ).decode()
 
@@ -69,4 +69,12 @@ def hash_level_password(password: int) -> str:
         key=XorKeys.LEVEL_PASSWORD,
     )
 
-    return base64.b64encode(xor_password).decode()
+    return base64.urlsafe_b64encode(xor_password).decode()
+
+
+def encode_base64(data: str) -> str:
+    return base64.urlsafe_b64encode(data.encode()).decode()
+
+
+def decode_base64(data: str) -> str:
+    return base64.urlsafe_b64decode(data.encode()).decode()

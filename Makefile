@@ -14,3 +14,10 @@ shell:
 
 pma:
 	docker-compose up phpmyadmin
+
+converter:
+	APP_COMPONENT=converter docker-compose up \
+		redis \
+		mysql \
+		meilisearch \
+		realistikgdps

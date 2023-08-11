@@ -185,7 +185,9 @@ async def search(
         assert user is not None, "User associated with level not found."
         users.add(user)
         if level.custom_song_id:
-            songs.append(await repositories.song.from_id(ctx, level.custom_song_id))
+            song = await repositories.song.from_id(ctx, level.custom_song_id)
+            if song:
+                songs.append(song)
 
     if lookup_level:
         # Move to the top.

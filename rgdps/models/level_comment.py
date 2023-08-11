@@ -42,6 +42,6 @@ class LevelComment:
         }
 
         if include_id:
-            mapping["id"] = self.id
+            mapping["id"] = self.id or None
 
         return mapping

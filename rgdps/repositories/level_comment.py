@@ -41,9 +41,10 @@ async def create(
     likes: int = 0,
     post_ts: datetime | None = None,
     deleted: bool = False,
+    comment_id: int = 0,
 ) -> LevelComment:
     comment = LevelComment(
-        id=0,
+        id=comment_id,
         user_id=user_id,
         level_id=level_id,
         content=content,
@@ -53,9 +54,9 @@ async def create(
         deleted=deleted,
     )
     comment.id = await ctx.mysql.execute(
-        "INSERT INTO level_comments (user_id, level_id, content, percent, likes, post_ts, deleted) "
-        "VALUES (:user_id, :level_id, :content, :percent, :likes, :post_ts, :deleted)",
-        comment.as_dict(include_id=False),
+        "INSERT INTO level_comments (id, user_id, level_id, content, percent, likes, post_ts, deleted) "
+        "VALUES (:id, :user_id, :level_id, :content, :percent, :likes, :post_ts, :deleted)",
+        comment.as_dict(include_id=True),
     )
     return comment
 
@@ -139,7 +140,7 @@ async def from_level_id_paginated(
     return [LevelComment.from_mapping(comment_db) for comment_db in comments_db]
 
 
-async def get_level_comment_count(
+async def get_count_from_level(
     ctx: Context,
     level_id: int,
     include_deleted: bool = False,
@@ -151,3 +152,9 @@ async def get_level_comment_count(
         else "",
         {"level_id": level_id},
     )
+
+
+async def get_count(
+    ctx: Context,
+) -> int:
+    return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM level_comments")

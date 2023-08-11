@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from urllib.parse import quote
+import urllib.parse
 
 import httpx
 from aiobotocore.config import AioConfig
@@ -73,7 +73,7 @@ def init_mysql(app: FastAPI) -> None:
     database_url = DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
             username=config.sql_user,
-            password=quote(config.sql_pass),
+            password=urllib.parse.quote(config.sql_pass),
             host=config.sql_host,
             port=config.sql_port,
             db=config.sql_db,

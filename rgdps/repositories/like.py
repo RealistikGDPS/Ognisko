@@ -25,18 +25,19 @@ async def create(
     target_id: int,
     user_id: int,
     value: int,
+    like_id: int = 0,
 ) -> Like:
     like = Like(
-        id=0,
+        id=like_id,
         target_type=target_type,
         target_id=target_id,
         user_id=user_id,
         value=value,
     )
     like.id = await ctx.mysql.execute(
-        "INSERT INTO user_likes (target_type, target_id, user_id, value) VALUES "
-        "(:target_type, :target_id, :user_id, :value)",
-        like.as_dict(include_id=False),
+        "INSERT INTO user_likes (id, target_type, target_id, user_id, value) VALUES "
+        "(:id, :target_type, :target_id, :user_id, :value)",
+        like.as_dict(include_id=True),
     )
 
     return like
