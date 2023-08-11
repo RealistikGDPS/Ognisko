@@ -1,17 +1,15 @@
 from __future__ import annotations
 
+import time
 from datetime import datetime
 from typing import NamedTuple
 
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
-from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
-from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
-from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.models.song import Song
 from rgdps.models.user import User
@@ -257,3 +255,48 @@ async def synchronise_search(ctx: Context) -> bool | ServiceError:
         await repositories.level.update_meili_full(ctx, level)
 
     return True
+
+
+async def suggest_stars(
+    ctx: Context,
+    level_id: int,
+    stars: int,
+    feature: bool,
+) -> Level | ServiceError:
+    existing_level = await repositories.level.from_id(ctx, level_id=level_id)
+
+    if existing_level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    user = await repositories.user.from_id(ctx, user_id=existing_level.user_id)
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    creator_points = user.creator_points
+
+    feature_order = int(time.time()) if feature else 0
+
+    # if the level did not have stars previously, add one creator point to the creator of the map
+    if existing_level.stars == 0:
+        creator_points += 1
+
+    # if the map is going from unfeatured->featured then +1 creator point
+    if existing_level.feature_order == 0 and feature_order != 0:
+        creator_points += 1
+    # if the map is going from featured->unfeatured then -1 creator point
+    elif existing_level.feature_order != 0 and feature_order == 0:
+        creator_points -= 1
+
+    level = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        stars=stars,
+        feature_order=feature_order,
+    )
+    if level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    user.creator_points = creator_points
+    await repositories.user.update(ctx, user=user)
+
+    return level
