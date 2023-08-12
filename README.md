@@ -9,6 +9,7 @@ It is written in asynchronous, modern Python and is meant as a replacement for o
 - Fully Dockerised, allowing for easy setup
 - MeiliSearch, allowing for typo tolerance
 - S3 support, allowing for flexible storage solutions
+- Proper ratelimiting
 
 ## How to set up?
 - Ensure Docker and Make are installed on your system.
