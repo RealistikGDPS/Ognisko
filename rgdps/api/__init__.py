@@ -8,6 +8,7 @@ from aiobotocore.session import get_session
 from databases import DatabaseURL
 from fastapi import FastAPI
 from fastapi import status
+from fastapi.exceptions import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
@@ -20,6 +21,7 @@ from starlette.middleware.base import RequestResponseEndpoint
 from . import context
 from . import gd
 from . import pubsub
+from . import responses
 from rgdps import logger
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.cache.redis import SimpleRedisCache
@@ -105,6 +107,8 @@ def init_redis(app: FastAPI) -> None:
             app.state.redis,
             pubsub.router,
         )
+
+        # TODO: Custom ratelimit callback that returns `-1`.
         await FastAPILimiter.init(
             app.state.redis,
             prefix="rgdps:ratelimit",
