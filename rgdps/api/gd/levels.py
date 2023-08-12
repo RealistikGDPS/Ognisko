@@ -158,11 +158,10 @@ async def levels_get(
                 gd_obj.dumps(gd_obj.create_level_minimal(level))
                 for level in level_res.levels
             ),
-            "|".join(
-                gd_obj.dumps(gd_obj.create_profile(user)) for user in level_res.users
-            ),
-            "~|~".join(
-                gd_obj.dumps(gd_obj.create_song(song)) for song in level_res.songs
+            "|".join(gd_obj.create_user_str(user) for user in level_res.users),
+            "~:~".join(
+                gd_obj.dumps(gd_obj.create_song(song), sep="~|~")
+                for song in level_res.songs
             ),
             gd_obj.create_pagination_info(level_res.total, page, PAGE_SIZE),
             gd_obj.create_search_security_str(level_res.levels),

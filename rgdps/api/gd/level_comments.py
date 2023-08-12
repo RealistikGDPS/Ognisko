@@ -70,7 +70,5 @@ async def level_comments_get(
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
 
-    logger.info(response)
-
     logger.info(f"Successfully viewed comments for level ID {level_id}.")
     return response

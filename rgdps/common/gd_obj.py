@@ -108,6 +108,10 @@ def create_profile(
     }
 
 
+def create_user_str(user: User) -> str:
+    return f"{user.id}:{user.username}:{user.id}"
+
+
 def create_user_comment(comment: UserComment) -> GDSerialisable:
     return {
         2: hashes.encode_base64(comment.content),
