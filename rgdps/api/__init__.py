@@ -8,16 +8,17 @@ from aiobotocore.session import get_session
 from databases import DatabaseURL
 from fastapi import FastAPI
 from fastapi import status
+from fastapi.exceptions import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
+from fastapi_limiter import FastAPILimiter
 from meilisearch_python_async import Client as MeiliClient
 from redis.asyncio import Redis
 from starlette.middleware.base import RequestResponseEndpoint
 
 from . import context
-from . import dependencies
 from . import gd
 from . import pubsub
 from . import responses
@@ -106,6 +107,13 @@ def init_redis(app: FastAPI) -> None:
             app.state.redis,
             pubsub.router,
         )
+
+        # TODO: Custom ratelimit callback that returns `-1`.
+        await FastAPILimiter.init(
+            app.state.redis,
+            prefix="rgdps:ratelimit",
+        )
+
         logger.info("Connected to the Redis database.")
 
     @app.on_event("shutdown")

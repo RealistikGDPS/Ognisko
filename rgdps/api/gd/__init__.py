@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from fastapi import APIRouter
+from fastapi import Depends
 from fastapi.responses import PlainTextResponse
+from fastapi_limiter.depends import RateLimiter
 
 from . import leaderboards
 from . import level_comments
@@ -21,6 +23,9 @@ router.add_api_route(
     "/accounts/registerGJAccount.php",
     users.register_post,
     methods=["POST"],
+    dependencies=[
+        Depends(RateLimiter(times=10, minutes=10)),
+    ],
 )
 
 router.add_api_route(
@@ -50,6 +55,9 @@ router.add_api_route(
     "/uploadGJAccComment20.php",
     user_comments.user_comments_post,
     methods=["POST"],
+    dependencies=[
+        Depends(RateLimiter(times=4, minutes=1)),
+    ],
 )
 
 router.add_api_route(
@@ -58,7 +66,6 @@ router.add_api_route(
     methods=["POST"],
 )
 
-# It may be possible to reuse `profiles.user_info_update`
 router.add_api_route(
     "/updateGJAccSettings20.php",
     users.user_settings_update,
@@ -82,6 +89,9 @@ router.add_api_route(
     "/database/accounts/backupGJAccountNew.php",
     save_data.save_data_post,
     methods=["POST"],
+    dependencies=[
+        Depends(RateLimiter(times=1, minutes=5)),
+    ],
 )
 
 router.add_api_route(
@@ -94,6 +104,10 @@ router.add_api_route(
     "/uploadGJLevel21.php",
     levels.level_post,
     methods=["POST"],
+    # TODO: Tweak based on average user behaviour. May be way too high.
+    dependencies=[
+        Depends(RateLimiter(times=1, minutes=3)),
+    ],
 )
 
 router.add_api_route(
@@ -106,6 +120,10 @@ router.add_api_route(
     "/downloadGJLevel22.php",
     levels.level_get,
     methods=["POST"],
+    # TODO: Tweak based on average user behaviour. May be too low.
+    dependencies=[
+        Depends(RateLimiter(times=100, minutes=10)),
+    ],
 )
 
 router.add_api_route(
@@ -118,6 +136,9 @@ router.add_api_route(
     "/likeGJItem211.php",
     user_comments.like_target_post,
     methods=["POST"],
+    dependencies=[
+        Depends(RateLimiter(times=50, minutes=10)),
+    ],
 )
 
 router.add_api_route(
@@ -130,6 +151,9 @@ router.add_api_route(
     "/uploadGJComment21.php",
     level_comments.create_comment_post,
     methods=["POST"],
+    dependencies=[
+        Depends(RateLimiter(times=4, minutes=1)),
+    ],
 )
 
 router.add_api_route(
