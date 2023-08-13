@@ -46,12 +46,13 @@ async def level_comments_get(
     ctx: HTTPContext = Depends(),
     level_id: int = Form(..., alias="levelID"),
     page: int = Form(...),
+    page_size: int = Form(PAGE_SIZE, alias="count"),
 ):
     result = await level_comments.get_level(
         ctx,
         level_id,
         page,
-        PAGE_SIZE,
+        page_size,
     )
 
     if isinstance(result, ServiceError):
@@ -68,7 +69,43 @@ async def level_comments_get(
         )
         for comment in result.comments
     )
-    response += "#" + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
+    response += "#" + gd_obj.create_pagination_info(result.total, page, page_size)
 
     logger.info(f"Successfully viewed comments for level ID {level_id}.")
+    return response
+
+
+async def get_comment_history(
+    ctx: HTTPContext = Depends(),
+    user_id: int = Form(..., alias="userID"),
+    page: int = Form(...),
+    page_size: int = Form(PAGE_SIZE, alias="count"),
+):
+    result = await level_comments.get_user(
+        ctx,
+        user_id,
+        page,
+        page_size,
+    )
+
+    if isinstance(result, ServiceError):
+        logger.info(f"Failed to load comments with error {result!r}")
+        return responses.fail()
+
+    response = "|".join(
+        gd_obj.dumps(
+            gd_obj.create_level_comment(
+                comment.comment,
+                comment.user,
+                include_level_id=True,
+            ),
+            sep="~",
+        )
+        for comment in result.comments
+    )
+    response += "#" + gd_obj.create_pagination_info(result.total, page, page_size)
+    print(result)
+    print(response)
+
+    logger.info(f"Successfully viewed comments for user ID {user_id}.")
     return response

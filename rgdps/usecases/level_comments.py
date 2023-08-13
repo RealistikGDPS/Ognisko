@@ -7,7 +7,6 @@ from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.models.level_comment import LevelComment
 from rgdps.models.user import User
-from rgdps.usecases import users
 
 
 class LevelCommentResponse(NamedTuple):
@@ -36,16 +35,13 @@ async def get_level(
 
     level_comment_responses = []
     for comment in comments:
-        user_perspective = await users.get(
-            ctx,
-            comment.user_id,
-            is_own=False,
-        )
-        if isinstance(user_perspective, ServiceError):
-            return ServiceError.COMMENTS_INVALID_OWNER
+        user = await repositories.user.from_id(ctx, comment.user_id)
+
+        if user is None:
+            continue
 
         level_comment_responses.append(
-            LevelCommentResponse(comment, user_perspective.user),
+            LevelCommentResponse(comment, user),
         )
 
     comment_count = await repositories.level_comment.get_count_from_level(
@@ -54,6 +50,36 @@ async def get_level(
     )
 
     return PaginatedLevelCommentResponse(level_comment_responses, comment_count)
+
+
+async def get_user(
+    ctx: Context,
+    user_id: int,
+    page: int = 0,
+    page_size: int = 10,
+) -> PaginatedLevelCommentResponse | ServiceError:
+    user = await repositories.user.from_id(ctx, user_id)
+
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    comments = await repositories.level_comment.from_user_id_paginated(
+        ctx,
+        user_id,
+        page,
+        page_size,
+        include_deleted=False,
+    )
+
+    comment_count = await repositories.level_comment.get_count_from_user(
+        ctx,
+        user_id,
+    )
+
+    return PaginatedLevelCommentResponse(
+        [LevelCommentResponse(comment, user) for comment in comments],
+        comment_count,
+    )
 
 
 async def create(

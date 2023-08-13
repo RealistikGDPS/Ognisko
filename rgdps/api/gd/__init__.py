@@ -173,3 +173,9 @@ router.add_api_route(
     levels.suggest_level_stars,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/getGJCommentHistory.php",
+    level_comments.get_comment_history,
+    methods=["POST"],
+)

@@ -140,6 +140,32 @@ async def from_level_id_paginated(
     return [LevelComment.from_mapping(comment_db) for comment_db in comments_db]
 
 
+async def from_user_id_paginated(
+    ctx: Context,
+    user_id: int,
+    page: int,
+    page_size: int,
+    include_deleted: bool = False,
+) -> list[LevelComment]:
+    condition = ""
+    # FIXME: Unused
+    if not include_deleted:
+        condition = "AND NOT deleted"
+
+    comments_db = await ctx.mysql.fetch_all(
+        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
+        f"level_comments WHERE user_id = :user_id {condition} "
+        "ORDER BY id DESC LIMIT :limit OFFSET :offset",
+        {
+            "user_id": user_id,
+            "limit": page_size,
+            "offset": page * page_size,
+        },
+    )
+
+    return [LevelComment.from_mapping(comment_db) for comment_db in comments_db]
+
+
 async def get_count_from_level(
     ctx: Context,
     level_id: int,
@@ -151,6 +177,20 @@ async def get_count_from_level(
         if not include_deleted
         else "",
         {"level_id": level_id},
+    )
+
+
+async def get_count_from_user(
+    ctx: Context,
+    user_id: int,
+    include_deleted: bool = False,
+) -> int:
+    return await ctx.mysql.fetch_val(
+        "SELECT COUNT(*) FROM level_comments WHERE user_id = :user_id "
+        "AND deleted = 0"
+        if not include_deleted
+        else "",
+        {"user_id": user_id},
     )
 
 
