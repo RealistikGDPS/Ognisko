@@ -49,33 +49,6 @@ async def from_db(ctx: Context, user_id: int) -> User | None:
     return User.from_mapping(user_db)
 
 
-async def create_old(ctx: Context, user: User) -> int:
-    """Inserts the user into the database, updating the user object to feature the
-    new registration timestamp and ID.
-
-    Args:
-        user (User): The model of the user to insert.
-
-    Returns:
-        int: The ID of the newly inserted user.
-    """
-
-    user_id = await ctx.mysql.execute(
-        "INSERT INTO users (username, email, password, privileges, message_privacy, "
-        "friend_privacy, comment_privacy, twitter_name, youtube_name, twitch_name, "
-        "stars, demons, primary_colour, secondary_colour, display_type, icon, "
-        "ship, ball, ufo, wave, robot, spider, explosion, glow, creator_points, "
-        "coins, user_coins, diamonds) VALUES (:username, :email, :password, :privileges, "
-        ":message_privacy, :friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
-        ":twitch_name, :stars, :demons, :primary_colour, "
-        ":secondary_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
-        ":spider, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds)",
-        user.as_dict(include_id=False),
-    )
-
-    return user_id
-
-
 async def create(
     ctx: Context,
     username: str,
@@ -172,9 +145,9 @@ async def update_partial(
     message_privacy: UserPrivacySetting | Unset = UNSET,
     friend_privacy: UserPrivacySetting | Unset = UNSET,
     comment_privacy: UserPrivacySetting | Unset = UNSET,
-    youtube_name: str | Unset = UNSET,
-    twitter_name: str | Unset = UNSET,
-    twitch_name: str | Unset = UNSET,
+    youtube_name: str | None | Unset = UNSET,
+    twitter_name: str | None | Unset = UNSET,
+    twitch_name: str | None | Unset = UNSET,
     stars: int | Unset = UNSET,
     demons: int | Unset = UNSET,
     primary_colour: int | Unset = UNSET,
@@ -282,24 +255,6 @@ async def from_id(ctx: Context, user_id: int) -> User | None:
         await ctx.user_cache.set(user_id, user)
 
     return user
-
-
-async def update_old(ctx: Context, user: User) -> None:
-    await ctx.mysql.execute(
-        "UPDATE users SET username = :username, email = :email, password = :password, "
-        "message_privacy = :message_privacy, friend_privacy = :friend_privacy, "
-        "comment_privacy = :comment_privacy, twitter_name = :twitter_name, "
-        "youtube_name = :youtube_name, twitch_name = :twitch_name, stars = :stars, "
-        "demons = :demons, primary_colour = :primary_colour, "
-        "secondary_colour = :secondary_colour, display_type = :display_type, "
-        "icon = :icon, ship = :ship, ball = :ball, ufo = :ufo, wave = :wave, "
-        "robot = :robot, spider = :spider, explosion = :explosion, glow = :glow, "
-        "creator_points = :creator_points, coins = :coins, user_coins = :user_coins, "
-        "diamonds = :diamonds, privileges = :privileges WHERE id = :id",
-        user.as_dict(include_id=True),
-    )
-
-    await ctx.user_cache.set(user.id, user)
 
 
 async def check_email_exists(ctx: Context, email: str) -> bool:

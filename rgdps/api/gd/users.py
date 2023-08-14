@@ -11,6 +11,7 @@ from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import LoginResponse
+from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
@@ -150,13 +151,23 @@ async def user_settings_update(
     youtube_name: str = Form(..., alias="yt"),
     twitter_name: str = Form(..., alias="twitter"),
     twitch_name: str = Form(..., alias="twitch"),
+    message_privacy: UserPrivacySetting = Form(..., alias="mS"),
+    comment_privacy: UserPrivacySetting = Form(..., alias="cS"),
+    friend_request_allowed: bool = Form(..., alias="frS"),
 ):
-    result = await users.update_stats(
+    friend_privacy = UserPrivacySetting.PUBLIC
+    if not friend_request_allowed:
+        friend_privacy = UserPrivacySetting.PRIVATE
+
+    result = await users.update_user_settings(
         ctx,
         user.id,
-        youtube_name=youtube_name,
-        twitter_name=twitter_name,
-        twitch_name=twitch_name,
+        message_privacy=message_privacy,
+        comment_privacy=comment_privacy,
+        friend_privacy=friend_privacy,
+        youtube_name=youtube_name or None,
+        twitter_name=twitter_name or None,
+        twitch_name=twitch_name or None,
     )
 
     if isinstance(result, ServiceError):
