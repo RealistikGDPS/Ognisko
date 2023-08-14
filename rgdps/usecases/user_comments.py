@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import NamedTuple
 
 from rgdps import repositories
@@ -61,7 +60,7 @@ async def create(
 
 async def delete(
     ctx: Context,
-    user: User,
+    user_id: int,
     comment_id: int,
 ) -> UserComment | ServiceError:
     comment = await repositories.user_comment.from_id(ctx, comment_id)
@@ -69,7 +68,7 @@ async def delete(
     if comment is None:
         return ServiceError.COMMENTS_NOT_FOUND
 
-    if comment.user_id != user.id:
+    if comment.user_id != user_id:
         return ServiceError.COMMENTS_INVALID_OWNER
 
     comment.deleted = True

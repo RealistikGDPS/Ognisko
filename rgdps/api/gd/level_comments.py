@@ -79,7 +79,7 @@ async def level_comments_get(
     return response
 
 
-async def get_comment_history(
+async def comment_history_get(
     ctx: HTTPContext = Depends(),
     user_id: int = Form(..., alias="userID"),
     page: int = Form(...),
@@ -116,3 +116,26 @@ async def get_comment_history(
 
     logger.info(f"Successfully viewed comments for user ID {user_id}.")
     return response
+
+
+async def level_comment_delete(
+    ctx: HTTPContext = Depends(),
+    user: User = Depends(
+        authenticate_dependency(required_privileges=UserPrivileges.COMMENTS_DELETE_OWN),
+    ),
+    comment_id: int = Form(..., alias="commentID"),
+):
+    can_delete_any = bool(user.privileges & UserPrivileges.COMMENTS_DELETE_OTHER)
+    result = await level_comments.delete(
+        ctx,
+        user.id,
+        comment_id,
+        can_delete_any,
+    )
+
+    if isinstance(result, ServiceError):
+        logger.info(f"Failed to delete comment with error {result!r}")
+        return responses.fail()
+
+    logger.info(f"Successfully deleted comment {comment_id}!")
+    return responses.success()

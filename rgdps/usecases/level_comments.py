@@ -106,3 +106,29 @@ async def create(
         content=content,
         percent=percent,
     )
+
+
+async def delete(
+    ctx: Context,
+    user_id: int,
+    comment_id: int,
+    can_delete_any: bool,
+) -> LevelComment | ServiceError:
+    comment = await repositories.level_comment.from_id(ctx, comment_id)
+
+    if comment is None:
+        return ServiceError.COMMENTS_NOT_FOUND
+
+    if comment.user_id != user_id and not can_delete_any:
+        return ServiceError.COMMENTS_INVALID_OWNER
+
+    comment = await repositories.level_comment.update_partial(
+        ctx,
+        comment_id,
+        deleted=True,
+    )
+
+    if comment is None:
+        return ServiceError.COMMENTS_NOT_FOUND
+
+    return comment

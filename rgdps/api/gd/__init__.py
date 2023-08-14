@@ -176,6 +176,12 @@ router.add_api_route(
 
 router.add_api_route(
     "/getGJCommentHistory.php",
-    level_comments.get_comment_history,
+    level_comments.comment_history_get,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/deleteGJComment20.php",
+    level_comments.level_comment_delete,
     methods=["POST"],
 )

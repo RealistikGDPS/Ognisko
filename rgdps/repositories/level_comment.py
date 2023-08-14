@@ -20,7 +20,7 @@ async def from_id(
         condition = " AND NOT deleted"
 
     level_db = await ctx.mysql.fetch_one(
-        "SELECT id, user_id, level_id, content, likes, post_ts, deleted "
+        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted "
         "FROM level_comments WHERE id = :comment_id" + condition,
         {
             "comment_id": comment_id,
@@ -112,7 +112,7 @@ async def update_partial(
 
     await ctx.mysql.execute(query, changed_data)
 
-    return await from_id(ctx, comment_id)
+    return await from_id(ctx, comment_id, include_deleted=True)
 
 
 async def from_level_id_paginated(
