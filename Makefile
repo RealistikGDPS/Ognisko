@@ -21,3 +21,6 @@ converter:
 		mysql \
 		meilisearch \
 		realistikgdps
+
+lint:
+	pre-commit run --all-files
