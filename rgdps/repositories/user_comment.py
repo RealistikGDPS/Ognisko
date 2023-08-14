@@ -155,7 +155,7 @@ async def update_partial(
 
     await ctx.mysql.execute(query, changed_data)
 
-    return await from_id(ctx, comment_id)
+    return await from_id(ctx, comment_id, include_deleted=True)
 
 
 async def get_count(ctx: Context) -> int:

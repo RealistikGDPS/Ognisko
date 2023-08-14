@@ -346,7 +346,7 @@ async def update_sql_partial(
     changed_data["id"] = level_id
     await ctx.mysql.execute(query, changed_data)
 
-    return await from_id(ctx, level_id)
+    return await from_id(ctx, level_id, include_deleted=True)
 
 
 async def update_meili_partial(
