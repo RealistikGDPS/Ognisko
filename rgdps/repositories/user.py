@@ -149,11 +149,11 @@ async def create(
     user.id = await ctx.mysql.execute(
         "INSERT INTO users (id, username, email, password, privileges, message_privacy, "
         "friend_privacy, comment_privacy, twitter_name, youtube_name, twitch_name, "
-        "stars, demons, primary_colour, secondary_colour, display_type, icon, "
+        "register_ts, stars, demons, primary_colour, secondary_colour, display_type, icon, "
         "ship, ball, ufo, wave, robot, spider, explosion, glow, creator_points, "
         "coins, user_coins, diamonds) VALUES (:id, :username, :email, :password, :privileges, "
         ":message_privacy, :friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
-        ":twitch_name, :stars, :demons, :primary_colour, "
+        ":twitch_name, :register_ts, :stars, :demons, :primary_colour, "
         ":secondary_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
         ":spider, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds)",
         user.as_dict(include_id=True),

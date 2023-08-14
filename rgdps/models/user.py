@@ -96,6 +96,7 @@ class User:
             "twitter_name": self.twitter_name,
             "youtube_name": self.youtube_name,
             "twitch_name": self.twitch_name,
+            "register_ts": self.register_ts,
             "stars": self.stars,
             "demons": self.demons,
             "primary_colour": self.primary_colour,
