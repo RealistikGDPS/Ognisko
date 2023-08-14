@@ -62,14 +62,6 @@ async def create(
     return comment
 
 
-async def update_full(ctx: Context, comment: LevelComment) -> None:
-    await ctx.mysql.execute(
-        "UPDATE level_comments SET user_id = :user_id, level_id = :level_id, content = :content, "
-        "likes = :likes, post_ts = :post_ts, deleted = :deleted WHERE id = :id",
-        comment.as_dict(),
-    )
-
-
 async def update_partial(
     ctx: Context,
     comment_id: int,

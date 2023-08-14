@@ -215,9 +215,11 @@ async def get(ctx: Context, level_id: int) -> LevelResponse | ServiceError:
         return ServiceError.LEVELS_NOT_FOUND
 
     # Handle stats updates
-    level.downloads += 1
-
-    await repositories.level.update_full(ctx, level)
+    await repositories.level.update_partial(
+        ctx,
+        level.id,
+        downloads=level.downloads + 1,
+    )
 
     return LevelResponse(
         level=level,
@@ -234,8 +236,13 @@ async def delete(ctx: Context, level_id: int, user: User) -> bool | ServiceError
     if level.user_id != user.id:
         return ServiceError.LEVELS_NO_DELETE_PERMISSION
 
-    level.deleted = True
-    await repositories.level.update_full(ctx, level)
+    await repositories.level.update_partial(
+        ctx,
+        level.id,
+        deleted=True,
+    )
+
+    # TODO: Creator point recalculation.
     await repositories.level.delete_meili(ctx, level_id)
     return True
 

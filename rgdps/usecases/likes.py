@@ -9,26 +9,6 @@ from rgdps.models.like import Like
 from rgdps.models.user_comment import UserComment
 
 
-async def recalculate(
-    ctx: Context,
-    like_id: int,
-) -> Like | ServiceError:
-    like = await repositories.like.from_id(ctx, like_id)
-
-    if like is None:
-        return ServiceError.LIKES_INVALID_TARGET
-
-    calced_value = await repositories.like.sum_by_target(
-        ctx,
-        like.target_type,
-        like.target_id,
-    )
-
-    like.value = calced_value
-    await repositories.like.update_value(ctx, like.id, like.value)
-    return like
-
-
 async def like_user_comment(
     ctx: Context,
     user_id: int,
@@ -58,8 +38,12 @@ async def like_user_comment(
         user_id,
         value,
     )
-    comment.likes += value
-    await repositories.user_comment.update(ctx, comment)
+
+    await repositories.user_comment.update_partial(
+        ctx,
+        comment_id,
+        likes=comment.likes + value,
+    )
 
     return comment
 
@@ -101,11 +85,10 @@ async def like_level(
         user_id,
         value,
     )
-    level.likes += value
     level = await repositories.level.update_partial(
         ctx,
         level.id,
-        likes=level.likes,
+        likes=level.likes + value,
     )
 
     if level is None:
