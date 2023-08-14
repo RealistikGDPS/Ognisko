@@ -51,41 +51,13 @@ async def register(
 
     hashed_password = await hashes.hash_bcypt_async(password)
 
-    user = User(
-        id=0,
+    user = await repositories.user.create(
+        ctx,
         username=name,
-        email=email,
         password=hashed_password,
-        privileges=DEFAULT_PRIVILEGES,
-        stars=0,
-        demons=0,
-        creator_points=0,
-        display_type=0,
-        primary_colour=0,
-        secondary_colour=0,
-        coins=0,
-        user_coins=0,
-        icon=0,
-        ship=0,
-        ball=0,
-        ufo=0,
-        wave=0,
-        robot=0,
-        spider=0,
-        explosion=0,
-        glow=False,
-        message_privacy=UserPrivacySetting.PUBLIC,
-        friend_privacy=UserPrivacySetting.PUBLIC,
-        comment_privacy=UserPrivacySetting.PUBLIC,
-        youtube_name=None,
-        twitter_name=None,
-        twitch_name=None,
-        register_ts=datetime.now(),
-        diamonds=0,
+        email=email,
     )
 
-    user_id = await repositories.user.create_old(ctx, user)
-    user.id = user_id
     return user
 
 
