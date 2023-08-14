@@ -6,6 +6,7 @@ from rgdps.common.context import Context
 from rgdps.common.typing import is_set
 from rgdps.common.typing import UNSET
 from rgdps.common.typing import Unset
+from rgdps.constants.level_comments import LevelCommentSorting
 from rgdps.models.level_comment import LevelComment
 
 
@@ -120,16 +121,20 @@ async def from_level_id_paginated(
     page: int,
     page_size: int,
     include_deleted: bool = False,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
 ) -> list[LevelComment]:
     condition = ""
-    # FIXME: Unused
     if not include_deleted:
         condition = "AND NOT deleted"
+
+    order_by = "id"
+    if sorting is LevelCommentSorting.MOST_LIKED:
+        order_by = "likes"
 
     comments_db = await ctx.mysql.fetch_all(
         "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
         f"level_comments WHERE level_id = :level_id {condition} "
-        "ORDER BY id DESC LIMIT :limit OFFSET :offset",
+        f"ORDER BY {order_by} DESC LIMIT :limit OFFSET :offset",
         {
             "level_id": level_id,
             "limit": page_size,
@@ -146,16 +151,20 @@ async def from_user_id_paginated(
     page: int,
     page_size: int,
     include_deleted: bool = False,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
 ) -> list[LevelComment]:
     condition = ""
-    # FIXME: Unused
     if not include_deleted:
         condition = "AND NOT deleted"
+
+    order_by = "id"
+    if sorting is LevelCommentSorting.MOST_LIKED:
+        order_by = "likes"
 
     comments_db = await ctx.mysql.fetch_all(
         "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
         f"level_comments WHERE user_id = :user_id {condition} "
-        "ORDER BY id DESC LIMIT :limit OFFSET :offset",
+        f"ORDER BY {order_by} DESC LIMIT :limit OFFSET :offset",
         {
             "user_id": user_id,
             "limit": page_size,

@@ -10,6 +10,7 @@ from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.level_comments import LevelCommentSorting
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.usecases import level_comments
@@ -25,6 +26,7 @@ async def create_comment_post(
     level_id: int = Form(..., alias="levelID"),
     content: Base64String = Form(..., alias="comment"),
     percent: int = Form(default=0),
+    sort: LevelCommentSorting = Form(LevelCommentSorting.NEWEST, alias="mode"),
 ):
     comment = await level_comments.create(
         ctx,
@@ -47,12 +49,14 @@ async def level_comments_get(
     level_id: int = Form(..., alias="levelID"),
     page: int = Form(...),
     page_size: int = Form(PAGE_SIZE, alias="count"),
+    sort: LevelCommentSorting = Form(LevelCommentSorting.NEWEST, alias="mode"),
 ):
     result = await level_comments.get_level(
         ctx,
         level_id,
         page,
         page_size,
+        sort,
     )
 
     if isinstance(result, ServiceError):
@@ -80,12 +84,14 @@ async def get_comment_history(
     user_id: int = Form(..., alias="userID"),
     page: int = Form(...),
     page_size: int = Form(PAGE_SIZE, alias="count"),
+    sort: LevelCommentSorting = Form(LevelCommentSorting.NEWEST, alias="mode"),
 ):
     result = await level_comments.get_user(
         ctx,
         user_id,
         page,
         page_size,
+        sort,
     )
 
     if isinstance(result, ServiceError):

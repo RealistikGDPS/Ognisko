@@ -5,6 +5,7 @@ from typing import NamedTuple
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.level_comments import LevelCommentSorting
 from rgdps.models.level_comment import LevelComment
 from rgdps.models.user import User
 
@@ -24,6 +25,7 @@ async def get_level(
     level_id: int,
     page: int = 0,
     page_size: int = 10,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
 ) -> PaginatedLevelCommentResponse | ServiceError:
     comments = await repositories.level_comment.from_level_id_paginated(
         ctx,
@@ -31,6 +33,7 @@ async def get_level(
         page,
         page_size,
         include_deleted=False,
+        sorting=sorting,
     )
 
     level_comment_responses = []
@@ -57,6 +60,7 @@ async def get_user(
     user_id: int,
     page: int = 0,
     page_size: int = 10,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
 ) -> PaginatedLevelCommentResponse | ServiceError:
     user = await repositories.user.from_id(ctx, user_id)
 
@@ -69,6 +73,7 @@ async def get_user(
         page,
         page_size,
         include_deleted=False,
+        sorting=sorting,
     )
 
     comment_count = await repositories.level_comment.get_count_from_user(
