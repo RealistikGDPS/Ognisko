@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -121,9 +120,6 @@ class User:
             res["id"] = self.id or None
 
         return res
-
-    def copy(self) -> User:
-        return copy.copy(self)
 
     # Dunder methods
     def __str__(self) -> str:

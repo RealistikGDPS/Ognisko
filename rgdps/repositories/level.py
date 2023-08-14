@@ -204,12 +204,6 @@ async def create_meili(ctx: Context, level: Level, level_id: int) -> None:
     await index.add_documents([level_dict])
 
 
-async def update_full(ctx: Context, level: Level) -> None:
-    # In case sql fails, we do not want to update meili.
-    await update_sql_full(ctx, level)
-    await update_meili_full(ctx, level)
-
-
 async def update_meili_full(ctx: Context, level: Level) -> None:
     index = ctx.meili.index("levels")
     await index.add_documents([_make_meili_dict(level.as_dict(include_id=True))])
@@ -346,7 +340,7 @@ async def update_sql_partial(
     changed_data["id"] = level_id
     await ctx.mysql.execute(query, changed_data)
 
-    return await from_id(ctx, level_id)
+    return await from_id(ctx, level_id, include_deleted=True)
 
 
 async def update_meili_partial(

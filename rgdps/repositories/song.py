@@ -30,7 +30,7 @@ async def from_db(
     return Song.from_mapping(song_db)
 
 
-async def create_old(ctx: Context, song: Song) -> int:
+async def _create_sql(ctx: Context, song: Song) -> int:
     return await ctx.mysql.execute(
         "INSERT INTO songs (name, author_id, author, author_youtube, size, "
         "download_url, source, blocked, id) VALUES "
@@ -126,7 +126,7 @@ async def from_id(
 
     song_boomlings = await from_boomlings(ctx, song_id)
     if song_boomlings is not None:
-        await create_old(ctx, song_boomlings)
+        await _create_sql(ctx, song_boomlings)
         return song_boomlings
 
     return None
