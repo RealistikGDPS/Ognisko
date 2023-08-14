@@ -94,18 +94,15 @@ async def get_comment_history(
 
     response = "|".join(
         gd_obj.dumps(
-            gd_obj.create_level_comment(
-                comment.comment,
-                comment.user,
-                include_level_id=True,
-            ),
+            [
+                gd_obj.create_level_comment(comment.comment, comment.user),
+                gd_obj.create_level_comment_author_string(comment.user),
+            ],
             sep="~",
         )
         for comment in result.comments
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, page_size)
-    print(result)
-    print(response)
 
     logger.info(f"Successfully viewed comments for user ID {user_id}.")
     return response
