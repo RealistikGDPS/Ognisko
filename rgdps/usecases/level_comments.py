@@ -6,6 +6,7 @@ from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_comments import LevelCommentSorting
+from rgdps.constants.users import UserPrivacySetting
 from rgdps.models.level_comment import LevelComment
 from rgdps.models.user import User
 
@@ -61,11 +62,16 @@ async def get_user(
     page: int = 0,
     page_size: int = 10,
     sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
+    # TODO: Friends
+    viewing_user_id: int | None = None,
 ) -> PaginatedLevelCommentResponse | ServiceError:
     user = await repositories.user.from_id(ctx, user_id)
 
     if user is None:
         return ServiceError.USER_NOT_FOUND
+
+    if user.comment_privacy is UserPrivacySetting.PRIVATE:
+        return ServiceError.USER_COMMENTS_PRIVATE
 
     comments = await repositories.level_comment.from_user_id_paginated(
         ctx,
