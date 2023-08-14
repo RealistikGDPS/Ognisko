@@ -263,8 +263,13 @@ async def update_partial(
     changed_data["id"] = user_id
 
     await ctx.mysql.execute(query, changed_data)
+    await drop_cache(ctx, user_id)
 
     return await from_id(ctx, user_id)
+
+
+async def drop_cache(ctx: Context, user_id: int) -> None:
+    await ctx.user_cache.delete(user_id)
 
 
 async def from_id(ctx: Context, user_id: int) -> User | None:
