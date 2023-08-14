@@ -101,7 +101,11 @@ async def get_comment_history(
     response = "|".join(
         gd_obj.dumps(
             [
-                gd_obj.create_level_comment(comment.comment, comment.user),
+                gd_obj.create_level_comment(
+                    comment.comment,
+                    comment.user,
+                    include_level_id=True,
+                ),
                 gd_obj.create_level_comment_author_string(comment.user),
             ],
             sep="~",
