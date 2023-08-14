@@ -145,15 +145,17 @@ async def user_info_update(
     return str(user.id)
 
 
+# NOTE: Comment Privacy is optional for now as some cleints don't send it. (2.111)
+# Delete the default when 2.2 is released.
 async def user_settings_update(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
-    youtube_name: str = Form(..., alias="yt"),
-    twitter_name: str = Form(..., alias="twitter"),
-    twitch_name: str = Form(..., alias="twitch"),
+    youtube_name: str | None = Form(None, alias="yt"),
+    twitter_name: str | None = Form(None, alias="twitter"),
+    twitch_name: str | None = Form(None, alias="twitch"),
     message_privacy: UserPrivacySetting = Form(..., alias="mS"),
-    comment_privacy: UserPrivacySetting = Form(..., alias="cS"),
     friend_request_allowed: bool = Form(..., alias="frS"),
+    comment_privacy: UserPrivacySetting = Form(UserPrivacySetting.PUBLIC, alias="cS"),
 ):
     friend_privacy = UserPrivacySetting.PUBLIC
     if not friend_request_allowed:
@@ -165,9 +167,9 @@ async def user_settings_update(
         message_privacy=message_privacy,
         comment_privacy=comment_privacy,
         friend_privacy=friend_privacy,
-        youtube_name=youtube_name or None,
-        twitter_name=twitter_name or None,
-        twitch_name=twitch_name or None,
+        youtube_name=youtube_name,
+        twitter_name=twitter_name,
+        twitch_name=twitch_name,
     )
 
     if isinstance(result, ServiceError):

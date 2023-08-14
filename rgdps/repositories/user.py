@@ -178,11 +178,11 @@ async def update_partial(
     if is_set(privileges):
         changed_data["privileges"] = privileges
     if is_set(message_privacy):
-        changed_data["message_privacy"] = message_privacy
+        changed_data["message_privacy"] = message_privacy.value
     if is_set(friend_privacy):
-        changed_data["friend_privacy"] = friend_privacy
+        changed_data["friend_privacy"] = friend_privacy.value
     if is_set(comment_privacy):
-        changed_data["comment_privacy"] = comment_privacy
+        changed_data["comment_privacy"] = comment_privacy.value
     if is_set(youtube_name):
         changed_data["youtube_name"] = youtube_name
     if is_set(twitter_name):
