@@ -5,9 +5,10 @@ from typing import NamedTuple
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.level_comments import LevelCommentSorting
+from rgdps.constants.users import UserPrivacySetting
 from rgdps.models.level_comment import LevelComment
 from rgdps.models.user import User
-from rgdps.usecases import users
 
 
 class LevelCommentResponse(NamedTuple):
@@ -25,6 +26,7 @@ async def get_level(
     level_id: int,
     page: int = 0,
     page_size: int = 10,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
 ) -> PaginatedLevelCommentResponse | ServiceError:
     comments = await repositories.level_comment.from_level_id_paginated(
         ctx,
@@ -32,20 +34,18 @@ async def get_level(
         page,
         page_size,
         include_deleted=False,
+        sorting=sorting,
     )
 
     level_comment_responses = []
     for comment in comments:
-        user_perspective = await users.get(
-            ctx,
-            comment.user_id,
-            is_own=False,
-        )
-        if isinstance(user_perspective, ServiceError):
-            return ServiceError.COMMENTS_INVALID_OWNER
+        user = await repositories.user.from_id(ctx, comment.user_id)
+
+        if user is None:
+            continue
 
         level_comment_responses.append(
-            LevelCommentResponse(comment, user_perspective.user),
+            LevelCommentResponse(comment, user),
         )
 
     comment_count = await repositories.level_comment.get_count_from_level(
@@ -54,6 +54,43 @@ async def get_level(
     )
 
     return PaginatedLevelCommentResponse(level_comment_responses, comment_count)
+
+
+async def get_user(
+    ctx: Context,
+    user_id: int,
+    page: int = 0,
+    page_size: int = 10,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
+    # TODO: Friends
+    viewing_user_id: int | None = None,
+) -> PaginatedLevelCommentResponse | ServiceError:
+    user = await repositories.user.from_id(ctx, user_id)
+
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    if user.comment_privacy is UserPrivacySetting.PRIVATE:
+        return ServiceError.USER_COMMENTS_PRIVATE
+
+    comments = await repositories.level_comment.from_user_id_paginated(
+        ctx,
+        user_id,
+        page,
+        page_size,
+        include_deleted=False,
+        sorting=sorting,
+    )
+
+    comment_count = await repositories.level_comment.get_count_from_user(
+        ctx,
+        user_id,
+    )
+
+    return PaginatedLevelCommentResponse(
+        [LevelCommentResponse(comment, user) for comment in comments],
+        comment_count,
+    )
 
 
 async def create(
@@ -75,3 +112,29 @@ async def create(
         content=content,
         percent=percent,
     )
+
+
+async def delete(
+    ctx: Context,
+    user_id: int,
+    comment_id: int,
+    can_delete_any: bool,
+) -> LevelComment | ServiceError:
+    comment = await repositories.level_comment.from_id(ctx, comment_id)
+
+    if comment is None:
+        return ServiceError.COMMENTS_NOT_FOUND
+
+    if comment.user_id != user_id and not can_delete_any:
+        return ServiceError.COMMENTS_INVALID_OWNER
+
+    comment = await repositories.level_comment.update_partial(
+        ctx,
+        comment_id,
+        deleted=True,
+    )
+
+    if comment is None:
+        return ServiceError.COMMENTS_NOT_FOUND
+
+    return comment

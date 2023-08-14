@@ -122,14 +122,18 @@ def create_user_comment(comment: UserComment) -> GDSerialisable:
     }
 
 
-def create_level_comment(comment: LevelComment, user: User) -> GDSerialisable:
+def create_level_comment(
+    comment: LevelComment,
+    user: User,
+    include_level_id: bool = False,
+) -> GDSerialisable:
     badge_level = 0
     if user.privileges & UserPrivileges.USER_DISPLAY_ELDER_BADGE:
         badge_level = 2
     elif user.privileges & UserPrivileges.USER_DISPLAY_MOD_BADGE:
         badge_level = 1
 
-    return {
+    ret: GDSerialisable = {
         2: hashes.encode_base64(comment.content),
         3: user.id,
         4: comment.likes,
@@ -140,6 +144,11 @@ def create_level_comment(comment: LevelComment, user: User) -> GDSerialisable:
         11: badge_level,
         12: "0,0,0",  # TODO: Colour system (privilege bound)
     }
+
+    if include_level_id:
+        ret[1] = comment.level_id
+
+    return ret
 
 
 def create_level_comment_author_string(user: User) -> GDSerialisable:
@@ -193,7 +202,7 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         37: level.coins,
         38: 1 if level.coins_verified else 0,
         39: level.requested_stars,
-        42: 1 if level.search_flags & LevelSearchFlag.EPIC else 0,  # is epic
+        42: 1 if level.search_flags & LevelSearchFlag.EPIC else 0,
         43: level.demon_difficulty.value if level.demon_difficulty else 0,
         45: level.object_count,
     }

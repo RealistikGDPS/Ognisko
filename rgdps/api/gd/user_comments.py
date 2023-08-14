@@ -105,7 +105,7 @@ async def user_comment_delete(
     user: User = Depends(authenticate_dependency()),
     comment_id: int = Form(..., alias="commentID"),
 ):
-    result = await user_comments.delete(ctx, user, comment_id)
+    result = await user_comments.delete(ctx, user.id, comment_id)
 
     if isinstance(result, ServiceError):
         logger.info(

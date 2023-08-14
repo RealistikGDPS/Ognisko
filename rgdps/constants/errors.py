@@ -14,6 +14,7 @@ class ServiceError(str, Enum):
     USER_NOT_FOUND = "user.not_found"
     USER_BLOCKED_BY_USER = "user.blocked_by_user"
     USER_PROFILE_PRIVATE = "user.profile_private"
+    USER_COMMENTS_PRIVATE = "user.comments_private"
 
     COMMENTS_INVALID_CONTENT = "comments.invalid_content"
     COMMENTS_NOT_FOUND = "comments.not_found"

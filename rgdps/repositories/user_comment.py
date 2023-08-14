@@ -56,7 +56,6 @@ async def from_user_id_paginated(
     include_deleted: bool = False,
 ) -> list[UserComment]:
     condition = ""
-    # FIXME: Unused
     if not include_deleted:
         condition = "AND NOT deleted"
 

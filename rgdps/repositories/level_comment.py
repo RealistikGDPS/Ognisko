@@ -6,6 +6,7 @@ from rgdps.common.context import Context
 from rgdps.common.typing import is_set
 from rgdps.common.typing import UNSET
 from rgdps.common.typing import Unset
+from rgdps.constants.level_comments import LevelCommentSorting
 from rgdps.models.level_comment import LevelComment
 
 
@@ -19,7 +20,7 @@ async def from_id(
         condition = " AND NOT deleted"
 
     level_db = await ctx.mysql.fetch_one(
-        "SELECT id, user_id, level_id, content, likes, post_ts, deleted "
+        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted "
         "FROM level_comments WHERE id = :comment_id" + condition,
         {
             "comment_id": comment_id,
@@ -111,7 +112,7 @@ async def update_partial(
 
     await ctx.mysql.execute(query, changed_data)
 
-    return await from_id(ctx, comment_id)
+    return await from_id(ctx, comment_id, include_deleted=True)
 
 
 async def from_level_id_paginated(
@@ -120,18 +121,52 @@ async def from_level_id_paginated(
     page: int,
     page_size: int,
     include_deleted: bool = False,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
 ) -> list[LevelComment]:
     condition = ""
-    # FIXME: Unused
     if not include_deleted:
         condition = "AND NOT deleted"
+
+    order_by = "id"
+    if sorting is LevelCommentSorting.MOST_LIKED:
+        order_by = "likes"
 
     comments_db = await ctx.mysql.fetch_all(
         "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
         f"level_comments WHERE level_id = :level_id {condition} "
-        "ORDER BY id DESC LIMIT :limit OFFSET :offset",
+        f"ORDER BY {order_by} DESC LIMIT :limit OFFSET :offset",
         {
             "level_id": level_id,
+            "limit": page_size,
+            "offset": page * page_size,
+        },
+    )
+
+    return [LevelComment.from_mapping(comment_db) for comment_db in comments_db]
+
+
+async def from_user_id_paginated(
+    ctx: Context,
+    user_id: int,
+    page: int,
+    page_size: int,
+    include_deleted: bool = False,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
+) -> list[LevelComment]:
+    condition = ""
+    if not include_deleted:
+        condition = "AND NOT deleted"
+
+    order_by = "id"
+    if sorting is LevelCommentSorting.MOST_LIKED:
+        order_by = "likes"
+
+    comments_db = await ctx.mysql.fetch_all(
+        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
+        f"level_comments WHERE user_id = :user_id {condition} "
+        f"ORDER BY {order_by} DESC LIMIT :limit OFFSET :offset",
+        {
+            "user_id": user_id,
             "limit": page_size,
             "offset": page * page_size,
         },
@@ -151,6 +186,20 @@ async def get_count_from_level(
         if not include_deleted
         else "",
         {"level_id": level_id},
+    )
+
+
+async def get_count_from_user(
+    ctx: Context,
+    user_id: int,
+    include_deleted: bool = False,
+) -> int:
+    return await ctx.mysql.fetch_val(
+        "SELECT COUNT(*) FROM level_comments WHERE user_id = :user_id "
+        "AND deleted = 0"
+        if not include_deleted
+        else "",
+        {"user_id": user_id},
     )
 
 
