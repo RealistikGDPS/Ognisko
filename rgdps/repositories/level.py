@@ -700,3 +700,7 @@ async def all_ids(ctx: Context, include_deleted: bool = False) -> list[int]:
 
 async def get_count(ctx: Context) -> int:
     return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM levels")
+
+
+async def nuke_meili(ctx: Context) -> None:
+    await ctx.meili.index("levels").delete_all_documents()

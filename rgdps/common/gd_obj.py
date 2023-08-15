@@ -171,6 +171,7 @@ def create_song(song: Song) -> GDSerialisable:
         4: song.author,
         5: song.size,
         7: song.author_youtube or "",
+        8: int(not song.blocked),  # Is scouted (allowed)
         10: urllib.parse.quote(song.download_url, safe=""),
     }
 
@@ -205,6 +206,8 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         42: 1 if level.search_flags & LevelSearchFlag.EPIC else 0,
         43: level.demon_difficulty.value if level.demon_difficulty else 0,
         45: level.object_count,
+        46: level.building_time,
+        47: level.building_time,
     }
 
 

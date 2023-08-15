@@ -176,7 +176,7 @@ async def search(
         followed_list=followed_list,
     )
 
-    songs = []
+    songs = set()
     users = set()
     for level in levels_db.results:
         user = await repositories.user.from_id(ctx, level.user_id)
@@ -185,7 +185,7 @@ async def search(
         if level.custom_song_id:
             song = await repositories.song.from_id(ctx, level.custom_song_id)
             if song:
-                songs.append(song)
+                songs.add(song)
 
     if lookup_level:
         # Move to the top.
@@ -197,7 +197,7 @@ async def search(
     return SearchResponse(
         levels=levels_db.results,
         total=levels_db.total + (1 if lookup_level else 0),
-        songs=songs,
+        songs=list(songs),
         users=list(users),
     )
 
@@ -303,7 +303,6 @@ async def suggest_stars(
     if level is None:
         return ServiceError.LEVELS_NOT_FOUND
 
-    user.creator_points = creator_points
-    await repositories.user.update(ctx, user=user)
+    await repositories.user.update_partial(ctx, user.id, creator_points=creator_points)
 
     return level
