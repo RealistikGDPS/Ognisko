@@ -7,6 +7,7 @@ from typing import NamedTuple
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchType
@@ -294,11 +295,14 @@ async def suggest_stars(
     elif existing_level.feature_order != 0 and feature_order == 0:
         creator_points -= 1
 
+    difficulty = LevelDifficulty.from_stars(stars)
+
     level = await repositories.level.update_partial(
         ctx,
         level_id=level_id,
         stars=stars,
         feature_order=feature_order,
+        difficulty=difficulty,
     )
     if level is None:
         return ServiceError.LEVELS_NOT_FOUND

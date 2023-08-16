@@ -19,6 +19,25 @@ class LevelDifficulty(IntEnum):
     HARDER = 40
     INSANE = 50
 
+    @staticmethod
+    def from_stars(stars: int) -> LevelDifficulty:
+        return _DIFFICULTY_STAR_MAP.get(
+            stars,
+            LevelDifficulty.NA,
+        )
+
+
+_DIFFICULTY_STAR_MAP = {
+    2: LevelDifficulty.EASY,
+    3: LevelDifficulty.EASY,
+    4: LevelDifficulty.NORMAL,
+    5: LevelDifficulty.HARD,
+    6: LevelDifficulty.HARD,
+    7: LevelDifficulty.HARDER,
+    8: LevelDifficulty.INSANE,
+    9: LevelDifficulty.INSANE,
+}
+
 
 class LevelLength(IntEnum):
     TINY = 0

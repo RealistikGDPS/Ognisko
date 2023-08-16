@@ -179,7 +179,11 @@ def create_song(song: Song) -> GDSerialisable:
 def create_level_minimal(level: Level) -> GDSerialisable:
     """Minimal level data for level search."""
 
-    description_b64 = hashes.encode_base64(level.description)
+    if level.description:
+        description_b64 = hashes.encode_base64(level.description)
+    else:
+        description_b64 = ""
+
     return {
         1: level.id,
         2: level.name,
