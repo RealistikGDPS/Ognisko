@@ -29,6 +29,13 @@ class LocalStorage(AbstractStorage):
     def __init__(self, base_location: str) -> None:
         self._base_location = base_location
 
+    def __ensure_subdirectories(self, key: str) -> None:
+        if "/" not in key:
+            return
+
+        directory = os.path.dirname(f"{self._base_location}/{key}")
+        os.makedirs(directory, exist_ok=True)
+
     async def load(self, key: str) -> bytes | None:
         location = f"{self._base_location}/{key}"
         if not os.path.exists(location):
@@ -38,6 +45,7 @@ class LocalStorage(AbstractStorage):
             return file.read()
 
     async def save(self, key: str, data: bytes) -> None:
+        self.__ensure_subdirectories(key)
         location = f"{self._base_location}/{key}"
 
         with open(location, "wb") as file:
@@ -93,10 +101,10 @@ class S3Storage(AbstractStorage):
                 return
             except Exception:
                 sleep_time = i * 2
-                await asyncio.sleep(sleep_time)
                 logger.warning(
                     f"Failing to save {key} to S3, retrying in {sleep_time}s...",
                 )
+                await asyncio.sleep(sleep_time)
 
         logger.error(f"Failed to save {key} to S3!")
 
