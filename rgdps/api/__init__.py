@@ -8,7 +8,6 @@ from aiobotocore.session import get_session
 from databases import DatabaseURL
 from fastapi import FastAPI
 from fastapi import status
-from fastapi.exceptions import HTTPException
 from fastapi.exceptions import RequestValidationError
 from fastapi.requests import Request
 from fastapi.responses import JSONResponse
