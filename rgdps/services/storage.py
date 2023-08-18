@@ -89,7 +89,7 @@ class S3Storage(AbstractStorage):
     async def __save(self, key: str, data: bytes) -> None:
         for i in range(self._retries):
             try:
-                await self.__save(key, data)
+                await self.__save_file(key, data)
                 return
             except Exception:
                 sleep_time = i * 2
