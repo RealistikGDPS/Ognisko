@@ -28,6 +28,8 @@ from rgdps.config import config
 from rgdps.constants.responses import GenericResponse
 from rgdps.services.mysql import MySQLService
 from rgdps.services.pubsub import listen_pubsubs
+from rgdps.services.storage import LocalStorage
+from rgdps.services.storage import S3Storage
 
 
 def init_events(app: FastAPI) -> None:
@@ -134,29 +136,34 @@ def init_meili(app: FastAPI) -> None:
 
 
 def init_s3_storage(app: FastAPI) -> None:
-    s3_creator = get_session().create_client(
-        "s3",
-        region_name=config.s3_region,
-        endpoint_url=config.s3_endpoint,
-        aws_access_key_id=config.s3_access_key,
-        aws_secret_access_key=config.s3_secret_key,
-        config=AioConfig(
-            read_timeout=5,
-        ),
+    app.state.storage = S3Storage(
+        region=config.s3_region,
+        endpoint=config.s3_endpoint,
+        access_key=config.s3_access_key,
+        secret_key=config.s3_secret_key,
+        bucket=config.s3_bucket,
+        retries=10,
+        timeout=5,
     )
 
     @app.on_event("startup")
     async def startup() -> None:
-        app.state.s3 = await s3_creator.__aenter__()
-        logger.info("Connected to S3.")
+        app.state.storage = await app.state.storage.connect()
+        logger.info("Connected to the S3 storage.")
 
     @app.on_event("shutdown")
     async def shutdown() -> None:
-        await app.state.s3.__aexit__(None, None, None)
+        await app.state.storage.disconnect()
 
 
 def init_local_storage(app: FastAPI) -> None:
-    logger.info("Initialising local storage.")
+    app.state.storage = LocalStorage(
+        root=config.local_root,
+    )
+
+    @app.on_event("startup")
+    async def startup() -> None:
+        logger.info("Connected to the local storage.")
 
 
 def init_http(app: FastAPI) -> None:

@@ -37,6 +37,7 @@ from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
 from rgdps.constants.songs import SongSource
 from rgdps.services.mysql import MySQLService
+from rgdps.services.storage import AbstractStorage
 from rgdps.models.user import User
 
 if TYPE_CHECKING:
@@ -94,11 +95,6 @@ class ConverterContext(Context):
         return self._meili
 
     @property
-    def s3(self) -> S3Client | None:
-        # We are not using storage.
-        return None
-
-    @property
     def user_cache(self) -> AbstractAsyncCache[User]:
         return self._user_cache
 
@@ -109,6 +105,10 @@ class ConverterContext(Context):
     @property
     def http(self) -> httpx.AsyncClient:
         return self._http
+
+    @property
+    def storage(self) -> AbstractStorage:
+        raise NotImplementedError("The GMDPS converter does not use storage.")
 
 
 async def create_user_id_map(conn: MySQLService) -> dict[int, int]:

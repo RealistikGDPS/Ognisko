@@ -13,6 +13,7 @@ if TYPE_CHECKING:
     from rgdps.models.user import User
     from rgdps.common.cache.base import AbstractAsyncCache
     from rgdps.services.mysql import MySQLService
+    from rgdps.services.storage import AbstractStorage
 
 
 class Context(ABC):
@@ -33,7 +34,7 @@ class Context(ABC):
 
     @property
     @abstractmethod
-    def s3(self) -> S3Client | None:
+    def storage(self) -> AbstractStorage:
         ...
 
     @property

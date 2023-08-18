@@ -11,6 +11,7 @@ from types_aiobotocore_s3 import S3Client
 from rgdps.common.cache.base import AbstractAsyncCache
 from rgdps.common.context import Context
 from rgdps.services.mysql import MySQLService
+from rgdps.services.storage import AbstractStorage
 
 if TYPE_CHECKING:
     from rgdps.models.user import User
@@ -33,8 +34,8 @@ class HTTPContext(Context):
         return self.request.app.state.meili
 
     @property
-    def s3(self) -> S3Client | None:
-        return self.request.app.state.s3
+    def storage(self) -> AbstractStorage:
+        return self.request.app.state.storage
 
     @property
     def user_cache(self) -> "AbstractAsyncCache[User]":

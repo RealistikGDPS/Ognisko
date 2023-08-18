@@ -26,18 +26,18 @@ class AbstractStorage(ABC):
 
 
 class LocalStorage(AbstractStorage):
-    def __init__(self, base_location: str) -> None:
-        self._base_location = base_location
+    def __init__(self, root: str) -> None:
+        self._root = root
 
     def __ensure_subdirectories(self, key: str) -> None:
         if "/" not in key:
             return
 
-        directory = os.path.dirname(f"{self._base_location}/{key}")
+        directory = os.path.dirname(f"{self._root}/{key}")
         os.makedirs(directory, exist_ok=True)
 
     async def load(self, key: str) -> bytes | None:
-        location = f"{self._base_location}/{key}"
+        location = f"{self._root}/{key}"
         if not os.path.exists(location):
             return None
 
@@ -46,7 +46,7 @@ class LocalStorage(AbstractStorage):
 
     async def save(self, key: str, data: bytes) -> None:
         self.__ensure_subdirectories(key)
-        location = f"{self._base_location}/{key}"
+        location = f"{self._root}/{key}"
 
         with open(location, "wb") as file:
             file.write(data)
