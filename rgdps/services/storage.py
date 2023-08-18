@@ -9,6 +9,8 @@ from aiobotocore.config import AioConfig
 from aiobotocore.session import get_session
 from types_aiobotocore_s3 import S3Client
 
+from rgdps import logger
+
 
 class AbstractStorage(ABC):
     @abstractmethod
@@ -88,9 +90,15 @@ class S3Storage(AbstractStorage):
         for i in range(self._retries):
             try:
                 await self.__save(key, data)
-                break
+                return
             except Exception:
-                await asyncio.sleep(i * 2)
+                sleep_time = i * 2
+                await asyncio.sleep(sleep_time)
+                logger.warning(
+                    f"Failing to save {key} to S3, retrying in {sleep_time}s...",
+                )
+
+        logger.error(f"Failed to save {key} to S3!")
 
     async def save(self, key: str, data: bytes) -> None:
         if self._s3 is None:
