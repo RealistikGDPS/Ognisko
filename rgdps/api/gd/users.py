@@ -44,7 +44,7 @@ async def login_post(
     ctx: HTTPContext = Depends(),
     username: str = Form(..., alias="userName", max_length=15),
     password: str = Form(..., max_length=20),
-    _: str = Form(..., alias="udid"),
+    # _: str = Form(..., alias="udid"),
 ):
 
     user = await users.authenticate(ctx, username, password)
