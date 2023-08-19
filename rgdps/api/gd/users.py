@@ -9,6 +9,8 @@ from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
+from rgdps.common.validators import SocialMediaString
+from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import LoginResponse
 from rgdps.constants.users import UserPrivacySetting
@@ -20,7 +22,7 @@ from rgdps.usecases import users
 
 async def register_post(
     ctx: HTTPContext = Depends(),
-    username: str = Form(..., alias="userName", min_length=3, max_length=15),
+    username: TextBoxString = Form(..., alias="userName", min_length=3, max_length=15),
     email: EmailStr = Form(...),
     password: str = Form(..., min_length=6, max_length=20),
 ):
@@ -42,7 +44,7 @@ async def register_post(
 
 async def login_post(
     ctx: HTTPContext = Depends(),
-    username: str = Form(..., alias="userName", max_length=15),
+    username: TextBoxString = Form(..., alias="userName", max_length=15),
     password: str = Form(..., max_length=20),
     # _: str = Form(..., alias="udid"),
 ):
@@ -150,9 +152,9 @@ async def user_info_update(
 async def user_settings_update(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
-    youtube_name: str | None = Form(None, alias="yt"),
-    twitter_name: str | None = Form(None, alias="twitter"),
-    twitch_name: str | None = Form(None, alias="twitch"),
+    youtube_name: SocialMediaString | None = Form(None, alias="yt"),
+    twitter_name: SocialMediaString | None = Form(None, alias="twitter"),
+    twitch_name: SocialMediaString | None = Form(None, alias="twitch"),
     message_privacy: UserPrivacySetting = Form(..., alias="mS"),
     friend_request_allowed: bool = Form(..., alias="frS"),
     comment_privacy: UserPrivacySetting = Form(UserPrivacySetting.PUBLIC, alias="cS"),
