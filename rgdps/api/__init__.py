@@ -202,6 +202,14 @@ def init_routers(app: FastAPI) -> None:
     app.include_router(rgdps.api.gd.router)
 
 
+def init_middlewares(app: FastAPI) -> None:
+    @app.middleware("http")
+    async def mysql_transaction(request: Request, call_next):
+        async with app.state.mysql.transaction() as sql:
+            request.state.mysql = sql
+            return await call_next(request)
+
+
 def init_api() -> FastAPI:
     app = FastAPI(
         title="RealistikGDPS",
@@ -210,6 +218,7 @@ def init_api() -> FastAPI:
     )
 
     init_events(app)
+    init_middlewares(app)
     init_mysql(app)
     init_redis(app)
     init_meili(app)

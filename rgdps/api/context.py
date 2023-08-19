@@ -23,7 +23,8 @@ class HTTPContext(Context):
 
     @property
     def mysql(self) -> AbstractMySQLService:
-        return self.request.app.state.mysql
+        # NOTE: This is a per-request transaction.
+        return self.request.state.mysql
 
     @property
     def redis(self) -> Redis:
