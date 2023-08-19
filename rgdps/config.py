@@ -13,7 +13,7 @@ from rgdps import logger
 @dataclass
 class Config:
     http_port: int = 8922
-    http_url_prefix: str = "/gdpsdatabase"
+    http_url_prefix: str = "/database"
     http_host: str = "127.0.0.1"
     sql_host: str = "localhost"
     sql_user: str = "root"
@@ -26,8 +26,6 @@ class Config:
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
-    data_levels: str = "data/levels"
-    data_saves: str = "data/saves"
     meili_host: str = "localhost"
     meili_port: int = 7700
     meili_key: str = "master_key"
@@ -37,6 +35,7 @@ class Config:
     s3_endpoint: str = ""
     s3_access_key: str = ""
     s3_secret_key: str = ""
+    local_root: str = "/data"
 
 
 def read_config_json() -> dict[str, Any]:
