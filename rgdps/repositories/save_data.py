@@ -20,4 +20,4 @@ async def create(
     user_id: int,
     data: str,
 ) -> None:
-    return await ctx.storage.save(f"saves/{user_id}", data.encode())
+    await ctx.storage.save(f"saves/{user_id}", data.encode())

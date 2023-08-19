@@ -10,7 +10,7 @@ from types_aiobotocore_s3 import S3Client
 
 from rgdps.common.cache.base import AbstractAsyncCache
 from rgdps.common.context import Context
-from rgdps.services.mysql import MySQLService
+from rgdps.services.mysql import AbstractMySQLService
 from rgdps.services.storage import AbstractStorage
 
 if TYPE_CHECKING:
@@ -22,7 +22,7 @@ class HTTPContext(Context):
         self.request = request
 
     @property
-    def mysql(self) -> MySQLService:
+    def mysql(self) -> AbstractMySQLService:
         return self.request.app.state.mysql
 
     @property
@@ -58,7 +58,7 @@ class PubsubContext(HTTPContext):
         self.state = app.state
 
     @property
-    def mysql(self) -> MySQLService:
+    def mysql(self) -> AbstractMySQLService:
         return self.state.mysql
 
     @property
