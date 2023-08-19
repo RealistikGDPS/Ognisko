@@ -9,6 +9,7 @@ from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
+from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import LoginResponse
 from rgdps.constants.users import UserPrivacySetting
@@ -20,7 +21,7 @@ from rgdps.usecases import users
 
 async def register_post(
     ctx: HTTPContext = Depends(),
-    username: str = Form(..., alias="userName", min_length=3, max_length=15),
+    username: TextBoxString = Form(..., alias="userName", min_length=3, max_length=15),
     email: EmailStr = Form(...),
     password: str = Form(..., min_length=6, max_length=20),
 ):
@@ -42,7 +43,7 @@ async def register_post(
 
 async def login_post(
     ctx: HTTPContext = Depends(),
-    username: str = Form(..., alias="userName", max_length=15),
+    username: TextBoxString = Form(..., alias="userName", max_length=15),
     password: str = Form(..., max_length=20),
     # _: str = Form(..., alias="udid"),
 ):

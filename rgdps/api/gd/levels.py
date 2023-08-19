@@ -9,6 +9,7 @@ from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
+from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelSearchType
@@ -36,7 +37,7 @@ async def level_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     level_id: int = Form(..., alias="levelID"),
-    name: str = Form(..., alias="levelName", max_length=32),  # TODO: Verify
+    name: TextBoxString = Form(..., alias="levelName", max_length=32),
     custom_song_id: int = Form(..., alias="songID"),
     copy_password: int = Form(..., alias="password"),
     two_player: bool = Form(..., alias="twoPlayer"),
