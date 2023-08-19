@@ -4,7 +4,6 @@ from typing import Any
 from pydantic_core import core_schema
 from rgdps.common import hashes
 
-# Learning source: https://github.com/pydantic/pydantic/issues/692#issuecomment-515565389
 class Base64String(str):
     @classmethod
     def __get_pydantic_core_schema__(
