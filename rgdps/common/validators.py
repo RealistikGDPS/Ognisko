@@ -7,6 +7,9 @@ from pydantic_core import core_schema
 
 from rgdps.common import hashes
 
+TEXT_BOX_REGEX = re.compile(r"^[a-zA-Z0-9 ]+$")
+SOCIAL_MEDIA_REGEX = re.compile(r"^[\w\-.' ]+$")
+
 
 class Base64String(str):
     @classmethod
@@ -59,7 +62,7 @@ class TextBoxString(str):
         # Value needs to be: stripped and alphanumeric.
         value = value.strip()
 
-        if not re.match(r"^[a-zA-Z0-9 ]+$", value):
+        if not TEXT_BOX_REGEX.match(value):
             raise ValueError(f"Input contains illegal characters")
 
         return TextBoxString(value)
@@ -87,7 +90,7 @@ class SocialMediaString(str):
         # Value needs to be: stripped and alphanumeric + it can contain `_`, `-`, `.`, and `'`.
         value = value.strip()
 
-        if not re.match(r"^[\w\-.' ]+$", value):
+        if not SOCIAL_MEDIA_REGEX.match(value):
             raise ValueError(f"Input contains illegal characters")
 
         return TextBoxString(value)
