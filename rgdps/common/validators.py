@@ -59,7 +59,7 @@ class TextBoxString(str):
         # Value needs to be: stripped and alphanumeric.
         value = value.strip()
 
-        if not value.isalnum():
+        if not re.match(r"^[a-zA-Z0-9 ]+$", value):
             raise ValueError(f"Input contains illegal characters")
 
         return TextBoxString(value)
