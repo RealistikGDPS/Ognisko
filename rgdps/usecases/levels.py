@@ -5,6 +5,7 @@ from datetime import datetime
 from typing import NamedTuple
 
 from rgdps import repositories
+from rgdps.common import gd_logic
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelDifficulty
@@ -281,19 +282,9 @@ async def suggest_stars(
         return ServiceError.USER_NOT_FOUND
 
     creator_points = user.creator_points
+    current_creator_points = gd_logic.calculate_creator_points(existing_level)
 
     feature_order = int(time.time()) if feature else 0
-
-    # if the level did not have stars previously, add one creator point to the creator of the map
-    if existing_level.stars == 0:
-        creator_points += 1
-
-    # if the map is going from unfeatured->featured then +1 creator point
-    if existing_level.feature_order == 0 and feature_order != 0:
-        creator_points += 1
-    # if the map is going from featured->unfeatured then -1 creator point
-    elif existing_level.feature_order != 0 and feature_order == 0:
-        creator_points -= 1
 
     difficulty = LevelDifficulty.from_stars(stars)
 
@@ -303,9 +294,13 @@ async def suggest_stars(
         stars=stars,
         feature_order=feature_order,
         difficulty=difficulty,
+        coins_verified=True,
     )
     if level is None:
         return ServiceError.LEVELS_NOT_FOUND
+
+    new_creator_points = gd_logic.calculate_creator_points(level)
+    creator_points += new_creator_points - current_creator_points
 
     await repositories.user.update_partial(ctx, user.id, creator_points=creator_points)
 
