@@ -106,7 +106,7 @@ router.add_api_route(
     methods=["POST"],
     # TODO: Tweak based on average user behaviour. May be way too high.
     dependencies=[
-        Depends(RateLimiter(times=1, minutes=3)),
+        Depends(RateLimiter(times=3, minutes=10)),
     ],
 )
 
