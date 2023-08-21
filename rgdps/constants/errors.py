@@ -21,6 +21,15 @@ class ServiceError(str, Enum):
     COMMENTS_INVALID_OWNER = "comments.invalid_owner"
     COMMENTS_TARGET_NOT_FOUND = "comments.target_not_found"
 
+    FRIEND_REQUEST_MESSAGE_INVALID_CONTENT = "friend_request.message_invalid_content"
+    FRIEND_REQUEST_NOT_FOUND = "friend_request.not_found"
+    FRIEND_REQUEST_EXISTS = "friend_request.exists"
+    FRIEND_REQUEST_INVALID_OWNER = "friend_request.invalid_owner"
+
+    RELATIONSHIP_NOT_FOUND = "relationship.not_found"
+    RELATIONSHIP_EXISTS = "relationship.exists"
+    RELATIONSHIP_INVALID_OWNER = "relationship.invalid_owner"
+
     LIKES_ALREADY_LIKED = "likes.already_liked"
     LIKES_OWN_TARGET = "likes.own_target"
     LIKES_INVALID_TARGET = "likes.invalid_target"

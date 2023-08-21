@@ -70,6 +70,11 @@ class UserPrivacySetting(IntEnum):
     PRIVATE = 2
 
 
+class UserRelationshipType(IntEnum):
+    FRIEND = 0
+    BLOCKED = 1
+
+
 class UserPrivilegeLevel(IntEnumStringMixin, IntEnum):
     """Enum for determining whether a user should be displayed as a
     moderator, elder moderator, or neither.
