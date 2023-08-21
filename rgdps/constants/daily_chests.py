@@ -34,4 +34,4 @@ class DailyChestRewardType(IntEnum):
     POISON_SHARD = 4
     SHADOW_SHARD = 5
     LAVA_SHARD = 6
-    KEY = 7
+    DEMON_KEY = 7

@@ -20,7 +20,7 @@ class DailyChest:
     poison_shards: int
     shadow_shards: int
     lava_shards: int
-    keys: int
+    demon_keys: int
     claimed_ts: datetime
 
     @staticmethod
@@ -36,7 +36,7 @@ class DailyChest:
             poison_shards=mapping["poison_shards"],
             shadow_shards=mapping["shadow_shards"],
             lava_shards=mapping["lava_shards"],
-            keys=mapping["keys"],
+            demon_keys=mapping["demon_keys"],
             claimed_ts=mapping["claimed_ts"],
         )
 
@@ -51,7 +51,7 @@ class DailyChest:
             "poison_shards": self.poison_shards,
             "shadow_shards": self.shadow_shards,
             "lava_shards": self.lava_shards,
-            "keys": self.keys,
+            "demon_keys": self.demon_keys,
             "claimed_ts": self.claimed_ts,
         }
 

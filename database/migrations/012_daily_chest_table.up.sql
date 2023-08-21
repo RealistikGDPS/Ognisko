@@ -9,7 +9,7 @@ CREATE TABLE `daily_chests` (
   `poison_shards` INT NOT NULL,
   `shadow_shards` INT NOT NULL,
   `lava_shards` INT NOT NULL,
-  `keys` INT NOT NULL,
+  `demon_keys` INT NOT NULL,
   `claimed_ts` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`)
 ) ENGINE = InnoDB;

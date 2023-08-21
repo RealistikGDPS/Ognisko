@@ -17,6 +17,10 @@ from rgdps.models.daily_chest import DailyChest
 class DailyChestInformation(NamedTuple):
     small_chest_time_remaining: timedelta
     large_chest_time_remaining: timedelta
+
+    small_chest_count: int
+    large_chest_count: int
+
     chest: DailyChest | None
 
 
@@ -25,7 +29,7 @@ LARGE_CHEST_TIME = timedelta(hours=24)
 
 # NOTE: This handles both just viewing and claiming a chest as GD handles
 # both in a single endpoint.
-async def view_daily_chests(
+async def view(
     ctx: Context,
     user_id: int,
     view: DailyChestView,
@@ -36,6 +40,17 @@ async def view_daily_chests(
         DailyChestType.SMALL,
     )
     last_large_chest = await repositories.daily_chest.from_user_id_and_type_latest(
+        ctx,
+        user_id,
+        DailyChestType.LARGE,
+    )
+
+    small_chest_count = await repositories.daily_chest.count_of_type(
+        ctx,
+        user_id,
+        DailyChestType.SMALL,
+    )
+    large_chest_count = await repositories.daily_chest.count_of_type(
         ctx,
         user_id,
         DailyChestType.LARGE,
@@ -65,6 +80,8 @@ async def view_daily_chests(
         return DailyChestInformation(
             small_chest_time_remaining,
             large_chest_time_remaining,
+            small_chest_count,
+            large_chest_count,
             None,
         )
 
@@ -76,7 +93,7 @@ async def view_daily_chests(
     poison_shards = 0
     shadow_shards = 0
     lava_shards = 0
-    keys = 0
+    demon_keys = 0
 
     if view is DailyChestView.CLAIM_LARGE:
         if large_chest_time_remaining > timedelta():
@@ -110,8 +127,8 @@ async def view_daily_chests(
                 shadow_shards += reward.amount
             case DailyChestRewardType.LAVA_SHARD:
                 lava_shards += reward.amount
-            case DailyChestRewardType.KEY:
-                keys += reward.amount
+            case DailyChestRewardType.DEMON_KEY:
+                demon_keys += reward.amount
 
     # Award a key for every 500 mana the player gets.
     total_mana = await repositories.daily_chest.sum_reward_mana(ctx, user_id)
@@ -120,7 +137,7 @@ async def view_daily_chests(
     new_total_keys = (total_mana + mana) // 500
 
     if new_total_keys > total_keys:
-        keys += new_total_keys - total_keys
+        demon_keys += new_total_keys - total_keys
 
     # Chest logging
     chest = await repositories.daily_chest.create(
@@ -134,11 +151,13 @@ async def view_daily_chests(
         poison_shards=poison_shards,
         shadow_shards=shadow_shards,
         lava_shards=lava_shards,
-        keys=keys,
+        demon_keys=demon_keys,
     )
 
     return DailyChestInformation(
         small_chest_time_remaining,
         large_chest_time_remaining,
+        small_chest_count,
+        large_chest_count,
         chest,
     )

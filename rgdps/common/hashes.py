@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
+import random
+import string
 
 import bcrypt
 import xor_cipher
@@ -72,9 +74,23 @@ def hash_level_password(password: int) -> str:
     return base64.urlsafe_b64encode(xor_password).decode()
 
 
+def encrypt_chests(response: str) -> str:
+    return xor_cipher.cyclic_xor_unsafe(
+        data=response.encode(),
+        key=XorKeys.CHESTS,
+    ).decode()
+
+
 def encode_base64(data: str) -> str:
     return base64.urlsafe_b64encode(data.encode()).decode()
 
 
 def decode_base64(data: str) -> str:
     return base64.urlsafe_b64decode(data.encode()).decode()
+
+
+CHARSET = string.ascii_letters + string.digits
+
+
+def random_string(length: int) -> str:
+    return "".join(random.choice(CHARSET) for _ in range(length))
