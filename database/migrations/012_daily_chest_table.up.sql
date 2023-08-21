@@ -15,3 +15,4 @@ CREATE TABLE `daily_chests` (
 ) ENGINE = InnoDB;
 
 ALTER TABLE `daily_chests` ADD INDEX(`user_id`);
+ALTER TABLE `daily_chests` ADD INDEX(`type`);
