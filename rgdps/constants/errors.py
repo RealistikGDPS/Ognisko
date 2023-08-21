@@ -25,10 +25,12 @@ class ServiceError(str, Enum):
     FRIEND_REQUEST_NOT_FOUND = "friend_request.not_found"
     FRIEND_REQUEST_EXISTS = "friend_request.exists"
     FRIEND_REQUEST_INVALID_OWNER = "friend_request.invalid_owner"
+    FRIEND_REQUEST_INVALID_TARGET_ID = "friend_request.invalid_target_id"
 
     RELATIONSHIP_NOT_FOUND = "relationship.not_found"
     RELATIONSHIP_EXISTS = "relationship.exists"
     RELATIONSHIP_INVALID_OWNER = "relationship.invalid_owner"
+    RELATIONSHIP_INVALID_TARGET_ID = "relationship.invalid_target_id"
 
     LIKES_ALREADY_LIKED = "likes.already_liked"
     LIKES_OWN_TARGET = "likes.own_target"

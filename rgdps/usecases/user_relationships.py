@@ -80,6 +80,9 @@ async def create(
     user2_id: int,
     relationship_type: UserRelationshipType,
 ) -> UserRelationship | ServiceError:
+    
+    if user1_id == user2_id:
+        return ServiceError.RELATIONSHIP_INVALID_TARGET_ID
 
     exists = await repositories.user_relationship.check_relationship_exists(
         ctx,
@@ -105,6 +108,9 @@ async def remove_friendship(
     user1_id: int,
     user2_id: int,
 ) -> UserRelationship | ServiceError:
+    
+    if user1_id == user2_id:
+        return ServiceError.RELATIONSHIP_INVALID_TARGET_ID
 
     relationship = await delete(
         ctx,

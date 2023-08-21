@@ -187,6 +187,7 @@ async def create(
     user2_id: int,
     relationship_type: UserRelationshipType,
 ) -> UserRelationship:
+
     relationship = UserRelationship(
         id=0,
         relationship_type=relationship_type,
