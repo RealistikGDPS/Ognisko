@@ -87,3 +87,16 @@ async def create(
     )
 
     return chest
+
+
+async def sum_reward_mana(
+    ctx: Context,
+    user_id: int,
+) -> int:
+    return (
+        await ctx.mysql.fetch_val(
+            "SELECT SUM(mana) FROM daily_chests WHERE user_id = :user_id",
+            {"user_id": user_id},
+        )
+        or 0
+    )

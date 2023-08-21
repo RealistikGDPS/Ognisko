@@ -8,6 +8,10 @@ class DailyChestView(IntEnum):
     CLAIM_SMALL = 1
     CLAIM_LARGE = 2
 
+    @property
+    def is_claim(self) -> bool:
+        return self in (DailyChestView.CLAIM_SMALL, DailyChestView.CLAIM_LARGE)
+
 
 class DailyChestType(IntEnum):
     SMALL = 0
