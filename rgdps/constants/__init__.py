@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from . import daily_chests
 from . import errors
 from . import friends
 from . import leaderboards
