@@ -34,15 +34,13 @@ class ChestReward(NamedTuple):
 # NOTE: Amounts have been estimated based on observation. May not be accurate.
 SMALL_CHEST_MANA = [
     20,
+    25,
     30,
     35,
     45,
     50,
 ]
-SMALL_CHEST_DIAMONDS = [
-    1,
-    2,
-]
+SMALL_CHEST_DIAMONDS = [1, 2, 4]
 
 
 def get_small_chest() -> list[ChestReward]:
@@ -60,6 +58,7 @@ LARGE_CHEST_MANA = [
     150,
     200,
     300,
+    400,
 ]
 POSSIBLE_SHARDS = [
     DailyChestRewardType.FIRE_SHARD,

@@ -47,9 +47,6 @@ async def create(
     user_id: int,
     content: str,
 ) -> UserComment | ServiceError:
-    if len(content) > 255:
-        return ServiceError.COMMENTS_INVALID_CONTENT
-
     comment = await repositories.user_comment.create(
         ctx,
         user_id=user_id,
