@@ -18,16 +18,16 @@ class UserRelationship:
     seen_ts: datetime | None
 
     @staticmethod
-    def from_mapping(relationship_dict: Mapping[str, Any]) -> UserRelationship:
+    def from_mapping(mapping: Mapping[str, Any]) -> UserRelationship:
         return UserRelationship(
-            id=relationship_dict["id"],
+            id=mapping["id"],
             relationship_type=UserRelationshipType(
-                relationship_dict["relationship_type"],
+                mapping["relationship_type"],
             ),
-            user1_id=relationship_dict["user1_id"],
-            user2_id=relationship_dict["user2_id"],
-            post_ts=relationship_dict["post_ts"],
-            seen_ts=relationship_dict["seen_ts"],
+            user1_id=mapping["user1_id"],
+            user2_id=mapping["user2_id"],
+            post_ts=mapping["post_ts"],
+            seen_ts=mapping["seen_ts"],
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:

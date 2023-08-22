@@ -16,14 +16,14 @@ class FriendRequest:
     seen_ts: datetime | None
 
     @staticmethod
-    def from_mapping(friend_request_dict: Mapping[str, Any]) -> FriendRequest:
+    def from_mapping(mapping: Mapping[str, Any]) -> FriendRequest:
         return FriendRequest(
-            id=friend_request_dict["id"],
-            sender_user_id=friend_request_dict["sender_user_id"],
-            recipient_user_id=friend_request_dict["recipient_user_id"],
-            message=friend_request_dict["message"],
-            post_ts=friend_request_dict["post_ts"],
-            seen_ts=friend_request_dict["seen_ts"],
+            id=mapping["id"],
+            sender_user_id=mapping["sender_user_id"],
+            recipient_user_id=mapping["recipient_user_id"],
+            message=mapping["message"],
+            post_ts=mapping["post_ts"],
+            seen_ts=mapping["seen_ts"],
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
