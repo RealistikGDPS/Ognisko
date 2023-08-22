@@ -254,9 +254,9 @@ async def block_user(
         logger.info(
             f"Failed to block user {target_id} with error {result!r}.",
         )
-    else:
-        logger.info(f"{user} successfully blocked user {target_id}.")
+        return responses.fail()
 
+    logger.info(f"{user} successfully blocked user {target_id}.")
     return responses.success()
 
 
@@ -276,7 +276,7 @@ async def unblock_user(
         logger.info(
             f"Failed to unblock user {target_id} with error {result!r}.",
         )
-    else:
-        logger.info(f"{user} successfully unblocked user {target_id}.")
+        return responses.fail()
 
+    logger.info(f"{user} successfully unblocked user {target_id}.")
     return responses.success()
