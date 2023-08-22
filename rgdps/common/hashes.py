@@ -94,3 +94,13 @@ CHARSET = string.ascii_letters + string.digits
 
 def random_string(length: int) -> str:
     return "".join(random.choice(CHARSET) for _ in range(length))
+
+
+def decrypt_chest_check(check_string: str) -> str:
+    valid_check = check_string[5:]
+    de_b64 = decode_base64(valid_check)
+
+    return xor_cipher.cyclic_xor_unsafe(
+        data=de_b64.encode(),
+        key=XorKeys.CHESTS,
+    ).decode()

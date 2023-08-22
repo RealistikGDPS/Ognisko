@@ -292,6 +292,9 @@ def create_chest_rewards(chest: DailyChest) -> str:
     )
 
 
+EMPTY_CHEST = "0,0,0,0"
+
+
 def create_chest_rewards_str(
     chest: DailyChest | None,
     user_id: int,
@@ -303,16 +306,15 @@ def create_chest_rewards_str(
     large_chest_count: int,
 ) -> str:
     if chest is None:
-        small_chest_items = ""
-        large_chest_items = ""
+        small_chest_items = EMPTY_CHEST
+        large_chest_items = EMPTY_CHEST
         reward_type = 0
     elif chest.type is DailyChestType.SMALL:
         small_chest_items = create_chest_rewards(chest)
-        # large_chest_items = "0,0,0,0"
-        large_chest_items = ""
+        large_chest_items = EMPTY_CHEST
         reward_type = 1
     else:
-        small_chest_items = ""
+        small_chest_items = EMPTY_CHEST
         large_chest_items = create_chest_rewards(chest)
         reward_type = 2
 
@@ -341,3 +343,7 @@ def encrypt_chest_response(response: str) -> str:
     prefix = hashes.random_string(5)
     encoded = hashes.encrypt_chests(response)
     return prefix + encoded
+
+
+def decrypt_chest_check_string(check_string: str) -> str:
+    return hashes.decrypt_chest_check(check_string)

@@ -32,10 +32,11 @@ async def daily_chest_get(
         return responses.fail()
 
     logger.info(f"Successfully fetched daily chest {result}.")
+    result_check = gd_obj.decrypt_chest_check_string(check_string)
     result = gd_obj.create_chest_rewards_str(
         result.chest,
         user.id,
-        check_string,
+        result_check,
         device_id,
         int(result.small_chest_time_remaining.total_seconds()),
         result.small_chest_count,
