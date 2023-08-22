@@ -60,7 +60,7 @@ router.add_api_route(
 
 router.add_api_route(
     "/uploadFriendRequest20.php",
-    user_relationships.friend_request_upload,
+    user_relationships.friend_request_post,
     methods=["POST"],
     dependencies=[
         Depends(RateLimiter(times=1, seconds=30)),
@@ -75,7 +75,7 @@ router.add_api_route(
 
 router.add_api_route(
     "/deleteGJFriendRequests20.php",
-    user_relationships.friend_request_delete,
+    user_relationships.friend_requests_delete,
     methods=["POST"],
 )
 
@@ -87,19 +87,19 @@ router.add_api_route(
 
 router.add_api_route(
     "/getGJUserList20.php",
-    user_relationships.user_relatoionship_list_get,
+    user_relationships.user_relationships_get,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/removeGJFriend20.php",
-    user_relationships.user_friend_remove,
+    user_relationships.friend_remove_post,
     methods=["POST"],
 )
 
 router.add_api_route(
     "/blockGJUser20.php",
-    user_relationships.block_user,
+    user_relationships.block_user_post,
     methods=["POST"],
     dependencies=[
         Depends(RateLimiter(times=1, seconds=30)),
@@ -108,7 +108,7 @@ router.add_api_route(
 
 router.add_api_route(
     "/unblockGJUser20.php",
-    user_relationships.unblock_user,
+    user_relationships.unblock_user_post,
     methods=["POST"],
 )
 

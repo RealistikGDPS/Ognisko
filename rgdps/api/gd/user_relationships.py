@@ -57,7 +57,7 @@ async def friend_requests_get(
     return response
 
 
-async def friend_request_upload(
+async def friend_request_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     target_user_id: int = Form(..., alias="toAccountID"),
@@ -103,7 +103,7 @@ async def friend_request_read(
     return responses.success()
 
 
-async def friend_request_delete(
+async def friend_requests_delete(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     target_id: int = Form(..., alias="targetAccountID"),
@@ -164,7 +164,7 @@ async def friend_request_accept(
     return responses.success()
 
 
-async def user_relatoionship_list_get(
+async def user_relationships_get(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     relationship_type: UserRelationshipType = Form(..., alias="type"),
@@ -202,7 +202,7 @@ async def user_relatoionship_list_get(
     return response
 
 
-async def user_friend_remove(
+async def friend_remove_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     target_id: int = Form(..., alias="targetAccountID"),
@@ -223,7 +223,7 @@ async def user_friend_remove(
     return responses.success()
 
 
-async def block_user(
+async def block_user_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     target_id: int = Form(..., alias="targetAccountID"),
@@ -260,7 +260,7 @@ async def block_user(
     return responses.success()
 
 
-async def unblock_user(
+async def unblock_user_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     target_id: int = Form(..., alias="targetAccountID"),
