@@ -118,7 +118,7 @@ async def accept(
 
     if request is None:
         return ServiceError.FRIEND_REQUEST_NOT_FOUND
-    
+
     if sender_user_id == recipient_user_id:
         return ServiceError.FRIEND_REQUEST_INVALID_TARGET_ID
 
@@ -143,9 +143,7 @@ async def create(
     recipient_user_id: int,
     message: str,
 ) -> FriendRequest | ServiceError:
-    if len(message) > 140:
-        return ServiceError.FRIEND_REQUEST_MESSAGE_INVALID_CONTENT
-    
+
     if sender_user_id == recipient_user_id:
         return ServiceError.FRIEND_REQUEST_INVALID_TARGET_ID
 

@@ -61,7 +61,7 @@ async def friend_request_upload(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     target_user_id: int = Form(..., alias="toAccountID"),
-    message: Base64String = Form("", alias="comment"),
+    message: Base64String = Form("", alias="comment", max_length=140),
 ):
 
     result = await friend_requests.create(
