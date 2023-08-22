@@ -40,7 +40,7 @@ SMALL_CHEST_MANA = [
     45,
     50,
 ]
-SMALL_CHEST_DIAMONDS = [1, 2, 4]
+SMALL_CHEST_DIAMONDS = [1, 2, 3, 4]
 
 
 def get_small_chest() -> list[ChestReward]:
