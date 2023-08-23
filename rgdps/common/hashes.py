@@ -75,9 +75,11 @@ def hash_level_password(password: int) -> str:
 
 
 def encrypt_chests(response: str) -> str:
-    return xor_cipher.cyclic_xor_unsafe(
-        data=response.encode(),
-        key=XorKeys.CHESTS,
+    return base64.urlsafe_b64encode(
+        xor_cipher.cyclic_xor_unsafe(
+            data=response.encode(),
+            key=XorKeys.CHESTS,
+        ),
     ).decode()
 
 
