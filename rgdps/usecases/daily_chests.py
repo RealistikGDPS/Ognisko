@@ -101,6 +101,8 @@ async def view(
 
         loot_table = gd_logic.get_large_chest
         chest_type = DailyChestType.LARGE
+        large_chest_count += 1
+        large_chest_time_remaining = LARGE_CHEST_TIME
 
     else:
         if small_chest_time_remaining > timedelta():
@@ -108,6 +110,8 @@ async def view(
 
         loot_table = gd_logic.get_small_chest
         chest_type = DailyChestType.SMALL
+        small_chest_count += 1
+        small_chest_time_remaining = SMALL_CHEST_TIME
 
     rewards = loot_table()
 
