@@ -44,7 +44,7 @@ async def daily_chest_get(
         result.large_chest_count,
     )
 
-    security_hash = gd_obj.create_chest_security_str(result)
     encrypted_result = gd_obj.encrypt_chest_response(result)
+    security_hash = gd_obj.create_chest_security_str(encrypted_result)
 
     return f"{encrypted_result}|{security_hash}"

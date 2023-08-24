@@ -67,15 +67,16 @@ POSSIBLE_SHARDS = [
     DailyChestRewardType.SHADOW_SHARD,
     DailyChestRewardType.LAVA_SHARD,
 ]
-MORE_DIAMONDS_CHANCE = 20
+MORE_DIAMONDS_CHANCE = 10
 SHARD_CHANCE = 50
 MAX_SHARDS = 2
+LOW_DIAMONDS_ROLL = [4, 5]
 
 
 def get_large_chest() -> list[ChestReward]:
     rewards = [ChestReward(DailyChestRewardType.MANA, random.choice(LARGE_CHEST_MANA))]
 
-    diamonds = 4
+    diamonds = random.choice(LOW_DIAMONDS_ROLL)
     if random.randint(0, 100) < MORE_DIAMONDS_CHANCE:
         diamonds = 10
 
