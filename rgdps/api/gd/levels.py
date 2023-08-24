@@ -17,7 +17,6 @@ from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.usecases import levels
 from rgdps.usecases import songs
-from rgdps.usecases import users
 
 
 async def song_info_get(

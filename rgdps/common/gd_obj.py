@@ -2,14 +2,18 @@ from __future__ import annotations
 
 import urllib.parse
 from typing import Callable
+from typing import NamedTuple
 from typing import TypeVar
 
 from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
+from rgdps.common.typing import SupportsStr
+from rgdps.constants.daily_chests import DailyChestType
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivileges
+from rgdps.models.daily_chest import DailyChest
 from rgdps.models.level import Level
 from rgdps.models.level_comment import LevelComment
 from rgdps.models.song import Song
@@ -274,3 +278,82 @@ def comma_separated_ints(data: str) -> list[int]:
     """Parses a list of ints in the from `(1,2,3,4)`."""
 
     return [int(x) for x in data[1:-1].split(",")]
+
+
+def joined_string(*data: SupportsStr, separator: str = ",") -> str:
+    return separator.join(str(x) for x in data)
+
+
+def create_chest_rewards(chest: DailyChest) -> str:
+    return joined_string(
+        chest.mana,
+        chest.diamonds,
+        0,  # TODO: Shards,
+        chest.demon_keys,
+    )
+
+
+EMPTY_CHEST = "0,0,0,0"
+
+
+def create_chest_rewards_str(
+    chest: DailyChest | None,
+    user_id: int,
+    check_string: str,
+    device_id: str,
+    small_chest_time: int,
+    small_chest_count: int,
+    large_chest_time: int,
+    large_chest_count: int,
+) -> str:
+    if chest is None:
+        small_chest_items = EMPTY_CHEST
+        large_chest_items = EMPTY_CHEST
+        reward_type = 0
+    elif chest.type is DailyChestType.SMALL:
+        small_chest_items = create_chest_rewards(chest)
+        large_chest_items = EMPTY_CHEST
+        reward_type = 1
+    else:
+        small_chest_items = EMPTY_CHEST
+        large_chest_items = create_chest_rewards(chest)
+        reward_type = 2
+
+    return joined_string(
+        hashes.random_string(5),
+        user_id,
+        check_string,
+        device_id,
+        user_id,
+        small_chest_time,
+        small_chest_items,
+        small_chest_count,
+        large_chest_time,
+        large_chest_items,
+        large_chest_count,
+        reward_type,
+        separator=":",
+    )
+
+
+def create_chest_security_str(response: str) -> str:
+    return hashes.hash_sha1(response + "pC26fpYaQCtg")
+
+
+class EncryptedChestResponse(NamedTuple):
+    response: str
+    prefix: str
+
+
+def encrypt_chest_response(response: str) -> EncryptedChestResponse:
+    prefix = hashes.random_string(5)
+    encoded = hashes.encrypt_chests(response)
+
+    return EncryptedChestResponse(
+        response=encoded,
+        prefix=prefix,
+    )
+
+
+def decrypt_chest_check_string(check_string: str) -> str:
+    return hashes.decrypt_chest_check(check_string)

@@ -9,6 +9,7 @@ from . import leaderboards
 from . import level_comments
 from . import levels
 from . import misc
+from . import rewards
 from . import save_data
 from . import user_comments
 from . import users
@@ -183,5 +184,11 @@ router.add_api_route(
 router.add_api_route(
     "/deleteGJComment20.php",
     level_comments.level_comment_delete,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/getGJRewards.php",
+    rewards.daily_chest_get,
     methods=["POST"],
 )

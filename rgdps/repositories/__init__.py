@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from . import auth
+from . import daily_chest
 from . import leaderboard
 from . import level
 from . import level_comment
