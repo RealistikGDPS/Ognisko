@@ -21,6 +21,8 @@ async def daily_chest_get(
     check_string: str = Form(..., alias="chk"),
     device_id: str = Form(..., alias="udid"),
 ):
+    result_check = gd_obj.decrypt_chest_check_string(check_string)
+
     result = await daily_chests.view(
         ctx,
         user.id,
@@ -32,7 +34,6 @@ async def daily_chest_get(
         return responses.fail()
 
     logger.info(f"Successfully fetched daily chest {result}.")
-    result_check = gd_obj.decrypt_chest_check_string(check_string)
     result = gd_obj.create_chest_rewards_str(
         result.chest,
         user.id,
@@ -45,6 +46,6 @@ async def daily_chest_get(
     )
 
     encrypted_result = gd_obj.encrypt_chest_response(result)
-    security_hash = gd_obj.create_chest_security_str(encrypted_result)
+    security_hash = gd_obj.create_chest_security_str(encrypted_result.response)
 
-    return f"{encrypted_result}|{security_hash}"
+    return f"{encrypted_result.prefix}{encrypted_result.response}|{security_hash}"

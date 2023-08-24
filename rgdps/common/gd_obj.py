@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import urllib.parse
 from typing import Callable
+from typing import NamedTuple
 from typing import TypeVar
 
 from rgdps.common import hashes
@@ -319,7 +320,7 @@ def create_chest_rewards_str(
         reward_type = 2
 
     return joined_string(
-        1,
+        hashes.random_string(5),
         user_id,
         check_string,
         device_id,
@@ -339,10 +340,19 @@ def create_chest_security_str(response: str) -> str:
     return hashes.hash_sha1(response + "pC26fpYaQCtg")
 
 
-def encrypt_chest_response(response: str) -> str:
+class EncryptedChestResponse(NamedTuple):
+    response: str
+    prefix: str
+
+
+def encrypt_chest_response(response: str) -> EncryptedChestResponse:
     prefix = hashes.random_string(5)
     encoded = hashes.encrypt_chests(response)
-    return prefix + encoded
+
+    return EncryptedChestResponse(
+        response=encoded,
+        prefix=prefix,
+    )
 
 
 def decrypt_chest_check_string(check_string: str) -> str:
