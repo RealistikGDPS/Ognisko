@@ -26,18 +26,33 @@ async def register_post(
     email: EmailStr = Form(...),
     password: str = Form(..., min_length=6, max_length=20),
 ):
-    user = await users.register(
+    result = await users.register(
         ctx,
         name=username,
         password=password,
         email=email,
     )
 
-    if isinstance(user, ServiceError):
-        logger.info(f"Failed to register {username} due to {user!r}.")
-        return str(user)
+    if isinstance(result, ServiceError):
+        logger.info(
+            "User registration failed.",
+            extra={
+                "error": result.value,
+                "username": username,
+                "email": email,
+            },
+        )
+        # TODO: This is currently a service error. GD doesnt know that.
+        return str(result)
 
-    logger.info(f"{user} has registered!")
+    logger.info(
+        "User registration success.",
+        extra={
+            "user_id": result.id,
+            "username": username,
+            "email": email,
+        },
+    )
 
     return responses.success()
 
@@ -51,14 +66,26 @@ async def login_post(
 
     user = await users.authenticate(ctx, username, password)
     if isinstance(user, ServiceError):
-        logger.info(f"Failed to login {username} due to {user!r}.")
+        logger.info(
+            "User login failed",
+            extra={
+                "error": user.value,
+                "username": username,
+            },
+        )
 
         if user is ServiceError.AUTH_NO_PRIVILEGE:
             return responses.code(LoginResponse.ACCOUNT_DISABLED)
 
         return responses.fail()
 
-    logger.info(f"{user} has logged in!")
+    logger.info(
+        "User login successful!",
+        extra={
+            "user_id": user.id,
+            "username": username,
+        },
+    )
 
     return f"{user.id},{user.id}"
 
@@ -73,8 +100,12 @@ async def user_info_get(
 
     if isinstance(target, ServiceError):
         logger.info(
-            f"Requested to view info of non-existent account {target_id} "
-            f"with error {target!r}.",
+            "Failed to view a profile.",
+            extra={
+                "error": target.value,
+                "user_id": user.id,
+                "target_id": target_id,
+            },
         )
         return responses.fail()
 
@@ -84,9 +115,22 @@ async def user_info_get(
         and (not target.user.privileges & UserPrivileges.USER_PROFILE_PUBLIC)
         and (not user.privileges & UserPrivileges.USER_VIEW_PRIVATE_PROFILE)
     ):
+        logger.info(
+            "Tried to view a profile with insufficient privileges.",
+            extra={
+                "user_id": user.id,
+                "target_id": target_id,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully viewed the profile of {target.user}.")
+    logger.info(
+        "Successfully viewed a profile.",
+        extra={
+            "user_id": user.id,
+            "target_id": target_id,
+        },
+    )
 
     return gd_obj.dumps(
         gd_obj.create_profile(target.user, target.friend_status, target.rank),
@@ -139,10 +183,22 @@ async def user_info_update(
     )
 
     if isinstance(res, ServiceError):
-        logger.info(f"Failed to update profile of {user} with error {res!r}.")
+        logger.info(
+            "Failed to update the profile.",
+            # XXX: Maybe add the stats here.
+            extra={
+                "error": res.value,
+                "user_id": user.id,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully updated the profile of {user}.")
+    logger.info(
+        "Successfully updated profile.",
+        extra={
+            "user_id": user.id,
+        },
+    )
 
     return str(user.id)
 
@@ -176,11 +232,32 @@ async def user_settings_update(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"Failed to update settings of {user} with error {result!r}.",
+            "Failed to update user settings.",
+            extra={
+                "error": result.value,
+                "user_id": user.id,
+                "youtube_name": youtube_name,
+                "twitter_name": twitter_name,
+                "twitch_name": twitch_name,
+                "message_privacy": message_privacy.name,
+                "friend_privacy": friend_privacy.name,
+                "comment_privacy": comment_privacy.name,
+            },
         )
         return responses.fail()
 
-    logger.info(f"Successfully updated settings of {user}.")
+    logger.info(
+        "Successfully updated user settings.",
+        extra={
+            "user_id": user.id,
+            "youtube_name": youtube_name,
+            "twitter_name": twitter_name,
+            "twitch_name": twitch_name,
+            "message_privacy": message_privacy.name,
+            "friend_privacy": friend_privacy.name,
+            "comment_privacy": comment_privacy.name,
+        },
+    )
     return responses.success()
 
 
@@ -192,11 +269,21 @@ async def request_status_get(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"Failed to get request status of {user} with error {result!r}.",
+            "Failed to get user request status.",
+            extra={
+                "error": result.value,
+                "user_id": user.id,
+            },
         )
         return responses.fail()
 
-    logger.info(f"Successfully got request status of {user}.")
+    logger.info(
+        "Successfully got user request status.",
+        extra={
+            "user_id": user.id,
+            "status": result.name,
+        },
+    )
 
     if result is UserPrivilegeLevel.NONE:
         return responses.fail()
