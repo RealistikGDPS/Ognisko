@@ -32,6 +32,16 @@ from rgdps.services.storage import LocalStorage
 from rgdps.services.storage import S3Storage
 
 
+def init_logging() -> None:
+    if config.logzio_enabled:
+        logger.init_logzio_logging(
+            config.logzio_token,
+            config.log_level,
+        )
+    else:
+        logger.init_basic_logging(config.log_level)
+
+
 def init_events(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
     async def on_validation_error(
@@ -217,6 +227,7 @@ def init_api() -> FastAPI:
         docs_url=None,
     )
 
+    init_logging()
     init_events(app)
     init_middlewares(app)
     init_mysql(app)

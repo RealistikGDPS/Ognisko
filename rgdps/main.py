@@ -7,11 +7,6 @@ from rgdps import logger
 from rgdps.api import init_api
 from rgdps.config import config
 
-
-logger.init_logging(
-    log_level=config.log_level,
-)
-
 # Uvloop does not work on windows. TODO: Maybe check for unix instead (would
 # require the same to be reflected in requirements)
 try:

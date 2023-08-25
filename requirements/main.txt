@@ -6,10 +6,10 @@ email-validator == 2.0.0
 fastapi == 0.101.1
 fastapi-limiter == 0.1.5
 httpx == 0.24.1
+logzio-python-handler == 4.1.0
 meilisearch-python-async == 1.6.2
 python-multipart
 redis == 4.6.0
-structlog==23.1.0
 types-aiobotocore[s3] == 2.5.2
 uvicorn == 0.22.0
 uvloop == 0.17.0; sys_platform != "win32"
