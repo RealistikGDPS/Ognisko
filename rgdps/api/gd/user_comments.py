@@ -33,7 +33,12 @@ async def user_comments_get(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"Failed to view comments of {target_id} with error {result!r}.",
+            "Failed to view user comments.",
+            extra={
+                "error": result.value,
+                "target_id": target_id,
+                "page": page,
+            },
         )
         return responses.fail()
 
@@ -43,7 +48,13 @@ async def user_comments_get(
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
 
-    logger.info(f"Successfully viewed comments for user ID {target_id}.")
+    logger.info(
+        "Successfully viewed user comments.",
+        extra={
+            "target_id": target_id,
+            "page": page,
+        },
+    )
     return response
 
 
@@ -54,17 +65,28 @@ async def user_comments_post(
             required_privileges=UserPrivileges.USER_CREATE_USER_COMMENTS,
         ),
     ),
-    content: Base64String = Form(..., alias="comment"),
+    content: Base64String = Form(..., alias="comment", max_length=256),
 ):
     result = await user_comments.create(ctx, user.id, content)
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"Failed to post comment on {user}'s profile with error {result!r}.",
+            "Failed to post user comment.",
+            extra={
+                "error": result.value,
+                "user_id": user.id,
+                "content": content,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully posted a profile comment.")
+    logger.info(
+        "Successfully posted a user comment.",
+        extra={
+            "user_id": user.id,
+            "content": content,
+        },
+    )
     return responses.success()
 
 
