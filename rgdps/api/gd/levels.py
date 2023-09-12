@@ -152,8 +152,6 @@ async def levels_get(
         f"{level_res.total} results.",
     )
 
-    print(level_res.songs)
-
     return "#".join(
         (
             "|".join(
