@@ -232,7 +232,9 @@ def create_level(level: Level, level_data: str) -> GDSerialisable:
 def create_level_security_str(level: Level) -> str:
     level_id_str = str(level.id)
 
-    return f"{level_id_str[0]}{level_id_str[-1]}{level.stars}{level.coins}"
+    return (
+        f"{level_id_str[0]}{level_id_str[-1]}{level.stars}{int(level.coins_verified)}"
+    )
 
 
 def create_search_security_str(levels: list[Level]) -> str:
