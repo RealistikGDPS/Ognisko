@@ -9,6 +9,6 @@ spec:
   ports:
   # FIXME
   - port: 80
-    targetPort: 1273
+    targetPort: 80
     protocol: TCP
-    nodePort: 30000
+    nodePort: 30069
