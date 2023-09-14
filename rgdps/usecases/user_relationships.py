@@ -26,7 +26,6 @@ async def get_user(
     user_id: int,
     relationship_type: UserRelationshipType,
 ) -> PaginatedUserRelationshipResponse | ServiceError:
-
     relationships = await repositories.user_relationship.from_user_id(
         ctx,
         user_id,
@@ -64,7 +63,6 @@ async def mark_all_as_seen(
     user_id: int,
     relationship_type: UserRelationshipType,
 ) -> ServiceError | None:
-
     seen_ts = datetime.utcnow()
     await repositories.user_relationship.mark_all_as_seen(
         ctx,
@@ -80,7 +78,6 @@ async def create(
     user2_id: int,
     relationship_type: UserRelationshipType,
 ) -> UserRelationship | ServiceError:
-
     if user1_id == user2_id:
         return ServiceError.RELATIONSHIP_INVALID_TARGET_ID
 
@@ -108,7 +105,6 @@ async def remove_friendship(
     user1_id: int,
     user2_id: int,
 ) -> UserRelationship | ServiceError:
-
     if user1_id == user2_id:
         return ServiceError.RELATIONSHIP_INVALID_TARGET_ID
 

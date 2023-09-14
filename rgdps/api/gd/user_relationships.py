@@ -24,7 +24,6 @@ async def friend_requests_get(
     page: int = Form(..., alias="page"),
     is_sender_user_id: bool = Form(0, alias="getSent"),
 ):
-
     result = await friend_requests.get_user(
         ctx,
         user.id,
@@ -46,7 +45,7 @@ async def friend_requests_get(
         gd_obj.dumps(
             [
                 gd_obj.create_friend_request(request.request),
-                gd_obj.create_friend_request_author_string(request.user),
+                gd_obj.create_friend_request_author(request.user),
             ],
         )
         for request in result.requests
@@ -63,7 +62,6 @@ async def friend_request_post(
     target_user_id: int = Form(..., alias="toAccountID"),
     message: Base64String = Form("", alias="comment", max_length=140),
 ):
-
     result = await friend_requests.create(
         ctx,
         user.id,
@@ -86,7 +84,6 @@ async def friend_request_read(
     user: User = Depends(authenticate_dependency()),
     request_id: int = Form(..., alias="requestID"),
 ):
-
     result = await friend_requests.mark_as_seen(
         ctx,
         user.id,
@@ -110,7 +107,6 @@ async def friend_requests_delete(
     is_sender_user_id: bool = Form(0, alias="isSender"),
     accounts: str | None = Form(None, alias="accounts"),
 ):
-
     if accounts:
         accounts_list = [int(account) for account in accounts.split(",")]
         await friend_requests.delete_multiple(
@@ -169,7 +165,6 @@ async def user_relationships_get(
     user: User = Depends(authenticate_dependency()),
     relationship_type: UserRelationshipType = Form(..., alias="type"),
 ):
-
     result = await user_relationships.get_user(
         ctx,
         user.id,
@@ -228,7 +223,6 @@ async def block_user_post(
     user: User = Depends(authenticate_dependency()),
     target_id: int = Form(..., alias="targetAccountID"),
 ):
-
     # Remove friendship if exists.
     friendship = await user_relationships.get_user(
         ctx,

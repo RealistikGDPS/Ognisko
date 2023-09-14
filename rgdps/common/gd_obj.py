@@ -46,7 +46,6 @@ def loads(
     key_cast: Callable[[str], KT] = int,
     value_cast: Callable[[str], VT] = str,
 ) -> dict[KT, VT]:
-
     data_split = data.split(sep)
 
     if len(data_split) % 2 != 0:
@@ -64,7 +63,6 @@ def create_profile(
     friend_status: FriendStatus = FriendStatus.NONE,
     rank: int = 0,
 ) -> GDSerialisable:
-
     badge_level = 0
     if user.privileges & UserPrivileges.USER_DISPLAY_ELDER_BADGE:
         badge_level = 2
@@ -142,7 +140,7 @@ def create_friend_request(friend_request: FriendRequest) -> GDSerialisable:
     }
 
 
-def create_friend_request_author_string(user: User) -> GDSerialisable:
+def create_friend_request_author(user: User) -> GDSerialisable:
     return {
         1: user.username,
         2: user.id,
@@ -184,7 +182,7 @@ def create_level_comment(
     return ret
 
 
-def create_level_comment_author_string(user: User) -> GDSerialisable:
+def create_level_comment_author(user: User) -> GDSerialisable:
     return {
         1: user.username,
         9: user.icon,
