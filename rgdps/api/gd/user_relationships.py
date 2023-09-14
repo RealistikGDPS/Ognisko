@@ -188,8 +188,8 @@ async def user_relationships_get(
     response = "|".join(
         gd_obj.dumps(
             [
-                gd_obj.create_profile(relationship.user),
-                gd_obj.create_user_relationship_list(relationship.relationship),
+                gd_obj.create_profile(relationship.target_user),
+                gd_obj.create_user_relationship(relationship.relationship),
             ],
         )
         for relationship in result.relationships

@@ -113,7 +113,7 @@ def create_profile(
     }
 
 
-def create_user_relationship_list(relationship: UserRelationship) -> GDSerialisable:
+def create_user_relationship(relationship: UserRelationship) -> GDSerialisable:
     return {
         41: 0 if relationship.seen_ts else 1,
     }

@@ -13,7 +13,7 @@ from rgdps.models.user_relationship import UserRelationship
 
 class UserRelationshipResponse(NamedTuple):
     relationship: UserRelationship
-    user: User  # It's the user2.
+    target_user: User
 
 
 class PaginatedUserRelationshipResponse(NamedTuple):
