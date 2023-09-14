@@ -121,7 +121,6 @@ async def get_user_relationship_count(
     is_new: bool = False,
     include_deleted: bool = False,
 ) -> int:
-
     condition = ""
     if not include_deleted:
         condition = "AND deleted = 0"
@@ -143,7 +142,6 @@ async def check_relationship_exists(
     relationship_type: UserRelationshipType,
     include_deleted: bool = False,
 ) -> bool:
-
     condition = ""
     if not include_deleted:
         condition = "AND deleted = 0"
@@ -186,15 +184,16 @@ async def create(
     user1_id: int,
     user2_id: int,
     relationship_type: UserRelationshipType,
+    post_ts: datetime = datetime.now(),
+    seen_ts: None | datetime = None,
 ) -> UserRelationship:
-
     relationship = UserRelationship(
         id=0,
         relationship_type=relationship_type,
         user1_id=user1_id,
         user2_id=user2_id,
-        post_ts=datetime.now(),
-        seen_ts=None,
+        post_ts=post_ts,
+        seen_ts=seen_ts,
     )
 
     relationship.id = await ctx.mysql.execute(
@@ -212,7 +211,6 @@ async def update_partial(
     seen_ts: Unset | datetime = UNSET,
     deleted: Unset | bool = UNSET,
 ) -> UserRelationship | None:
-
     changed_data = {}
 
     if is_set(seen_ts):

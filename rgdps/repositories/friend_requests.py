@@ -120,7 +120,6 @@ async def get_user_friend_request_count(
     is_new: bool = False,
     include_deleted: bool = False,
 ) -> int:
-
     id_row = "recipient_user_id"
     if is_sender_user_id:
         id_row = "sender_user_id"
@@ -144,7 +143,6 @@ async def check_request_exists(
     recipient_user_id: int,
     include_deleted: bool = False,
 ) -> bool:
-
     condition = ""
     if not include_deleted:
         condition = "AND deleted = 0"
@@ -161,14 +159,16 @@ async def create(
     sender_user_id: int,
     recipient_user_id: int,
     message: str,
+    post_ts: datetime = datetime.now(),
+    seen_ts: None | datetime = None,
 ) -> FriendRequest:
     friend_request = FriendRequest(
         id=0,
         sender_user_id=sender_user_id,
         recipient_user_id=recipient_user_id,
         message=message,
-        post_ts=datetime.now(),
-        seen_ts=None,
+        post_ts=post_ts,
+        seen_ts=seen_ts,
     )
 
     friend_request.id = await ctx.mysql.execute(
@@ -186,7 +186,6 @@ async def update_partial(
     seen_ts: Unset | datetime = UNSET,
     deleted: Unset | bool = UNSET,
 ) -> FriendRequest | None:
-
     changed_data = {}
 
     if is_set(seen_ts):
