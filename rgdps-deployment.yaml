@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: realistikgdps-deployment
+spec:
+  selector:
+    matchLabels:
+      app: realistikgdps
+  template:
+    metadata:
+      labels:
+        app: realistikgdps
+    spec:
+      containers:
+      - name: realistikgdps
+        image: realistikgdps:latest
+        ports:
+        - containerPort: 80
+        env:
+          - name: KUBERNETES
+            value: "1"
