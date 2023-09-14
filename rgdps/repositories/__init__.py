@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from . import auth
 from . import friend_requests
+from . import daily_chest
 from . import leaderboard
 from . import level
 from . import level_comment

@@ -67,7 +67,7 @@ async def sum_by_target(
     target_type: LikeType,
     target_id: int,
 ) -> int:
-    like_db = await ctx.mysql.fetch_one(
+    like_db = await ctx.mysql.fetch_val(
         "SELECT SUM(value) AS sum FROM user_likes WHERE target_type = :target_type "
         "AND target_id = :target_id",
         {
@@ -79,7 +79,7 @@ async def sum_by_target(
     if like_db is None:
         return 0
 
-    return like_db["sum"]
+    return int(like_db)
 
 
 async def update_value(

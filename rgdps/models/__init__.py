@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from . import friend_request
+from . import daily_chest
 from . import level
 from . import level_comment
 from . import like
