@@ -10,3 +10,4 @@ redis_data/
 rgdps_data/
 
 .github/
+.env/
