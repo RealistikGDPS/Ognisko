@@ -11,3 +11,6 @@ rgdps_data/
 
 .github/
 .env/
+rgdps-configmap.yaml
+rgdps-deployment.yaml
+rgdps-serivce.yaml
