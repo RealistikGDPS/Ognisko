@@ -109,31 +109,19 @@ async def friend_requests_delete(
 ):
     if accounts:
         accounts_list = [int(account) for account in accounts.split(",")]
-        await friend_requests.delete_multiple(
-            ctx,
-            user.id,
-            accounts_list,
-            is_sender_user_id=is_sender_user_id,
-        )
+    else:
+        accounts_list = [target_id]
 
-        logger.info(
-            f"{user} successfully deleted friend request from/to {accounts_list}.",
-        )
-        return responses.success()
-
-    result = await friend_requests.delete(
+    await friend_requests.delete_multiple(
         ctx,
         user.id,
-        target_id,
+        accounts_list,
+        is_sender_user_id=is_sender_user_id,
     )
 
-    if isinstance(result, ServiceError):
-        logger.info(
-            f"Failed to delete friend request from/to {target_id} with error {result!r}.",
-        )
-        return responses.fail()
-
-    logger.info(f"{user} successfully deleted friend request from/to {target_id}.")
+    logger.info(
+        f"{user} successfully deleted friend request from/to {accounts_list}.",
+    )
     return responses.success()
 
 
