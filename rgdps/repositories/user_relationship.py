@@ -169,7 +169,7 @@ async def mark_all_as_seen(
         condition = "AND deleted = 0"
 
     await ctx.mysql.execute(
-        "UPDATE user_relationships SET seen_ts = :seen_ts WHERE user1_id = :user_id "
+        "UPDATE user_relationships SET seen_ts = :seen_ts WHERE user_id = :user_id "
         f"AND relationship_type = :relationship_type AND seen_ts IS NULL {condition}",
         {
             "seen_ts": seen_ts,
