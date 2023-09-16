@@ -14,11 +14,13 @@ from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.daily_chest import DailyChest
+from rgdps.models.friend_request import FriendRequest
 from rgdps.models.level import Level
 from rgdps.models.level_comment import LevelComment
 from rgdps.models.song import Song
 from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
+from rgdps.models.user_relationship import UserRelationship
 
 GDSerialisable = dict[int | str, int | str | float]
 
@@ -48,7 +50,6 @@ def loads(
     key_cast: Callable[[str], KT] = int,
     value_cast: Callable[[str], VT] = str,
 ) -> dict[KT, VT]:
-
     data_split = data.split(sep)
 
     if len(data_split) % 2 != 0:
@@ -65,8 +66,9 @@ def create_profile(
     user: User,
     friend_status: FriendStatus = FriendStatus.NONE,
     rank: int = 0,
+    friend_request_count: int = 0,
+    friend_count: int = 0,
 ) -> GDSerialisable:
-
     badge_level = 0
     if user.privileges & UserPrivileges.USER_DISPLAY_ELDER_BADGE:
         badge_level = 2
@@ -102,6 +104,9 @@ def create_profile(
         29: 1,  # Is Registered
         30: rank,
         31: friend_status.value,
+        38: 0,  # TODO: New messages.
+        39: friend_request_count,
+        40: friend_count,
         43: user.spider,
         44: user.twitter_name or "",
         45: user.twitch_name or "",
@@ -109,6 +114,12 @@ def create_profile(
         48: user.explosion,
         49: badge_level,
         50: user.comment_privacy.value,
+    }
+
+
+def create_user_relationship(relationship: UserRelationship) -> GDSerialisable:
+    return {
+        41: 0 if relationship.seen_ts else 1,
     }
 
 
@@ -123,6 +134,28 @@ def create_user_comment(comment: UserComment) -> GDSerialisable:
         6: comment.id,
         9: into_str_ts(comment.post_ts),
         12: "0,0,0",  # TODO: Colour system (privilege bound)
+    }
+
+
+def create_friend_request(friend_request: FriendRequest) -> GDSerialisable:
+    return {
+        32: friend_request.id,
+        35: hashes.encode_base64(friend_request.message),
+        37: into_str_ts(friend_request.post_ts),
+        41: 0 if friend_request.seen_ts else 1,
+    }
+
+
+def create_friend_request_author(user: User) -> GDSerialisable:
+    return {
+        1: user.username,
+        2: user.id,
+        9: user.icon,
+        10: user.primary_colour,
+        11: user.secondary_colour,
+        14: user.display_type,
+        15: 2 if user.glow else 0,
+        16: user.id,
     }
 
 
@@ -155,7 +188,7 @@ def create_level_comment(
     return ret
 
 
-def create_level_comment_author_string(user: User) -> GDSerialisable:
+def create_level_comment_author(user: User) -> GDSerialisable:
     return {
         1: user.username,
         9: user.icon,

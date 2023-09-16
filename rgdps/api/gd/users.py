@@ -48,7 +48,6 @@ async def login_post(
     password: str = Form(..., max_length=20),
     # _: str = Form(..., alias="udid"),
 ):
-
     user = await users.authenticate(ctx, username, password)
     if isinstance(user, ServiceError):
         logger.info(f"Failed to login {username} due to {user!r}.")
@@ -69,7 +68,7 @@ async def user_info_get(
     target_id: int = Form(..., alias="targetAccountID"),
 ):
     is_own = target_id == user.id
-    target = await users.get(ctx, target_id, is_own)
+    target = await users.get(ctx, user.id, target_id, is_own)
 
     if isinstance(target, ServiceError):
         logger.info(
@@ -89,7 +88,18 @@ async def user_info_get(
     logger.info(f"Successfully viewed the profile of {target.user}.")
 
     return gd_obj.dumps(
-        gd_obj.create_profile(target.user, target.friend_status, target.rank),
+        [
+            gd_obj.create_profile(
+                target.user,
+                target.friend_status,
+                target.rank,
+                target.friend_request_count,
+                target.friend_count,
+            ),
+            gd_obj.create_friend_request(target.friend_request)
+            if target.friend_request is not None
+            else {},
+        ],
     )
 
 
@@ -114,7 +124,6 @@ async def user_info_update(
     coins: int = Form(...),
     user_coins: int = Form(..., alias="userCoins"),
 ):
-
     res = await users.update_stats(
         ctx,
         user.id,

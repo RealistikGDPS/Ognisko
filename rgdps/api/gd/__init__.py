@@ -12,6 +12,7 @@ from . import misc
 from . import rewards
 from . import save_data
 from . import user_comments
+from . import user_relationships
 from . import users
 from rgdps.config import config
 
@@ -49,6 +50,66 @@ router.add_api_route(
 router.add_api_route(
     "/updateGJUserScore22.php",
     users.user_info_update,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/getGJFriendRequests20.php",
+    user_relationships.friend_requests_get,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/uploadFriendRequest20.php",
+    user_relationships.friend_request_post,
+    methods=["POST"],
+    dependencies=[
+        Depends(RateLimiter(times=1, seconds=30)),
+    ],
+)
+
+router.add_api_route(
+    "/readGJFriendRequest20.php",
+    user_relationships.friend_request_read,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/deleteGJFriendRequests20.php",
+    user_relationships.friend_requests_delete,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/acceptGJFriendRequest20.php",
+    user_relationships.friend_request_accept,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/getGJUserList20.php",
+    user_relationships.user_relationships_get,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/removeGJFriend20.php",
+    user_relationships.friend_remove_post,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/blockGJUser20.php",
+    user_relationships.block_user_post,
+    methods=["POST"],
+    dependencies=[
+        Depends(RateLimiter(times=1, seconds=30)),
+    ],
+)
+
+router.add_api_route(
+    "/unblockGJUser20.php",
+    user_relationships.unblock_user_post,
     methods=["POST"],
 )
 

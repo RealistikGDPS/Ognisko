@@ -67,7 +67,7 @@ async def level_comments_get(
         gd_obj.dumps(
             [
                 gd_obj.create_level_comment(comment.comment, comment.user),
-                gd_obj.create_level_comment_author_string(comment.user),
+                gd_obj.create_level_comment_author(comment.user),
             ],
             sep="~",
         )
@@ -106,7 +106,7 @@ async def comment_history_get(
                     comment.user,
                     include_level_id=True,
                 ),
-                gd_obj.create_level_comment_author_string(comment.user),
+                gd_obj.create_level_comment_author(comment.user),
             ],
             sep="~",
         )

@@ -37,7 +37,7 @@ class Base64String(str):
         try:
             return Base64String(hashes.decode_base64(value))
         except Exception as e:
-            raise ValueError(f"Input is not valid base64") from e
+            raise ValueError("Input is not valid base64") from e
 
 
 class TextBoxString(str):
@@ -63,7 +63,7 @@ class TextBoxString(str):
         value = value.strip()
 
         if not TEXT_BOX_REGEX.match(value):
-            raise ValueError(f"Input contains illegal characters")
+            raise ValueError("Input contains illegal characters")
 
         return TextBoxString(value)
 
@@ -91,6 +91,6 @@ class SocialMediaString(str):
         value = value.strip()
 
         if not SOCIAL_MEDIA_REGEX.match(value):
-            raise ValueError(f"Input contains illegal characters")
+            raise ValueError("Input contains illegal characters")
 
         return TextBoxString(value)
