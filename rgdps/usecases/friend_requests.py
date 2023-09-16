@@ -28,7 +28,6 @@ async def get_user(
     page_size: int = 10,
     is_sender_user_id: bool = False,
 ) -> PaginatedFriendRequestResponse | ServiceError:
-
     requests = await repositories.friend_requests.from_user_id_paginated(
         ctx,
         user_id,
@@ -104,6 +103,9 @@ async def accept(
     if request is None:
         return ServiceError.FRIEND_REQUEST_NOT_FOUND
 
+    if sender_user_id == recipient_user_id:
+        return ServiceError.FRIEND_REQUEST_INVALID_TARGET_ID
+
     if (
         request.sender_user_id != sender_user_id
         or request.recipient_user_id != recipient_user_id
@@ -118,9 +120,6 @@ async def accept(
 
     if request is None:
         return ServiceError.FRIEND_REQUEST_NOT_FOUND
-
-    if sender_user_id == recipient_user_id:
-        return ServiceError.FRIEND_REQUEST_INVALID_TARGET_ID
 
     # Create 2 records so it's a mutual friend relationship
     await repositories.user_relationship.create(
@@ -143,7 +142,6 @@ async def create(
     recipient_user_id: int,
     message: str,
 ) -> FriendRequest | ServiceError:
-
     if sender_user_id == recipient_user_id:
         return ServiceError.FRIEND_REQUEST_INVALID_TARGET_ID
 
@@ -203,9 +201,7 @@ async def delete_multiple(
     accounts_list: list[int],
     is_sender_user_id: bool = False,
 ) -> None:
-
     for account_id in accounts_list:
-
         if is_sender_user_id:
             sender_user_id = user_id
             recipient_user_id = account_id
