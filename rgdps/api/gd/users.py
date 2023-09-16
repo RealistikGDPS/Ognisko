@@ -99,7 +99,7 @@ async def user_info_get(
             gd_obj.create_friend_request(target.friend_request)
             if target.friend_request is not None
             else {},
-        ]
+        ],
     )
 
 

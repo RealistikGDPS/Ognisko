@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from . import auth
-from . import friend_requests
 from . import daily_chests
+from . import friend_requests
 from . import leaderboards
 from . import level_comments
 from . import levels

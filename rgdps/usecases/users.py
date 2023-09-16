@@ -9,9 +9,9 @@ from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.users import UserPrivacySetting
-from rgdps.constants.users import UserRelationshipType
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
+from rgdps.constants.users import UserRelationshipType
 from rgdps.models.friend_request import FriendRequest
 from rgdps.models.user import User
 
@@ -129,7 +129,10 @@ async def get(
 
     else:
         friend_check = await repositories.user_relationship.from_user_and_target_user(
-            ctx, request_user_id, user_id, UserRelationshipType.FRIEND
+            ctx,
+            request_user_id,
+            user_id,
+            UserRelationshipType.FRIEND,
         )
 
         incoming_check = await repositories.friend_requests.from_target_and_recipient(

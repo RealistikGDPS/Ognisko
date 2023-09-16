@@ -13,8 +13,8 @@ from rgdps.constants.friends import FriendStatus
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivileges
-from rgdps.models.friend_request import FriendRequest
 from rgdps.models.daily_chest import DailyChest
+from rgdps.models.friend_request import FriendRequest
 from rgdps.models.level import Level
 from rgdps.models.level_comment import LevelComment
 from rgdps.models.song import Song
