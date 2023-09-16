@@ -10,6 +10,7 @@ sys.path.append(".")
 # Please see the README for more information.
 import asyncio
 import base64
+from datetime import datetime
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 import urllib.parse
@@ -34,6 +35,7 @@ from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivacySetting
+from rgdps.constants.users import UserRelationshipType
 from rgdps.constants.users import UserPrivileges
 from rgdps.constants.songs import SongSource
 from rgdps.services.mysql import MySQLService
@@ -437,6 +439,69 @@ async def convert_levels(ctx: ConverterContext) -> None:
         )
 
 
+async def convert_friend_requests(ctx: ConverterContext) -> None:
+    old_friend_requests = await ctx.old_sql.fetch_all(
+        "SELECT * FROM friendreqs",
+    )
+
+    for request in old_friend_requests:
+        post_ts = from_unix_ts(request["uploadDate"])
+
+        await repositories.friend_requests.create(
+            ctx,
+            sender_user_id=request["accountID"],
+            recipient_user_id=request["toAccountID"],
+            message=hashes.decode_base64(request["comment"])[:140],
+            post_ts=post_ts,
+            # GMDPS did not store timestamps.
+            seen_ts=datetime.now() if not request["isNew"] else None,
+        )
+
+
+async def convert_user_relationships(ctx: ConverterContext) -> None:
+    # Friends as first.
+    old_friends = await ctx.old_sql.fetch_all(
+        "SELECT * FROM friendships",
+    )
+
+    for friend in old_friends:
+        await repositories.user_relationship.create(
+            ctx,
+            user_id=friend["person1"],
+            target_user_id=friend["person2"],
+            relationship_type=UserRelationshipType.FRIEND,
+            # GMDPS did not store timestamps.
+            post_ts=datetime.now(),
+            seen_ts=datetime.now() if not friend["isNew1"] else None,
+        )
+
+        # Reverse to make mutual feeling.
+        await repositories.user_relationship.create(
+            ctx,
+            user_id=friend["person2"],
+            target_user_id=friend["person1"],
+            relationship_type=UserRelationshipType.FRIEND,
+            # GMDPS did not store timestamps.
+            post_ts=datetime.now(),
+            seen_ts=datetime.now() if not friend["isNew2"] else None,
+        )
+
+    # Now blocks.
+    old_blocks = await ctx.old_sql.fetch_all(
+        "SELECT * FROM blocks",
+    )
+
+    for block in old_blocks:
+        await repositories.user_relationship.create(
+            ctx,
+            user_id=block["person1"],
+            target_user_id=block["person2"],
+            relationship_type=UserRelationshipType.BLOCKED,
+            # GMDPS did not store timestamps.
+            post_ts=datetime.now(),
+        )
+
+
 async def main() -> int:
     logger.info("Starting the GMDPS -> RealistikGDPS converter.")
     ctx = await get_context()
@@ -476,6 +541,22 @@ async def main() -> int:
         else:
             logger.info(
                 "Skipping level comment conversion, level comments already exist.",
+            )
+
+        if not await repositories.friend_requests.get_count(ctx):
+            logger.info("Converting friend requests...")
+            await convert_friend_requests(ctx)
+        else:
+            logger.info(
+                "Skipping friend requests conversion, friend requests already exist.",
+            )
+
+        if not await repositories.user_relationship.get_count(ctx):
+            logger.info("Converting user relationships...")
+            await convert_user_relationships(ctx)
+        else:
+            logger.info(
+                "Skipping user relationships conversion, user relationships already exist.",
             )
     except Exception:
         logger.error(
