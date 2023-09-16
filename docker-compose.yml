@@ -28,7 +28,7 @@ services:
   realistikgdps:
     image: realistikgdps:latest
     ports:
-      - "80:80"
+      - "${HTTP_PORT}:${HTTP_PORT}"
     depends_on:
       - mysql
       - redis
