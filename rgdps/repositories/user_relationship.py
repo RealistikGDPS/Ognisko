@@ -20,7 +20,7 @@ async def from_id(
         condition = "AND deleted = 0"
 
     relationship_db = await ctx.mysql.fetch_one(
-        "SELECT id, relationship_type, user1_id, user2_id, post_ts, seen_ts "
+        "SELECT id, relationship_type, user_id, target_user_id, post_ts, seen_ts "
         f"FROM user_relationships WHERE id = :relationship_id {condition}",
         {"relationship_id": relationship_id},
     )
@@ -42,45 +42,17 @@ async def from_user_id(
         condition = "AND deleted = 0"
 
     relationships_db = await ctx.mysql.fetch_all(
-        "SELECT id, relationship_type, user1_id, user2_id, post_ts, seen_ts "
-        "FROM user_relationships WHERE user1_id = :user1_id AND "
+        "SELECT id, relationship_type, user_id, target_user_id, post_ts, seen_ts "
+        "FROM user_relationships WHERE user_id = :user_id AND "
         f"relationship_type = :relationship_type {condition} "
         "ORDER BY post_ts DESC",
-        {"user1_id": user_id, "relationship_type": relationship_type.value},
+        {"user_id": user_id, "relationship_type": relationship_type.value},
     )
 
     return [
         UserRelationship.from_mapping(relationship_db)
         for relationship_db in relationships_db
     ]
-
-
-async def from_user_ids(
-    ctx: Context,
-    user1_id: int,
-    user2_id: int,
-    relationship_type: UserRelationshipType,
-    include_deleted: bool = False,
-) -> UserRelationship | None:
-    condition = ""
-    if not include_deleted:
-        condition = "AND deleted = 0"
-
-    relationship_db = await ctx.mysql.fetch_one(
-        "SELECT id, relationship_type, user1_id, user2_id, post_ts, seen_ts "
-        "FROM user_relationships WHERE user1_id = :user1_id AND user2_id = :user2_id "
-        f"AND relationship_type = :relationship_type {condition}",
-        {
-            "user1_id": user1_id,
-            "user2_id": user2_id,
-            "relationship_type": relationship_type.value,
-        },
-    )
-
-    if not relationship_db:
-        return None
-
-    return UserRelationship.from_mapping(relationship_db)
 
 
 async def from_user_id_paginated(
@@ -96,8 +68,8 @@ async def from_user_id_paginated(
         condition = "AND deleted = 0"
 
     relationships_db = await ctx.mysql.fetch_all(
-        "SELECT id, relationship_type, user1_id, user2_id, post_ts, seen_ts "
-        "FROM user_relationships WHERE user1_id = :user1_id AND "
+        "SELECT id, relationship_type, user_id, target_user_id, post_ts, seen_ts "
+        "FROM user_relationships WHERE user_id = :user_id AND "
         f"relationship_type = :relationship_type {condition} "
         "ORDER BY post_ts DESC LIMIT :limit OFFSET :offset",
         {
@@ -112,6 +84,34 @@ async def from_user_id_paginated(
         UserRelationship.from_mapping(relationship_db)
         for relationship_db in relationships_db
     ]
+
+
+async def from_user_and_target_user(
+    ctx: Context,
+    user_id: int,
+    target_user_id: int,
+    relationship_type: UserRelationshipType,
+    include_deleted: bool = False,
+) -> UserRelationship | None:
+    condition = ""
+    if not include_deleted:
+        condition = "AND deleted = 0"
+
+    relationship_db = await ctx.mysql.fetch_one(
+        "SELECT id, relationship_type, user_id, target_user_id, post_ts, seen_ts "
+        "FROM user_relationships WHERE user_id = :user_id AND target_user_id = :target_user_id "
+        f"AND relationship_type = :relationship_type {condition}",
+        {
+            "user_id": user_id,
+            "target_user_id": target_user_id,
+            "relationship_type": relationship_type.value,
+        },
+    )
+
+    if not relationship_db:
+        return None
+
+    return UserRelationship.from_mapping(relationship_db)
 
 
 async def get_user_relationship_count(
@@ -129,7 +129,7 @@ async def get_user_relationship_count(
         condition += " AND seen_ts IS NULL"
 
     return await ctx.mysql.fetch_val(
-        "SELECT COUNT(*) FROM user_relationships WHERE user1_id = :user_id "
+        "SELECT COUNT(*) FROM user_relationships WHERE user_id = :user_id "
         f"AND relationship_type = :relationship_type {condition}",
         {"user_id": user_id, "relationship_type": relationship_type.value},
     )
@@ -137,8 +137,8 @@ async def get_user_relationship_count(
 
 async def check_relationship_exists(
     ctx: Context,
-    user1_id: int,
-    user2_id: int,
+    user_id: int,
+    target_user_id: int,
     relationship_type: UserRelationshipType,
     include_deleted: bool = False,
 ) -> bool:
@@ -147,11 +147,11 @@ async def check_relationship_exists(
         condition = "AND deleted = 0"
 
     return await ctx.mysql.fetch_val(
-        "SELECT EXISTS(SELECT 1 FROM user_relationships WHERE user1_id = :user1_id "
-        f"AND user2_id = :user2_id AND relationship_type = :relationship_type {condition})",
+        "SELECT EXISTS(SELECT 1 FROM user_relationships WHERE user_id = :user_id "
+        f"AND target_user_id = :target_user_id AND relationship_type = :relationship_type {condition})",
         {
-            "user1_id": user1_id,
-            "user2_id": user2_id,
+            "user_id": user_id,
+            "target_user_id": target_user_id,
             "relationship_type": relationship_type.value,
         },
     )
@@ -181,8 +181,8 @@ async def mark_all_as_seen(
 
 async def create(
     ctx: Context,
-    user1_id: int,
-    user2_id: int,
+    user_id: int,
+    target_user_id: int,
     relationship_type: UserRelationshipType,
     post_ts: datetime = datetime.now(),
     seen_ts: None | datetime = None,
@@ -190,15 +190,15 @@ async def create(
     relationship = UserRelationship(
         id=0,
         relationship_type=relationship_type,
-        user1_id=user1_id,
-        user2_id=user2_id,
+        user_id=user_id,
+        target_user_id=target_user_id,
         post_ts=post_ts,
         seen_ts=seen_ts,
     )
 
     relationship.id = await ctx.mysql.execute(
-        "INSERT INTO user_relationships (relationship_type, user1_id, user2_id, post_ts, seen_ts) "
-        "VALUES (:relationship_type, :user1_id, :user2_id, :post_ts, :seen_ts)",
+        "INSERT INTO user_relationships (relationship_type, user_id, target_user_id, post_ts, seen_ts) "
+        "VALUES (:relationship_type, :user_id, :target_user_id, :post_ts, :seen_ts)",
         relationship.as_dict(include_id=False),
     )
 

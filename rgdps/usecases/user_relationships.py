@@ -35,7 +35,7 @@ async def get_user(
 
     relationships_responses = []
     for relationship in relationships:
-        user = await repositories.user.from_id(ctx, relationship.user2_id)
+        user = await repositories.user.from_id(ctx, relationship.target_user_id)
 
         if user is None:
             continue
@@ -74,17 +74,17 @@ async def mark_all_as_seen(
 
 async def create(
     ctx: Context,
-    user1_id: int,
-    user2_id: int,
+    user_id: int,
+    target_user_id: int,
     relationship_type: UserRelationshipType,
 ) -> UserRelationship | ServiceError:
-    if user1_id == user2_id:
+    if user_id == target_user_id:
         return ServiceError.RELATIONSHIP_INVALID_TARGET_ID
 
     exists = await repositories.user_relationship.check_relationship_exists(
         ctx,
-        user1_id,
-        user2_id,
+        user_id,
+        target_user_id,
         relationship_type,
     )
 
@@ -93,8 +93,8 @@ async def create(
 
     relationship = await repositories.user_relationship.create(
         ctx,
-        user1_id,
-        user2_id,
+        user_id,
+        target_user_id,
         relationship_type,
     )
     return relationship
@@ -102,46 +102,75 @@ async def create(
 
 async def remove_friendship(
     ctx: Context,
-    user1_id: int,
-    user2_id: int,
-) -> UserRelationship | ServiceError:
-    if user1_id == user2_id:
+    user_id: int,
+    target_user_id: int,
+) -> ServiceError | None:
+    if user_id == target_user_id:
         return ServiceError.RELATIONSHIP_INVALID_TARGET_ID
 
-    relationship = await delete(
+    relationship = await repositories.user_relationship.from_user_and_target_user(
         ctx,
-        user1_id,
-        user2_id,
+        user_id,
+        target_user_id,
         UserRelationshipType.FRIEND,
     )
 
-    await delete(  # This is to remove the other side of the relationship.
+    if relationship is None:
+        return ServiceError.RELATIONSHIP_NOT_FOUND
+
+    if relationship.user_id != user_id:
+        return ServiceError.RELATIONSHIP_INVALID_OWNER
+
+    relationship = await repositories.user_relationship.update_partial(
         ctx,
-        user2_id,
-        user1_id,
+        relationship.id,
+        deleted=True,
+    )
+
+    if relationship is None:
+        return ServiceError.RELATIONSHIP_NOT_FOUND
+
+    # Remove the other side of the relationship.
+    relationship = await repositories.user_relationship.from_user_and_target_user(
+        ctx,
+        target_user_id,
+        user_id,
         UserRelationshipType.FRIEND,
     )
 
-    return relationship
+    if relationship is None:
+        return ServiceError.RELATIONSHIP_NOT_FOUND
+
+    if relationship.user_id != target_user_id:
+        return ServiceError.RELATIONSHIP_INVALID_OWNER
+
+    relationship = await repositories.user_relationship.update_partial(
+        ctx,
+        relationship.id,
+        deleted=True,
+    )
+
+    if relationship is None:
+        return ServiceError.RELATIONSHIP_NOT_FOUND
 
 
 async def delete(
     ctx: Context,
-    user1_id: int,
-    user2_id: int,
+    user_id: int,
+    target_user_id: int,
     relationship_type: UserRelationshipType,
 ) -> UserRelationship | ServiceError:
-    relationship = await repositories.user_relationship.from_user_ids(
+    relationship = await repositories.user_relationship.from_user_and_target_user(
         ctx,
-        user1_id,
-        user2_id,
+        user_id,
+        target_user_id,
         relationship_type,
     )
 
     if relationship is None:
         return ServiceError.RELATIONSHIP_NOT_FOUND
 
-    if relationship.user1_id != user1_id:
+    if relationship.user_id != user_id:
         return ServiceError.RELATIONSHIP_INVALID_OWNER
 
     relationship = await repositories.user_relationship.update_partial(

@@ -12,8 +12,8 @@ from rgdps.constants.users import UserRelationshipType
 class UserRelationship:
     id: int
     relationship_type: UserRelationshipType
-    user1_id: int
-    user2_id: int
+    user_id: int
+    target_user_id: int
     post_ts: datetime
     seen_ts: datetime | None
 
@@ -24,8 +24,8 @@ class UserRelationship:
             relationship_type=UserRelationshipType(
                 mapping["relationship_type"],
             ),
-            user1_id=mapping["user1_id"],
-            user2_id=mapping["user2_id"],
+            user_id=mapping["user_id"],
+            target_user_id=mapping["target_user_id"],
             post_ts=mapping["post_ts"],
             seen_ts=mapping["seen_ts"],
         )
@@ -33,8 +33,8 @@ class UserRelationship:
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
         res = {
             "relationship_type": self.relationship_type.value,
-            "user1_id": self.user1_id,
-            "user2_id": self.user2_id,
+            "user_id": self.user_id,
+            "target_user_id": self.target_user_id,
             "post_ts": self.post_ts,
             "seen_ts": self.seen_ts,
         }
