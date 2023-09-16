@@ -111,7 +111,6 @@ async def get(
     friend_request_count = 0
     friend_count = 0
 
-    # TODO: the logic should be moved somewhere else? ~lenforiee
     if is_own:
         friend_request_count = (
             await repositories.friend_requests.get_user_friend_request_count(
