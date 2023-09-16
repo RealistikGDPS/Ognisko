@@ -66,6 +66,8 @@ def create_profile(
     user: User,
     friend_status: FriendStatus = FriendStatus.NONE,
     rank: int = 0,
+    friend_request_count: int = 0,
+    friend_count: int = 0,
 ) -> GDSerialisable:
     badge_level = 0
     if user.privileges & UserPrivileges.USER_DISPLAY_ELDER_BADGE:
@@ -103,8 +105,8 @@ def create_profile(
         30: rank,
         31: friend_status.value,
         38: 0,  # TODO: New messages.
-        39: 0,  # TODO: New friend requests.
-        40: 0,  # TODO: New friends.
+        39: friend_request_count,
+        40: friend_count,
         43: user.spider,
         44: user.twitter_name or "",
         45: user.twitch_name or "",
