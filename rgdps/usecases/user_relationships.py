@@ -116,7 +116,7 @@ async def remove_friendship(
     )
 
     if relationship is None:
-        return ServiceError.RELATIONSHIP_NOT_FOUND
+        return  # Doesn't matter if it doesn't exist.
 
     if relationship.user_id != user_id:
         return ServiceError.RELATIONSHIP_INVALID_OWNER
@@ -139,7 +139,7 @@ async def remove_friendship(
     )
 
     if relationship is None:
-        return ServiceError.RELATIONSHIP_NOT_FOUND
+        return  # Doesn't matter if it doesn't exist.
 
     if relationship.user_id != target_user_id:
         return ServiceError.RELATIONSHIP_INVALID_OWNER

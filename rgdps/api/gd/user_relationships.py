@@ -212,18 +212,17 @@ async def block_user_post(
     target_id: int = Form(..., alias="targetAccountID"),
 ):
     # Remove friendship if exists.
-    friendship = await user_relationships.get_user(
+    result = await user_relationships.remove_friendship(
         ctx,
         user.id,
-        UserRelationshipType.FRIEND,
+        target_id,
     )
 
-    if not isinstance(friendship, ServiceError):
-        await user_relationships.remove_friendship(
-            ctx,
-            user.id,
-            target_id,
+    if isinstance(result, ServiceError):
+        logger.info(
+            f"Failed to remove friend {target_id} with error {result!r}.",
         )
+        return responses.fail()
 
     result = await user_relationships.create(
         ctx,
