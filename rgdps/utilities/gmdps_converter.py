@@ -403,6 +403,12 @@ async def convert_levels(ctx: ConverterContext) -> None:
             custom_song_id = level["songID"]
             official_song_id = None
 
+        stars = level["starStars"]
+        if stars > 10:
+            stars = 10
+        elif stars < 0:
+            stars = 0
+
         await repositories.level.create(
             ctx,
             level_id=level["levelID"],
@@ -423,7 +429,7 @@ async def convert_levels(ctx: ConverterContext) -> None:
             difficulty=LevelDifficulty(level["starDifficulty"]),
             downloads=level["downloads"],
             likes=level["likes"],
-            stars=level["starStars"],
+            stars=stars,
             # NOTE: Only upload ts is varchar.
             upload_ts=from_unix_ts(int(level["uploadDate"])),
             update_ts=from_unix_ts(level["updateDate"]),
