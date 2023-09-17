@@ -228,6 +228,11 @@ async def users_get(
         return responses.fail()
 
     logger.info(f"Successfully retrieved {result.total} users.")
+
+    # NOTE: Client shows garbage data if an empty list is sent.
+    if not result.results:
+        return responses.fail()
+
     return (
         "|".join(gd_obj.dumps(gd_obj.create_profile(user)) for user in result.results)
         + "#"
