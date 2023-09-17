@@ -537,3 +537,7 @@ async def from_name(ctx: Context, username: str) -> User | None:
 
 async def get_count(ctx: Context) -> int:
     return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM users")
+
+
+async def all_ids(ctx: Context) -> list[int]:
+    return [x["id"] for x in await ctx.mysql.fetch_all("SELECT id FROM users")]

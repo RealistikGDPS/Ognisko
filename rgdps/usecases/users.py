@@ -310,3 +310,17 @@ async def request_status(
         return UserPrivilegeLevel.ELDER_MODERATOR
 
     return UserPrivilegeLevel.NONE
+
+
+async def synchronise_search(ctx: Context) -> bool | ServiceError:
+    users = await repositories.user.all_ids(ctx)
+
+    for user_id in users:
+        user = await repositories.user.from_id(ctx, user_id)
+
+        if not user:
+            continue
+
+        await repositories.user.create_meili(ctx, user)
+
+    return True
