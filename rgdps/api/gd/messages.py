@@ -58,18 +58,18 @@ async def messages_get(
 
     if is_sender_user_id:
         message_direction = MessageDirection.SENT
-        result = await messages.from_sender_user_id(
+        result = await messages.get_user(
             ctx,
-            sender_user_id=user.id,
+            user_id=user.id,
             page=page,
             page_size=PAGE_SIZE,
             include_deleted=False,
         )
     else:
         message_direction = MessageDirection.RECEIVED
-        result = await messages.from_recipient_user_id(
+        result = await messages.get_sent(
             ctx,
-            recipient_user_id=user.id,
+            user_id=user.id,
             page=page,
             page_size=PAGE_SIZE,
             include_deleted=False,
@@ -109,7 +109,7 @@ async def message_get(
     user: User = Depends(authenticate_dependency()),
     message_id: int = Form(..., alias="messageID"),
 ):
-    result = await messages.from_id(ctx, user.id, message_id=message_id)
+    result = await messages.get(ctx, user.id, message_id=message_id)
 
     if isinstance(result, ServiceError):
         logger.info(f"{user} failed to view message with error {result!r}.")

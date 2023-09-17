@@ -22,7 +22,7 @@ class PaginatedMessagesResponse(NamedTuple):
     total: int
 
 
-async def from_id(
+async def get(
     ctx: Context,
     user_id: int,
     message_id: int,
@@ -51,16 +51,16 @@ async def from_id(
     return MessageResponse(message=message, user=recipient)
 
 
-async def from_recipient_user_id(
+async def get_sent(
     ctx: Context,
-    recipient_user_id: int,
+    user_id: int,
     page: int = 0,
     page_size: int = 10,
     include_deleted: bool = False,
 ) -> PaginatedMessagesResponse | ServiceError:
     messages = await repositories.message.from_recipient_user_id(
         ctx,
-        recipient_user_id=recipient_user_id,
+        recipient_user_id=user_id,
         page=page,
         page_size=page_size,
         include_deleted=include_deleted,
@@ -77,7 +77,7 @@ async def from_recipient_user_id(
 
     messages_count = await repositories.message.from_recipient_user_id_count(
         ctx,
-        recipient_user_id=recipient_user_id,
+        recipient_user_id=user_id,
         include_deleted=include_deleted,
     )
 
@@ -87,16 +87,16 @@ async def from_recipient_user_id(
     )
 
 
-async def from_sender_user_id(
+async def get_user(
     ctx: Context,
-    sender_user_id: int,
+    user_id: int,
     page: int = 0,
     page_size: int = 10,
     include_deleted: bool = False,
 ) -> PaginatedMessagesResponse | ServiceError:
     messages = await repositories.message.from_sender_user_id(
         ctx,
-        sender_user_id=sender_user_id,
+        sender_user_id=user_id,
         page=page,
         page_size=page_size,
         include_deleted=include_deleted,
@@ -113,7 +113,7 @@ async def from_sender_user_id(
 
     messages_count = await repositories.message.from_sender_user_id_count(
         ctx,
-        sender_user_id=sender_user_id,
+        sender_user_id=user_id,
         include_deleted=include_deleted,
     )
 
@@ -153,13 +153,13 @@ async def create(
     )
 
     if block_check:
-        return ServiceError.MESSAGES_SENDER_BLOCKED
+        return ServiceError.USER_BLOCKED_BY_USER
 
     if recipient.message_privacy is UserPrivacySetting.PRIVATE:
-        return ServiceError.MESSAGES_MESSAGES_DISABLED
+        return ServiceError.USER_MESSAGES_PRIVATE
 
     if recipient.message_privacy is UserPrivacySetting.FRIENDS and not friendship_check:
-        return ServiceError.MESSAGES_SENDER_NOT_FRIENDS
+        return ServiceError.USER_NOT_FRIENDS
 
     message = await repositories.message.create(
         ctx,
