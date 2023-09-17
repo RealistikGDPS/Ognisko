@@ -47,7 +47,11 @@ class ServiceError(str, Enum):
     LEVELS_NO_DELETE_PERMISSION = "levels.no_delete_permission"
     LEVELS_NO_UPLOAD_PERMISSION = "levels.no_upload_permission"
 
+    MESSAGES_NOT_FOUND = "messages.not_found"
+    MESSAGES_INVALID_OWNER = "messages.invalid_owner"
     MESSAGES_INVALID_RECIPIENT = "messages.invalid_recipient"
-    MESSAGES_INVALID_RECIPIENT_ID = "messages.invalid_recipient_id"
+    MESSAGES_MESSAGES_DISABLED = "messages.messages_disabled"
+    MESSAGES_SENDER_NOT_FRIENDS = "messages.sender_not_friends"
+    MESSAGES_SENDER_BLOCKED = "messages.sender_blocked"
 
     DAILY_CHESTS_ALREADY_CLAIMED = "daily_chests.already_claimed"

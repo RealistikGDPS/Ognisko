@@ -3,7 +3,29 @@ from __future__ import annotations
 from datetime import datetime
 
 from rgdps.common.context import Context
+from rgdps.common.typing import UNSET, Unset, is_set
 from rgdps.models.message import Message
+
+async def from_id(
+    ctx: Context,
+    message_id: int,
+    include_deleted: bool = False,
+) -> Message | None:
+    condition = ""
+    if not include_deleted:
+        condition = "AND deleted = 0"
+
+    message_db = await ctx.mysql.fetch_one(
+        "SELECT id, sender_user_id, recipient_user_id, subject, content, post_ts, "
+        "seen_ts, sender_deleted, recipient_deleted, deleted "
+        f"FROM messages WHERE id = :message_id {condition}",
+        {"message_id": message_id},
+    )
+
+    if not message_db:
+        return None
+
+    return Message.from_mapping(message_db)
 
 
 async def from_recipient_user_id(
@@ -15,10 +37,11 @@ async def from_recipient_user_id(
 ) -> list[Message]:
     condition = ""
     if not include_deleted:
-        condition = "AND deleted = 0"
+        condition = "AND deleted = 0 AND recipient_deleted = 0"
 
     messages_db = await ctx.mysql.fetch_all(
-        "SELECT id, sender_user_id, recipient_user_id, subject, content, post_ts, seen_ts "
+        "SELECT id, sender_user_id, recipient_user_id, subject, content, post_ts, "
+        "seen_ts, sender_deleted, recipient_deleted, deleted "
         f"FROM messages WHERE recipient_user_id = :recipient_user_id {condition} "
         "ORDER BY post_ts DESC LIMIT :limit OFFSET :offset",
         {
@@ -40,10 +63,11 @@ async def from_sender_user_id(
 ) -> list[Message]:
     condition = ""
     if not include_deleted:
-        condition = "AND deleted = 0"
+        condition = "AND deleted = 0 AND sender_deleted = 0"
 
     messages_db = await ctx.mysql.fetch_all(
-        "SELECT id, sender_user_id, recipient_user_id, subject, content, post_ts, seen_ts "
+        "SELECT id, sender_user_id, recipient_user_id, subject, content, post_ts, "
+        "seen_ts, sender_deleted, recipient_deleted, deleted "
         f"FROM messages WHERE sender_user_id = :sender_user_id {condition} "
         "ORDER BY post_ts DESC LIMIT :limit OFFSET :offset",
         {
@@ -63,7 +87,7 @@ async def from_recipient_user_id_count(
 ) -> int:
     condition = ""
     if not include_deleted:
-        condition = "AND deleted = 0"
+        condition = "AND deleted = 0 AND recipient_deleted = 0"
 
     if is_new:
         condition += " AND seen_ts IS NULL"
@@ -86,7 +110,7 @@ async def from_sender_user_id_count(
 ) -> int:
     condition = ""
     if not include_deleted:
-        condition = "AND deleted = 0"
+        condition = "AND deleted = 0 AND sender_deleted = 0"
 
     if is_new:
         condition += " AND seen_ts IS NULL"
@@ -125,3 +149,35 @@ async def create(
     )
 
     return message
+
+async def update_partial(
+    ctx: Context,
+    message_id: int,
+    seen_ts: Unset | datetime = UNSET,
+    sender_deleted: Unset | bool = UNSET,
+    recipient_deleted: Unset | bool = UNSET,
+    deleted: Unset | bool = UNSET,
+) -> Message | None:
+    changed_data = {}
+
+    if is_set(seen_ts):
+        changed_data["seen_ts"] = seen_ts
+    if is_set(deleted):
+        changed_data["deleted"] = deleted
+    if is_set(sender_deleted):
+        changed_data["sender_deleted"] = sender_deleted
+    if is_set(recipient_deleted):
+        changed_data["recipient_deleted"] = recipient_deleted
+
+    if not changed_data:
+        return None
+
+    query = "UPDATE messages SET "
+    query += ", ".join(f"{key} = :{key}" for key in changed_data.keys())
+    query += " WHERE id = :id"
+
+    changed_data["id"] = message_id
+
+    await ctx.mysql.execute(query, changed_data)
+
+    return await from_id(ctx, message_id, include_deleted=True)

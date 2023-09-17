@@ -241,7 +241,23 @@ router.add_api_route(
     "/uploadGJMessage20.php",
     messages.message_post,
     methods=["POST"],
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=5)),
+    ],
 )
+
+router.add_api_route(
+    "/deleteGJMessages20.php",
+    messages.message_delete,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/downloadGJMessage20.php",
+    messages.message_get,
+    methods=["POST"],
+)
+
 
 router.add_api_route(
     "/suggestGJStars20.php",
