@@ -487,6 +487,8 @@ async def update_partial(
         diamonds=diamonds,
     )
 
+    await drop_cache(ctx, user_id)
+
     return user
 
 

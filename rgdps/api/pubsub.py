@@ -3,6 +3,7 @@ from __future__ import annotations
 from rgdps import logger
 from rgdps.common.context import Context
 from rgdps.services.pubsub import RedisPubsubRouter
+from rgdps.usecases import leaderboards
 from rgdps.usecases import levels
 from rgdps.usecases import users
 
@@ -24,3 +25,9 @@ async def level_sync_meili_handler(ctx: Context, _) -> None:
 async def user_sync_meili_handler(ctx: Context, _) -> None:
     logger.debug("Synchronising MeiliSearch indexes.")
     await users.synchronise_search(ctx)
+
+
+@router.register("rgdps:leaderboards:sync_stars")
+async def leaderboard_sync_stars_handler(ctx: Context, _) -> None:
+    logger.debug("Synchronising star leaderboard.")
+    await leaderboards.synchronise_top_stars(ctx)
