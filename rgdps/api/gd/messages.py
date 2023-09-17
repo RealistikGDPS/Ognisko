@@ -134,7 +134,7 @@ async def message_delete(
             required_privileges=UserPrivileges.MESSAGES_DELETE_OWN,
         ),
     ),
-    message_id: int | None = Form(None, alias="messageID"),
+    message_id: int = Form(0, alias="messageID"),
     message_id_list: str | None = Form(None, alias="messages"),
 ):
     if message_id_list:
