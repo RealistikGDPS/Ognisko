@@ -564,7 +564,12 @@ async def search(
     if not include_hidden:
         filters.append("is_public = true")
 
-    results_db = await index.search(query, offset=page * page_size, limit=page_size)
+    results_db = await index.search(
+        query,
+        offset=page * page_size,
+        limit=page_size,
+        filter=filters,
+    )
 
     if (not results_db.hits) or (not results_db.estimated_total_hits):
         return UserSearchResults([], 0)
