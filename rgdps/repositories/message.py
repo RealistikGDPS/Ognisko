@@ -135,6 +135,8 @@ async def create(
     recipient_user_id: int,
     subject: str,
     content: str,
+    post_ts: datetime = datetime.now(),
+    seen_ts: None | datetime = None,
 ) -> Message:
     message = Message(
         id=0,
@@ -142,8 +144,8 @@ async def create(
         recipient_user_id=recipient_user_id,
         subject=subject,
         content=content,
-        post_ts=datetime.now(),
-        seen_ts=None,
+        post_ts=post_ts,
+        seen_ts=seen_ts,
     )
 
     message.id = await ctx.mysql.execute(
@@ -186,3 +188,6 @@ async def update_partial(
     await ctx.mysql.execute(query, changed_data)
 
     return await from_id(ctx, message_id, include_deleted=True)
+
+async def get_count(ctx: Context) -> int:
+    return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM messages")
