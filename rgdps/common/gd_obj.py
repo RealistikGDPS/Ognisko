@@ -415,8 +415,10 @@ def encrypt_chest_response(response: str) -> EncryptedChestResponse:
 def decrypt_chest_check_string(check_string: str) -> str:
     return hashes.decrypt_chest_check(check_string)
 
+
 def encrypt_message_content_string(content: str) -> str:
     return hashes.encrypt_message_content(content)
+
 
 def decrypt_message_content_string(content: str) -> str:
     return hashes.decrypt_message_content(content)

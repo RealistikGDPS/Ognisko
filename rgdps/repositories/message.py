@@ -3,8 +3,11 @@ from __future__ import annotations
 from datetime import datetime
 
 from rgdps.common.context import Context
-from rgdps.common.typing import UNSET, Unset, is_set
+from rgdps.common.typing import is_set
+from rgdps.common.typing import UNSET
+from rgdps.common.typing import Unset
 from rgdps.models.message import Message
+
 
 async def from_id(
     ctx: Context,
@@ -79,11 +82,12 @@ async def from_sender_user_id(
 
     return [Message.from_mapping(message_db) for message_db in messages_db]
 
+
 async def from_recipient_user_id_count(
     ctx: Context,
     recipient_user_id: int,
     is_new: bool = False,
-    include_deleted: bool = False, 
+    include_deleted: bool = False,
 ) -> int:
     condition = ""
     if not include_deleted:
@@ -106,7 +110,7 @@ async def from_sender_user_id_count(
     ctx: Context,
     sender_user_id: int,
     is_new: bool = False,
-    include_deleted: bool = False, 
+    include_deleted: bool = False,
 ) -> int:
     condition = ""
     if not include_deleted:
@@ -149,6 +153,7 @@ async def create(
     )
 
     return message
+
 
 async def update_partial(
     ctx: Context,

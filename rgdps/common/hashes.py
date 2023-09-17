@@ -107,6 +107,7 @@ def decrypt_chest_check(check_string: str) -> str:
         key=XorKeys.CHESTS,
     ).decode()
 
+
 def encrypt_message_content(content: str) -> str:
     return base64.urlsafe_b64encode(
         xor_cipher.cyclic_xor_unsafe(
@@ -114,6 +115,7 @@ def encrypt_message_content(content: str) -> str:
             key=XorKeys.MESSAGE,
         ),
     ).decode()
+
 
 def decrypt_message_content(content: str) -> str:
     de_b64 = decode_base64(content)

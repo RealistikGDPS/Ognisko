@@ -111,12 +111,10 @@ async def get(
     friend_count = 0
 
     if is_own:
-        messages_count = (
-            await repositories.message.from_recipient_user_id_count(
-                ctx,
-                user_id,
-                is_new=True,
-            )
+        messages_count = await repositories.message.from_recipient_user_id_count(
+            ctx,
+            user_id,
+            is_new=True,
         )
 
         friend_request_count = (

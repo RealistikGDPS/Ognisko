@@ -1,22 +1,26 @@
 from __future__ import annotations
-from datetime import datetime
 
+from datetime import datetime
 from typing import NamedTuple
 
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
-from rgdps.constants.users import UserPrivacySetting, UserRelationshipType
+from rgdps.constants.users import UserPrivacySetting
+from rgdps.constants.users import UserRelationshipType
 from rgdps.models.message import Message
 from rgdps.models.user import User
+
 
 class MessageResponse(NamedTuple):
     message: Message
     user: User
 
+
 class PaginatedMessagesResponse(NamedTuple):
     messages: list[MessageResponse]
     total: int
+
 
 async def from_id(
     ctx: Context,
@@ -32,13 +36,10 @@ async def from_id(
 
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
-    
-    if (
-        message.sender_user_id != user.id 
-        and message.recipient_user_id != user.id
-    ):
+
+    if message.sender_user_id != user.id and message.recipient_user_id != user.id:
         return ServiceError.MESSAGES_INVALID_OWNER
-    
+
     if message.sender_user_id == user.id:
         recipient = await repositories.user.from_id(ctx, message.recipient_user_id)
     else:
@@ -46,8 +47,9 @@ async def from_id(
 
     if recipient is None:
         return ServiceError.MESSAGES_INVALID_OWNER
-    
+
     return MessageResponse(message=message, user=recipient)
+
 
 async def from_recipient_user_id(
     ctx: Context,
@@ -69,11 +71,9 @@ async def from_recipient_user_id(
         user = await repositories.user.from_id(ctx, message.sender_user_id)
 
         if user is None:
-            continue 
+            continue
 
-        messages_resp.append(
-            MessageResponse(message=message, user=user)
-        )
+        messages_resp.append(MessageResponse(message=message, user=user))
 
     messages_count = await repositories.message.from_recipient_user_id_count(
         ctx,
@@ -107,11 +107,9 @@ async def from_sender_user_id(
         user = await repositories.user.from_id(ctx, message.recipient_user_id)
 
         if user is None:
-            continue 
+            continue
 
-        messages_resp.append(
-            MessageResponse(message=message, user=user)
-        )
+        messages_resp.append(MessageResponse(message=message, user=user))
 
     messages_count = await repositories.message.from_sender_user_id_count(
         ctx,
@@ -139,7 +137,7 @@ async def create(
     recipient = await repositories.user.from_id(ctx, recipient_user_id)
     if recipient is None:
         return ServiceError.MESSAGES_INVALID_RECIPIENT
-    
+
     friendship_check = await repositories.user_relationship.check_relationship_exists(
         ctx,
         user_id=sender_user_id,
@@ -156,10 +154,10 @@ async def create(
 
     if block_check:
         return ServiceError.MESSAGES_SENDER_BLOCKED
-    
+
     if recipient.message_privacy is UserPrivacySetting.PRIVATE:
         return ServiceError.MESSAGES_MESSAGES_DISABLED
-    
+
     if recipient.message_privacy is UserPrivacySetting.FRIENDS and not friendship_check:
         return ServiceError.MESSAGES_SENDER_NOT_FRIENDS
 
@@ -172,6 +170,7 @@ async def create(
     )
 
     return message
+
 
 async def mark_message_as_seen(
     ctx: Context,
@@ -186,20 +185,21 @@ async def mark_message_as_seen(
 
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
-    
+
     if message.recipient_user_id != user.id:
         return ServiceError.MESSAGES_INVALID_RECIPIENT
-    
+
     message = await repositories.message.update_partial(
         ctx,
         message_id=message_id,
-        seen_ts=datetime.now()
+        seen_ts=datetime.now(),
     )
 
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
-    
+
     return message
+
 
 async def delete_by_user(
     ctx: Context,
@@ -214,22 +214,19 @@ async def delete_by_user(
 
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
-    
-    if (
-        message.sender_user_id != user.id 
-        and message.recipient_user_id != user.id
-    ):
+
+    if message.sender_user_id != user.id and message.recipient_user_id != user.id:
         return ServiceError.MESSAGES_INVALID_OWNER
-    
+
     # Turns out that geometry dash delete message just for one person.
     sender_deleted = False
     recipient_deleted = False
-    
+
     if message.sender_user_id == user.id:
         sender_deleted = True
     else:
         recipient_deleted = True
-    
+
     message = await repositories.message.update_partial(
         ctx,
         message_id=message_id,
@@ -239,8 +236,9 @@ async def delete_by_user(
 
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
-    
+
     return message
+
 
 async def delete(
     ctx: Context,
@@ -255,13 +253,10 @@ async def delete(
 
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
-    
-    if (
-        message.sender_user_id != user.id 
-        and message.recipient_user_id != user.id
-    ):
+
+    if message.sender_user_id != user.id and message.recipient_user_id != user.id:
         return ServiceError.MESSAGES_INVALID_OWNER
-    
+
     message = await repositories.message.update_partial(
         ctx,
         message_id=message_id,
@@ -270,5 +265,5 @@ async def delete(
 
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
-    
+
     return message
