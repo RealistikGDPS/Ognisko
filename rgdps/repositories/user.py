@@ -150,11 +150,7 @@ def _make_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
 def _from_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
     user_dict = user_dict.copy()
 
-    user_dict["privileges"] = int(user_dict["privileges"]).to_bytes(
-        length=16,
-        byteorder="little",
-        signed=False,
-    )
+    user_dict["privileges"] = UserPrivileges(int(user_dict["privileges"])).as_bytes()
 
     user_dict["register_ts"] = time_utils.from_unix_ts(user_dict["register_ts"])
 
@@ -560,8 +556,14 @@ async def search(
     page: int,
     page_size: int,
     query: str,
+    include_hidden: bool = False,
 ) -> UserSearchResults:
     index = ctx.meili.index("users")
+
+    filters = []
+    if not include_hidden:
+        filters.append("is_public = true")
+
     results_db = await index.search(query, offset=page * page_size, limit=page_size)
 
     if (not results_db.hits) or (not results_db.estimated_total_hits):
