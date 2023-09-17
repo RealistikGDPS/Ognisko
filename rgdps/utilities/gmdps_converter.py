@@ -24,6 +24,7 @@ from types_aiobotocore_s3 import S3Client
 
 from rgdps import logger
 from rgdps import repositories
+from rgdps.common import gd_obj
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.context import Context
 from rgdps.common.time import from_unix_ts
@@ -508,6 +509,27 @@ async def convert_user_relationships(ctx: ConverterContext) -> None:
         )
 
 
+async def convert_messages(ctx: ConverterContext) -> None:
+    old_messages = await ctx.old_sql.fetch_all(
+        "SELECT * FROM messages",
+    )
+
+    for message in old_messages:
+        content = gd_obj.decrypt_message_content_string(message["body"])[:200]
+        subject = hashes.decode_base64(message["subject"])[:35]
+
+        await repositories.message.create(
+            ctx,
+            sender_user_id=message["accID"],
+            recipient_user_id=message["toAccountID"],
+            subject=subject,
+            content=content,
+            post_ts=from_unix_ts(message["timestamp"]),
+            # GMDPS did not store timestamps.
+            seen_ts=datetime.now() if not message["isNew"] else None,
+        )
+
+
 async def main() -> int:
     logger.info("Starting the GMDPS -> RealistikGDPS converter.")
     ctx = await get_context()
@@ -563,6 +585,14 @@ async def main() -> int:
         else:
             logger.info(
                 "Skipping user relationships conversion, user relationships already exist.",
+            )
+
+        if not await repositories.message.get_count(ctx):
+            logger.info("Converting messages...")
+            await convert_messages(ctx)
+        else:
+            logger.info(
+                "Skipping messages conversion, messages already exist.",
             )
     except Exception:
         logger.error(

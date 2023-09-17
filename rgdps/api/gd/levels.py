@@ -19,6 +19,9 @@ from rgdps.usecases import levels
 from rgdps.usecases import songs
 
 
+PAGE_SIZE = 10
+
+
 async def song_info_get(
     ctx: HTTPContext = Depends(),
     song_id: int = Form(..., alias="songID"),
@@ -87,9 +90,6 @@ async def level_post(
 
     logger.info(f"Successfully uploaded level {level}.")
     return str(level.id)
-
-
-PAGE_SIZE = 10
 
 
 async def levels_get(

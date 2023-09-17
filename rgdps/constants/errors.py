@@ -12,9 +12,12 @@ class ServiceError(str, Enum):
     USER_USERNAME_EXISTS = "user.username_exists"
     USER_IS_BLOCKED = "user.is_blocked"
     USER_NOT_FOUND = "user.not_found"
+    USER_NOT_FRIENDS = "user.not_friends"
     USER_BLOCKED_BY_USER = "user.blocked_by_user"
     USER_PROFILE_PRIVATE = "user.profile_private"
     USER_COMMENTS_PRIVATE = "user.comments_private"
+    USER_MESSAGES_PRIVATE = "user.messages_private"
+    USER_FRIEND_REQUESTS_PRIVATE = "user.friend_requests_private"
 
     COMMENTS_INVALID_CONTENT = "comments.invalid_content"
     COMMENTS_NOT_FOUND = "comments.not_found"
@@ -46,5 +49,9 @@ class ServiceError(str, Enum):
     LEVELS_UPDATE_LOCKED = "levels.update_locked"
     LEVELS_NO_DELETE_PERMISSION = "levels.no_delete_permission"
     LEVELS_NO_UPLOAD_PERMISSION = "levels.no_upload_permission"
+
+    MESSAGES_NOT_FOUND = "messages.not_found"
+    MESSAGES_INVALID_OWNER = "messages.invalid_owner"
+    MESSAGES_INVALID_RECIPIENT = "messages.invalid_recipient"
 
     DAILY_CHESTS_ALREADY_CLAIMED = "daily_chests.already_claimed"

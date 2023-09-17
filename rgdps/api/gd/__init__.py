@@ -8,6 +8,7 @@ from fastapi_limiter.depends import RateLimiter
 from . import leaderboards
 from . import level_comments
 from . import levels
+from . import messages
 from . import misc
 from . import rewards
 from . import save_data
@@ -229,6 +230,34 @@ router.add_api_route(
     level_comments.level_comments_get,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/getGJMessages20.php",
+    messages.messages_get,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/uploadGJMessage20.php",
+    messages.message_post,
+    methods=["POST"],
+    dependencies=[
+        Depends(RateLimiter(times=5, minutes=5)),
+    ],
+)
+
+router.add_api_route(
+    "/deleteGJMessages20.php",
+    messages.message_delete,
+    methods=["POST"],
+)
+
+router.add_api_route(
+    "/downloadGJMessage20.php",
+    messages.message_get,
+    methods=["POST"],
+)
+
 
 router.add_api_route(
     "/suggestGJStars20.php",

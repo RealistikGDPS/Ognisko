@@ -17,6 +17,8 @@ from rgdps.models.daily_chest import DailyChest
 from rgdps.models.friend_request import FriendRequest
 from rgdps.models.level import Level
 from rgdps.models.level_comment import LevelComment
+from rgdps.models.message import Message
+from rgdps.models.message import MessageDirection
 from rgdps.models.song import Song
 from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
@@ -66,6 +68,7 @@ def create_profile(
     user: User,
     friend_status: FriendStatus = FriendStatus.NONE,
     rank: int = 0,
+    messages_count: int = 0,
     friend_request_count: int = 0,
     friend_count: int = 0,
 ) -> GDSerialisable:
@@ -104,7 +107,7 @@ def create_profile(
         29: 1,  # Is Registered
         30: rank,
         31: friend_status.value,
-        38: 0,  # TODO: New messages.
+        38: messages_count,
         39: friend_request_count,
         40: friend_count,
         43: user.spider,
@@ -262,6 +265,25 @@ def create_level(level: Level, level_data: str) -> GDSerialisable:
     }
 
 
+def create_message(
+    message: Message,
+    user: User,
+    message_direction: MessageDirection,
+) -> GDSerialisable:
+
+    return {
+        1: message.id,
+        2: user.id,
+        3: user.id,
+        4: hashes.encode_base64(message.subject),
+        5: encrypt_message_content_string(message.content),
+        6: user.username,
+        7: into_str_ts(message.post_ts),
+        8: message.seen_ts is not None,
+        9: 0 if message_direction is MessageDirection.RECEIVED else 1,
+    }
+
+
 def create_level_security_str(level: Level) -> str:
     level_id_str = str(level.id)
 
@@ -305,7 +327,7 @@ def create_level_metadata_security_str_hashed(level: Level) -> str:
 
 
 def create_pagination_info(total: int, page: int, page_size: int) -> str:
-    offset = page * page_size
+    offset = page * page_size  # NOTE: page starts at 0
     return f"{total}:{offset}:{page_size}"
 
 
@@ -392,3 +414,11 @@ def encrypt_chest_response(response: str) -> EncryptedChestResponse:
 
 def decrypt_chest_check_string(check_string: str) -> str:
     return hashes.decrypt_chest_check(check_string)
+
+
+def encrypt_message_content_string(content: str) -> str:
+    return hashes.encrypt_message_content(content)
+
+
+def decrypt_message_content_string(content: str) -> str:
+    return hashes.decrypt_message_content(content)
