@@ -189,5 +189,6 @@ async def update_partial(
 
     return await from_id(ctx, message_id, include_deleted=True)
 
+
 async def get_count(ctx: Context) -> int:
     return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM messages")

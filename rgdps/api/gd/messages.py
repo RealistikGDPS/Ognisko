@@ -1,5 +1,3 @@
-import base64
-
 from fastapi import Depends
 from fastapi import Form
 
@@ -9,6 +7,7 @@ from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
+from rgdps.common.validators import MessageContentString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.message import MessageDirection
@@ -27,16 +26,14 @@ async def message_post(
     ),
     recipient_user_id: int = Form(..., alias="toAccountID"),
     subject: Base64String = Form(..., max_length=35),
-    content: str = Form(..., alias="body"),
+    content: MessageContentString = Form(..., alias="body", max_length=200),
 ):
-    content_decoded = gd_obj.decrypt_message_content_string(content)
-
     message = await messages.create(
         ctx,
         sender_user_id=user.id,
         recipient_user_id=recipient_user_id,
         subject=subject,
-        content=content_decoded,
+        content=content,
     )
 
     if isinstance(message, ServiceError):
@@ -94,8 +91,8 @@ async def messages_get(
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
 
-    if not is_sender_user_id:
-        for message in result.messages:
+    for message in result.messages:
+        if not is_sender_user_id and message.message.seen_ts is None:
             await messages.mark_message_as_seen(ctx, user.id, message.message.id)
 
     logger.info(f"{user} successfully viewed messages list.")
@@ -114,8 +111,9 @@ async def message_get(
     if isinstance(result, ServiceError):
         logger.info(f"{user} failed to view message with error {result!r}.")
         return responses.fail()
-
-    await messages.mark_message_as_seen(ctx, user.id, result.message.id)
+    
+    if result.message.seen_ts is None:
+        await messages.mark_message_as_seen(ctx, user.id, result.message.id)
 
     logger.info(f"{user} successfully viewed message.")
     return gd_obj.dumps(

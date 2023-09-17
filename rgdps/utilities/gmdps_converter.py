@@ -508,6 +508,7 @@ async def convert_user_relationships(ctx: ConverterContext) -> None:
             post_ts=datetime.now(),
         )
 
+
 async def convert_messages(ctx: ConverterContext) -> None:
     old_messages = await ctx.old_sql.fetch_all(
         "SELECT * FROM messages",
@@ -527,6 +528,7 @@ async def convert_messages(ctx: ConverterContext) -> None:
             # GMDPS did not store timestamps.
             seen_ts=datetime.now() if not message["isNew"] else None,
         )
+
 
 async def main() -> int:
     logger.info("Starting the GMDPS -> RealistikGDPS converter.")
