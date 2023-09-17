@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import time
 from datetime import datetime
-from enum import IntFlag
 from typing import Any
 from typing import NamedTuple
 
 from rgdps.common import data_utils
+from rgdps.common import time as time_utils
 from rgdps.common.context import Context
 from rgdps.common.typing import is_set
 from rgdps.common.typing import UNSET
@@ -123,7 +122,7 @@ async def create(
     )
 
     level.id = await create_sql(ctx, level)
-    await create_meili(ctx, level, level.id)
+    await create_meili(ctx, level)
     return level
 
 
@@ -145,21 +144,13 @@ async def create_sql(ctx: Context, level: Level) -> int:
     )
 
 
-# Functions to assist with meili not liking datetime objects.
-def _dt_as_unix_ts(dt: datetime) -> int:
-    return int(time.mktime(dt.timetuple()))
-
-
-def _unix_ts_as_dt(unix_ts: int) -> datetime:
-    return datetime.fromtimestamp(unix_ts)
-
-
 def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
+    level_dict = level_dict.copy()
     if "upload_ts" in level_dict:
-        level_dict["upload_ts"] = _dt_as_unix_ts(level_dict["upload_ts"])
+        level_dict["upload_ts"] = time_utils.into_unix_ts(level_dict["upload_ts"])
 
     if "update_ts" in level_dict:
-        level_dict["update_ts"] = _dt_as_unix_ts(level_dict["update_ts"])
+        level_dict["update_ts"] = time_utils.into_unix_ts(level_dict["update_ts"])
 
     # Split up bitwise enums as meili does not support bitwise operations.
     if "search_flags" in level_dict:
@@ -172,10 +163,11 @@ def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     return level_dict
 
 
-def _from_meili_dict(level_dict: dict[str, Any]) -> Level:
+def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
+    level_dict = level_dict.copy()
     # Meili returns unix timestamps, so we need to convert them back to datetime.
-    level_dict["upload_ts"] = _unix_ts_as_dt(level_dict["upload_ts"])
-    level_dict["update_ts"] = _unix_ts_as_dt(level_dict["update_ts"])
+    level_dict["upload_ts"] = time_utils.from_unix_ts(level_dict["upload_ts"])
+    level_dict["update_ts"] = time_utils.from_unix_ts(level_dict["update_ts"])
 
     search_flags = LevelSearchFlag.NONE
 
@@ -194,19 +186,14 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> Level:
     del level_dict["magic"]
     del level_dict["awarded"]
 
-    return Level.from_mapping(level_dict)
+    return level_dict
 
 
-async def create_meili(ctx: Context, level: Level, level_id: int) -> None:
+async def create_meili(ctx: Context, level: Level) -> None:
     level_dict = _make_meili_dict(level.as_dict(include_id=True))
 
     index = ctx.meili.index("levels")
     await index.add_documents([level_dict])
-
-
-async def update_meili_full(ctx: Context, level: Level) -> None:
-    index = ctx.meili.index("levels")
-    await index.add_documents([_make_meili_dict(level.as_dict(include_id=True))])
 
 
 async def update_sql_full(ctx: Context, level: Level) -> None:
@@ -377,7 +364,7 @@ async def update_meili_partial(
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
     deleted: bool | Unset = UNSET,
-) -> Level | None:
+) -> None:
     changed_data: dict[str, Any] = {
         "id": level_id,
     }
@@ -450,7 +437,8 @@ async def update_meili_partial(
 
     changed_data = _make_meili_dict(changed_data)
 
-    await ctx.meili.index("levels").update_documents([changed_data])
+    index = ctx.meili.index("levels")
+    await index.update_documents([changed_data])
 
 
 async def update_partial(
@@ -571,7 +559,7 @@ async def delete_meili(ctx: Context, level_id: int) -> None:
     await index.delete_documents([str(level_id)])
 
 
-class SearchResults(NamedTuple):
+class LevelSearchResults(NamedTuple):
     results: list[Level]
     total: int
 
@@ -592,7 +580,7 @@ async def search(
     song_id: int | None = None,
     custom_song_id: int | None = None,
     followed_list: list[int] | None = None,
-) -> SearchResults:
+) -> LevelSearchResults:
     # Create the filters.
     filters = []
     sort = []
@@ -682,10 +670,12 @@ async def search(
     )
 
     if (not results_db.hits) or (not results_db.estimated_total_hits):
-        return SearchResults([], 0)
+        return LevelSearchResults([], 0)
 
-    results = [_from_meili_dict(result) for result in results_db.hits]
-    return SearchResults(results, results_db.estimated_total_hits)
+    results = [
+        Level.from_mapping(_from_meili_dict(result)) for result in results_db.hits
+    ]
+    return LevelSearchResults(results, results_db.estimated_total_hits)
 
 
 async def all_ids(ctx: Context, include_deleted: bool = False) -> list[int]:

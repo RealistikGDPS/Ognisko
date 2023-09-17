@@ -20,6 +20,9 @@ from rgdps.models.user import User
 from rgdps.usecases import users
 
 
+PAGE_SIZE = 10
+
+
 async def register_post(
     ctx: HTTPContext = Depends(),
     username: TextBoxString = Form(..., alias="userName", min_length=3, max_length=15),
@@ -212,3 +215,27 @@ async def request_status_get(
         return responses.fail()
 
     return str(result)
+
+
+async def users_get(
+    ctx: HTTPContext = Depends(),
+    query: str = Form("", alias="str"),
+    page: int = Form(0),
+):
+    result = await users.search(ctx, page, PAGE_SIZE, query)
+
+    if isinstance(result, ServiceError):
+        logger.info(f"Failed to search for users with error {result!r}.")
+        return responses.fail()
+
+    logger.info(f"Successfully retrieved {result.total} users.")
+
+    # NOTE: Client shows garbage data if an empty list is sent.
+    if not result.results:
+        return responses.fail()
+
+    return (
+        "|".join(gd_obj.dumps(gd_obj.create_profile(user)) for user in result.results)
+        + "#"
+        + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
+    )

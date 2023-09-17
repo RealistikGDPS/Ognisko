@@ -282,3 +282,9 @@ router.add_api_route(
     rewards.daily_chest_get,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/getGJUsers20.php",
+    users.users_get,
+    methods=["POST"],
+)
