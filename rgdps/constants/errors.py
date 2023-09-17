@@ -48,4 +48,6 @@ class ServiceError(str, Enum):
     LEVELS_NO_UPLOAD_PERMISSION = "levels.no_upload_permission"
 
     MESSAGES_INVALID_RECIPIENT = "messages.invalid_recipient"
+    MESSAGES_INVALID_RECIPIENT_ID = "messages.invalid_recipient_id"
+
     DAILY_CHESTS_ALREADY_CLAIMED = "daily_chests.already_claimed"

@@ -19,12 +19,10 @@ class Message:
     id: int
     sender_user_id: int
     recipient_user_id: int
-    recipient_username: str
     subject: str
     content: str
     post_ts: datetime
     seen_ts: datetime | None
-    deleted: bool
 
     @staticmethod
     def from_mapping(message_dict: Mapping[str, Any]) -> Message:
@@ -32,24 +30,20 @@ class Message:
             id=message_dict["id"],
             sender_user_id=message_dict["sender_user_id"],
             recipient_user_id=message_dict["recipient_user_id"],
-            recipient_username=message_dict["recipient_username"],
             subject=message_dict["subject"],
             content=message_dict["content"],
             post_ts=message_dict["post_ts"],
             seen_ts=message_dict["seen_ts"],
-            deleted=message_dict["deleted"],
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
         res = {
             "sender_user_id": self.sender_user_id,
             "recipient_user_id": self.recipient_user_id,
-            "recipient_username": self.recipient_username,
             "subject": self.subject,
             "content": self.content,
             "post_ts": self.post_ts,
             "seen_ts": self.seen_ts,
-            "deleted": self.deleted,
         }
 
         if include_id:

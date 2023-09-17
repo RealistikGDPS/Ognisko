@@ -68,6 +68,7 @@ def create_profile(
     user: User,
     friend_status: FriendStatus = FriendStatus.NONE,
     rank: int = 0,
+    messages_count: int = 0,
     friend_request_count: int = 0,
     friend_count: int = 0,
 ) -> GDSerialisable:
@@ -106,7 +107,7 @@ def create_profile(
         29: 1,  # Is Registered
         30: rank,
         31: friend_status.value,
-        38: 0,  # TODO: New messages.
+        38: messages_count,
         39: friend_request_count,
         40: friend_count,
         43: user.spider,
@@ -266,15 +267,17 @@ def create_level(level: Level, level_data: str) -> GDSerialisable:
 
 def create_message(
     message: Message,
+    user: User,
     message_direction: MessageDirection,
 ) -> GDSerialisable:
+
     return {
         1: message.id,
-        2: message.sender_user_id,
-        3: message.recipient_user_id,
-        4: message.subject,
-        5: message.content,
-        6: message.recipient_username,
+        2: user.id,
+        3: user.id,
+        4: hashes.encode_base64(message.subject),
+        5: encrypt_message_content_string(message.content),
+        6: user.username,
         7: into_str_ts(message.post_ts),
         8: message.seen_ts is not None,
         9: 0 if message_direction is MessageDirection.RECEIVED else 1,
@@ -411,3 +414,9 @@ def encrypt_chest_response(response: str) -> EncryptedChestResponse:
 
 def decrypt_chest_check_string(check_string: str) -> str:
     return hashes.decrypt_chest_check(check_string)
+
+def encrypt_message_content_string(content: str) -> str:
+    return hashes.encrypt_message_content(content)
+
+def decrypt_message_content_string(content: str) -> str:
+    return hashes.decrypt_message_content(content)

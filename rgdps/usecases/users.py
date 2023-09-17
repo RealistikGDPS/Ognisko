@@ -97,7 +97,6 @@ async def get(
     user_id: int,
     is_own: bool = True,
 ) -> UserPerspective | ServiceError:
-    # TODO: Messages Check
 
     user = await repositories.user.from_id(ctx, user_id)
     if user is None:
@@ -112,6 +111,14 @@ async def get(
     friend_count = 0
 
     if is_own:
+        messages_count = (
+            await repositories.message.from_recipient_user_id_count(
+                ctx,
+                user_id,
+                is_new=True,
+            )
+        )
+
         friend_request_count = (
             await repositories.friend_requests.get_user_friend_request_count(
                 ctx,
@@ -119,6 +126,7 @@ async def get(
                 is_new=True,
             )
         )
+
         friend_count = await repositories.user_relationship.get_user_relationship_count(
             ctx,
             user_id,

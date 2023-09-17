@@ -93,6 +93,7 @@ async def user_info_get(
                 target.user,
                 target.friend_status,
                 target.rank,
+                target.messages_count,
                 target.friend_request_count,
                 target.friend_count,
             ),
