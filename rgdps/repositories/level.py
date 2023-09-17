@@ -167,7 +167,7 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     level_dict = level_dict.copy()
     # Meili returns unix timestamps, so we need to convert them back to datetime.
     level_dict["upload_ts"] = time_utils.from_unix_ts(level_dict["upload_ts"])
-    level_dict["update_ts"] = from_unix_ts(level_dict["update_ts"])
+    level_dict["update_ts"] = time_utils.from_unix_ts(level_dict["update_ts"])
 
     search_flags = LevelSearchFlag.NONE
 
@@ -559,7 +559,7 @@ async def delete_meili(ctx: Context, level_id: int) -> None:
     await index.delete_documents([str(level_id)])
 
 
-class SearchResults(NamedTuple):
+class LevelSearchResults(NamedTuple):
     results: list[Level]
     total: int
 
@@ -580,7 +580,7 @@ async def search(
     song_id: int | None = None,
     custom_song_id: int | None = None,
     followed_list: list[int] | None = None,
-) -> SearchResults:
+) -> LevelSearchResults:
     # Create the filters.
     filters = []
     sort = []
@@ -670,12 +670,12 @@ async def search(
     )
 
     if (not results_db.hits) or (not results_db.estimated_total_hits):
-        return SearchResults([], 0)
+        return LevelSearchResults([], 0)
 
     results = [
         Level.from_mapping(_from_meili_dict(result)) for result in results_db.hits
     ]
-    return SearchResults(results, results_db.estimated_total_hits)
+    return LevelSearchResults(results, results_db.estimated_total_hits)
 
 
 async def all_ids(ctx: Context, include_deleted: bool = False) -> list[int]:

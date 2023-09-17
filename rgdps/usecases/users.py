@@ -324,3 +324,18 @@ async def synchronise_search(ctx: Context) -> bool | ServiceError:
         await repositories.user.create_meili(ctx, user)
 
     return True
+
+
+# Is the return type right?
+async def search(
+    ctx: Context,
+    page: int,
+    page_size: int,
+    query: str,
+) -> repositories.user.UserSearchResults | ServiceError:
+    return await repositories.user.search(
+        ctx,
+        page,
+        page_size,
+        query,
+    )

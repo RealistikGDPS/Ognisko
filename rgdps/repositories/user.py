@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
+from typing import NamedTuple
 
 from rgdps.common import time as time_utils
 from rgdps.common.context import Context
@@ -137,7 +138,7 @@ def _make_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
             signed=False,
         )
         user_dict["is_public"] = (
-            user_dict["privileges"] & UserPrivileges.USER_PROFILE_PUBLIC
+            user_dict["privileges"] & UserPrivileges.USER_PROFILE_PUBLIC > 0
         )
 
     if "register_ts" in user_dict:
@@ -149,7 +150,7 @@ def _make_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
 def _from_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
     user_dict = user_dict.copy()
 
-    user_dict["privileges"] = user_dict["privileges"].to_bytes(
+    user_dict["privileges"] = int(user_dict["privileges"]).to_bytes(
         length=16,
         byteorder="little",
         signed=False,
@@ -547,3 +548,27 @@ async def get_count(ctx: Context) -> int:
 
 async def all_ids(ctx: Context) -> list[int]:
     return [x["id"] for x in await ctx.mysql.fetch_all("SELECT id FROM users")]
+
+
+class UserSearchResults(NamedTuple):
+    results: list[User]
+    total: int
+
+
+async def search(
+    ctx: Context,
+    page: int,
+    page_size: int,
+    query: str,
+) -> UserSearchResults:
+    index = ctx.meili.index("users")
+    results_db = await index.search(query, offset=page * page_size, limit=page_size)
+
+    if (not results_db.hits) or (not results_db.estimated_total_hits):
+        return UserSearchResults([], 0)
+
+    results = [
+        User.from_mapping(_from_meili_dict(result)) for result in results_db.hits
+    ]
+
+    return UserSearchResults(results, results_db.estimated_total_hits)
