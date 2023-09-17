@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 
+from rgdps.common import time as time_utils
 from rgdps.common.context import Context
 from rgdps.common.typing import is_set
 from rgdps.common.typing import UNSET
@@ -139,6 +140,9 @@ def _make_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
             user_dict["privileges"] & UserPrivileges.USER_PROFILE_PUBLIC
         )
 
+    if "register_ts" in user_dict:
+        user_dict["register_ts"] = time_utils.into_unix_ts(user_dict["register_ts"])
+
     return user_dict
 
 
@@ -150,6 +154,8 @@ def _from_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
         byteorder="little",
         signed=False,
     )
+
+    user_dict["register_ts"] = time_utils.from_unix_ts(user_dict["register_ts"])
 
     del user_dict["is_public"]
 

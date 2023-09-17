@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-import time
 from datetime import datetime
-from enum import IntFlag
 from typing import Any
 from typing import NamedTuple
 
 from rgdps.common import data_utils
+from rgdps.common import time as time_utils
 from rgdps.common.context import Context
 from rgdps.common.typing import is_set
 from rgdps.common.typing import UNSET
@@ -145,22 +144,13 @@ async def create_sql(ctx: Context, level: Level) -> int:
     )
 
 
-# Functions to assist with meili not liking datetime objects.
-def _dt_as_unix_ts(dt: datetime) -> int:
-    return int(time.mktime(dt.timetuple()))
-
-
-def _unix_ts_as_dt(unix_ts: int) -> datetime:
-    return datetime.fromtimestamp(unix_ts)
-
-
 def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     level_dict = level_dict.copy()
     if "upload_ts" in level_dict:
-        level_dict["upload_ts"] = _dt_as_unix_ts(level_dict["upload_ts"])
+        level_dict["upload_ts"] = time_utils.into_unix_ts(level_dict["upload_ts"])
 
     if "update_ts" in level_dict:
-        level_dict["update_ts"] = _dt_as_unix_ts(level_dict["update_ts"])
+        level_dict["update_ts"] = time_utils.into_unix_ts(level_dict["update_ts"])
 
     # Split up bitwise enums as meili does not support bitwise operations.
     if "search_flags" in level_dict:
@@ -176,8 +166,8 @@ def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
 def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     level_dict = level_dict.copy()
     # Meili returns unix timestamps, so we need to convert them back to datetime.
-    level_dict["upload_ts"] = _unix_ts_as_dt(level_dict["upload_ts"])
-    level_dict["update_ts"] = _unix_ts_as_dt(level_dict["update_ts"])
+    level_dict["upload_ts"] = time_utils.from_unix_ts(level_dict["upload_ts"])
+    level_dict["update_ts"] = from_unix_ts(level_dict["update_ts"])
 
     search_flags = LevelSearchFlag.NONE
 
