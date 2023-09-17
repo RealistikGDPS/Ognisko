@@ -80,6 +80,7 @@ async def create(
     building_time: int = 0,
     update_locked: bool = False,
     deleted: bool = False,
+    level_id: int = 0,
 ) -> Level:
     if upload_ts is None:
         upload_ts = datetime.now()
@@ -87,7 +88,7 @@ async def create(
         update_ts = datetime.now()
 
     level = Level(
-        id=0,
+        id=level_id,
         name=name,
         user_id=user_id,
         description=description,
@@ -128,19 +129,19 @@ async def create(
 
 async def create_sql(ctx: Context, level: Level) -> int:
     return await ctx.mysql.execute(
-        "INSERT INTO levels (name, user_id, description, custom_song_id, "
+        "INSERT INTO levels (id, name, user_id, description, custom_song_id, "
         "official_song_id, version, length, two_player, publicity, render_str, "
         "game_version, binary_version, upload_ts, update_ts, original_id, downloads, likes, "
         "stars, difficulty, demon_difficulty, coins, coins_verified, requested_stars, "
         "feature_order, search_flags, low_detail_mode, object_count, copy_password, "
-        "building_time, update_locked, deleted) VALUES (:name, :user_id, "
+        "building_time, update_locked, deleted) VALUES (:id, :name, :user_id, "
         ":description, :custom_song_id, :official_song_id, :version, :length, "
         ":two_player, :publicity, :render_str, :game_version, :binary_version, "
         ":upload_ts, :update_ts, :original_id, :downloads, :likes, :stars, :difficulty, "
         ":demon_difficulty, :coins, :coins_verified, :requested_stars, :feature_order, "
         ":search_flags, :low_detail_mode, :object_count, :copy_password, "
         ":building_time, :update_locked, :deleted)",
-        level.as_dict(include_id=False),
+        level.as_dict(include_id=True),
     )
 
 
@@ -201,12 +202,6 @@ async def create_meili(ctx: Context, level: Level, level_id: int) -> None:
 
     index = ctx.meili.index("levels")
     await index.add_documents([level_dict])
-
-
-async def update_full(ctx: Context, level: Level) -> None:
-    # In case sql fails, we do not want to update meili.
-    await update_sql_full(ctx, level)
-    await update_meili_full(ctx, level)
 
 
 async def update_meili_full(ctx: Context, level: Level) -> None:
@@ -345,7 +340,7 @@ async def update_sql_partial(
     changed_data["id"] = level_id
     await ctx.mysql.execute(query, changed_data)
 
-    return await from_id(ctx, level_id)
+    return await from_id(ctx, level_id, include_deleted=True)
 
 
 async def update_meili_partial(
@@ -701,3 +696,11 @@ async def all_ids(ctx: Context, include_deleted: bool = False) -> list[int]:
     return [
         x["id"] for x in await ctx.mysql.fetch_all("SELECT id FROM levels" + condition)
     ]
+
+
+async def get_count(ctx: Context) -> int:
+    return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM levels")
+
+
+async def nuke_meili(ctx: Context) -> None:
+    await ctx.meili.index("levels").delete_all_documents()

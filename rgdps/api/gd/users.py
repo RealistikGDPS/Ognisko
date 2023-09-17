@@ -9,8 +9,11 @@ from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
+from rgdps.common.validators import SocialMediaString
+from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import LoginResponse
+from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
@@ -19,7 +22,7 @@ from rgdps.usecases import users
 
 async def register_post(
     ctx: HTTPContext = Depends(),
-    username: str = Form(..., alias="userName", min_length=3, max_length=15),
+    username: TextBoxString = Form(..., alias="userName", min_length=3, max_length=15),
     email: EmailStr = Form(...),
     password: str = Form(..., min_length=6, max_length=20),
 ):
@@ -41,11 +44,10 @@ async def register_post(
 
 async def login_post(
     ctx: HTTPContext = Depends(),
-    username: str = Form(..., alias="userName", max_length=15),
+    username: TextBoxString = Form(..., alias="userName", max_length=15),
     password: str = Form(..., max_length=20),
-    _: str = Form(..., alias="udid"),
+    # _: str = Form(..., alias="udid"),
 ):
-
     user = await users.authenticate(ctx, username, password)
     if isinstance(user, ServiceError):
         logger.info(f"Failed to login {username} due to {user!r}.")
@@ -66,7 +68,7 @@ async def user_info_get(
     target_id: int = Form(..., alias="targetAccountID"),
 ):
     is_own = target_id == user.id
-    target = await users.get(ctx, target_id, is_own)
+    target = await users.get(ctx, user.id, target_id, is_own)
 
     if isinstance(target, ServiceError):
         logger.info(
@@ -86,7 +88,18 @@ async def user_info_get(
     logger.info(f"Successfully viewed the profile of {target.user}.")
 
     return gd_obj.dumps(
-        gd_obj.create_profile(target.user, target.friend_status, target.rank),
+        [
+            gd_obj.create_profile(
+                target.user,
+                target.friend_status,
+                target.rank,
+                target.friend_request_count,
+                target.friend_count,
+            ),
+            gd_obj.create_friend_request(target.friend_request)
+            if target.friend_request is not None
+            else {},
+        ],
     )
 
 
@@ -111,7 +124,6 @@ async def user_info_update(
     coins: int = Form(...),
     user_coins: int = Form(..., alias="userCoins"),
 ):
-
     res = await users.update_stats(
         ctx,
         user.id,
@@ -144,16 +156,28 @@ async def user_info_update(
     return str(user.id)
 
 
+# NOTE: Comment Privacy is optional for now as some cleints don't send it. (2.111)
+# Delete the default when 2.2 is released.
 async def user_settings_update(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
-    youtube_name: str = Form(..., alias="yt"),
-    twitter_name: str = Form(..., alias="twitter"),
-    twitch_name: str = Form(..., alias="twitch"),
+    youtube_name: SocialMediaString | None = Form(None, alias="yt"),
+    twitter_name: SocialMediaString | None = Form(None, alias="twitter"),
+    twitch_name: SocialMediaString | None = Form(None, alias="twitch"),
+    message_privacy: UserPrivacySetting = Form(..., alias="mS"),
+    friend_request_allowed: bool = Form(..., alias="frS"),
+    comment_privacy: UserPrivacySetting = Form(UserPrivacySetting.PUBLIC, alias="cS"),
 ):
-    result = await users.update_stats(
+    friend_privacy = UserPrivacySetting.PUBLIC
+    if not friend_request_allowed:
+        friend_privacy = UserPrivacySetting.PRIVATE
+
+    result = await users.update_user_settings(
         ctx,
         user.id,
+        message_privacy=message_privacy,
+        comment_privacy=comment_privacy,
+        friend_privacy=friend_privacy,
         youtube_name=youtube_name,
         twitter_name=twitter_name,
         twitch_name=twitch_name,

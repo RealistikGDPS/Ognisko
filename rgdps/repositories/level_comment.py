@@ -6,6 +6,7 @@ from rgdps.common.context import Context
 from rgdps.common.typing import is_set
 from rgdps.common.typing import UNSET
 from rgdps.common.typing import Unset
+from rgdps.constants.level_comments import LevelCommentSorting
 from rgdps.models.level_comment import LevelComment
 
 
@@ -19,7 +20,7 @@ async def from_id(
         condition = " AND NOT deleted"
 
     level_db = await ctx.mysql.fetch_one(
-        "SELECT id, user_id, level_id, content, likes, post_ts, deleted "
+        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted "
         "FROM level_comments WHERE id = :comment_id" + condition,
         {
             "comment_id": comment_id,
@@ -41,9 +42,10 @@ async def create(
     likes: int = 0,
     post_ts: datetime | None = None,
     deleted: bool = False,
+    comment_id: int = 0,
 ) -> LevelComment:
     comment = LevelComment(
-        id=0,
+        id=comment_id,
         user_id=user_id,
         level_id=level_id,
         content=content,
@@ -53,19 +55,11 @@ async def create(
         deleted=deleted,
     )
     comment.id = await ctx.mysql.execute(
-        "INSERT INTO level_comments (user_id, level_id, content, percent, likes, post_ts, deleted) "
-        "VALUES (:user_id, :level_id, :content, :percent, :likes, :post_ts, :deleted)",
-        comment.as_dict(include_id=False),
+        "INSERT INTO level_comments (id, user_id, level_id, content, percent, likes, post_ts, deleted) "
+        "VALUES (:id, :user_id, :level_id, :content, :percent, :likes, :post_ts, :deleted)",
+        comment.as_dict(include_id=True),
     )
     return comment
-
-
-async def update_full(ctx: Context, comment: LevelComment) -> None:
-    await ctx.mysql.execute(
-        "UPDATE level_comments SET user_id = :user_id, level_id = :level_id, content = :content, "
-        "likes = :likes, post_ts = :post_ts, deleted = :deleted WHERE id = :id",
-        comment.as_dict(),
-    )
 
 
 async def update_partial(
@@ -110,7 +104,7 @@ async def update_partial(
 
     await ctx.mysql.execute(query, changed_data)
 
-    return await from_id(ctx, comment_id)
+    return await from_id(ctx, comment_id, include_deleted=True)
 
 
 async def from_level_id_paginated(
@@ -119,16 +113,20 @@ async def from_level_id_paginated(
     page: int,
     page_size: int,
     include_deleted: bool = False,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
 ) -> list[LevelComment]:
     condition = ""
-    # FIXME: Unused
     if not include_deleted:
         condition = "AND NOT deleted"
+
+    order_by = "id"
+    if sorting is LevelCommentSorting.MOST_LIKED:
+        order_by = "likes"
 
     comments_db = await ctx.mysql.fetch_all(
         "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
         f"level_comments WHERE level_id = :level_id {condition} "
-        "ORDER BY id DESC LIMIT :limit OFFSET :offset",
+        f"ORDER BY {order_by} DESC LIMIT :limit OFFSET :offset",
         {
             "level_id": level_id,
             "limit": page_size,
@@ -139,7 +137,37 @@ async def from_level_id_paginated(
     return [LevelComment.from_mapping(comment_db) for comment_db in comments_db]
 
 
-async def get_level_comment_count(
+async def from_user_id_paginated(
+    ctx: Context,
+    user_id: int,
+    page: int,
+    page_size: int,
+    include_deleted: bool = False,
+    sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
+) -> list[LevelComment]:
+    condition = ""
+    if not include_deleted:
+        condition = "AND NOT deleted"
+
+    order_by = "id"
+    if sorting is LevelCommentSorting.MOST_LIKED:
+        order_by = "likes"
+
+    comments_db = await ctx.mysql.fetch_all(
+        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
+        f"level_comments WHERE user_id = :user_id {condition} "
+        f"ORDER BY {order_by} DESC LIMIT :limit OFFSET :offset",
+        {
+            "user_id": user_id,
+            "limit": page_size,
+            "offset": page * page_size,
+        },
+    )
+
+    return [LevelComment.from_mapping(comment_db) for comment_db in comments_db]
+
+
+async def get_count_from_level(
     ctx: Context,
     level_id: int,
     include_deleted: bool = False,
@@ -151,3 +179,23 @@ async def get_level_comment_count(
         else "",
         {"level_id": level_id},
     )
+
+
+async def get_count_from_user(
+    ctx: Context,
+    user_id: int,
+    include_deleted: bool = False,
+) -> int:
+    return await ctx.mysql.fetch_val(
+        "SELECT COUNT(*) FROM level_comments WHERE user_id = :user_id "
+        "AND deleted = 0"
+        if not include_deleted
+        else "",
+        {"user_id": user_id},
+    )
+
+
+async def get_count(
+    ctx: Context,
+) -> int:
+    return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM level_comments")

@@ -3,6 +3,8 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
+import random
+import string
 
 import bcrypt
 import xor_cipher
@@ -47,7 +49,7 @@ def decode_gjp(gjp: str) -> str:
     """
 
     return xor_cipher.cyclic_xor_unsafe(
-        data=base64.b64decode(gjp.encode()),
+        data=base64.urlsafe_b64decode(gjp.encode()),
         key=XorKeys.GJP,
     ).decode()
 
@@ -69,4 +71,38 @@ def hash_level_password(password: int) -> str:
         key=XorKeys.LEVEL_PASSWORD,
     )
 
-    return base64.b64encode(xor_password).decode()
+    return base64.urlsafe_b64encode(xor_password).decode()
+
+
+def encrypt_chests(response: str) -> str:
+    return base64.urlsafe_b64encode(
+        xor_cipher.cyclic_xor_unsafe(
+            data=response.encode(),
+            key=XorKeys.CHESTS,
+        ),
+    ).decode()
+
+
+def encode_base64(data: str) -> str:
+    return base64.urlsafe_b64encode(data.encode()).decode()
+
+
+def decode_base64(data: str) -> str:
+    return base64.urlsafe_b64decode(data.encode()).decode()
+
+
+CHARSET = string.ascii_letters + string.digits
+
+
+def random_string(length: int) -> str:
+    return "".join(random.choice(CHARSET) for _ in range(length))
+
+
+def decrypt_chest_check(check_string: str) -> str:
+    valid_check = check_string[5:]
+    de_b64 = decode_base64(valid_check)
+
+    return xor_cipher.cyclic_xor_unsafe(
+        data=de_b64.encode(),
+        key=XorKeys.CHESTS,
+    ).decode()

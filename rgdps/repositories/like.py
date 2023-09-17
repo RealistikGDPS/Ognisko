@@ -25,18 +25,19 @@ async def create(
     target_id: int,
     user_id: int,
     value: int,
+    like_id: int = 0,
 ) -> Like:
     like = Like(
-        id=0,
+        id=like_id,
         target_type=target_type,
         target_id=target_id,
         user_id=user_id,
         value=value,
     )
     like.id = await ctx.mysql.execute(
-        "INSERT INTO user_likes (target_type, target_id, user_id, value) VALUES "
-        "(:target_type, :target_id, :user_id, :value)",
-        like.as_dict(include_id=False),
+        "INSERT INTO user_likes (id, target_type, target_id, user_id, value) VALUES "
+        "(:id, :target_type, :target_id, :user_id, :value)",
+        like.as_dict(include_id=True),
     )
 
     return like
@@ -66,7 +67,7 @@ async def sum_by_target(
     target_type: LikeType,
     target_id: int,
 ) -> int:
-    like_db = await ctx.mysql.fetch_one(
+    like_db = await ctx.mysql.fetch_val(
         "SELECT SUM(value) AS sum FROM user_likes WHERE target_type = :target_type "
         "AND target_id = :target_id",
         {
@@ -78,7 +79,7 @@ async def sum_by_target(
     if like_db is None:
         return 0
 
-    return like_db["sum"]
+    return int(like_db)
 
 
 async def update_value(

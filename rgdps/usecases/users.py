@@ -11,9 +11,12 @@ from rgdps.constants.friends import FriendStatus
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
+from rgdps.constants.users import UserRelationshipType
+from rgdps.models.friend_request import FriendRequest
 from rgdps.models.user import User
 
 
+# FIXME: Moved to repository
 DEFAULT_PRIVILEGES = (
     UserPrivileges.USER_AUTHENTICATE
     | UserPrivileges.USER_PROFILE_PUBLIC
@@ -42,7 +45,6 @@ async def register(
     password: str,
     email: str,
 ) -> User | ServiceError:
-
     if await repositories.user.check_email_exists(ctx, email):
         return ServiceError.USER_EMAIL_EXISTS
     elif await repositories.user.check_username_exists(ctx, name):
@@ -50,41 +52,13 @@ async def register(
 
     hashed_password = await hashes.hash_bcypt_async(password)
 
-    user = User(
-        id=0,
+    user = await repositories.user.create(
+        ctx,
         username=name,
-        email=email,
         password=hashed_password,
-        privileges=DEFAULT_PRIVILEGES,
-        stars=0,
-        demons=0,
-        creator_points=0,
-        display_type=0,
-        primary_colour=0,
-        secondary_colour=0,
-        coins=0,
-        user_coins=0,
-        icon=0,
-        ship=0,
-        ball=0,
-        ufo=0,
-        wave=0,
-        robot=0,
-        spider=0,
-        explosion=0,
-        glow=False,
-        message_privacy=UserPrivacySetting.PUBLIC,
-        friend_privacy=UserPrivacySetting.PUBLIC,
-        comment_privacy=UserPrivacySetting.PUBLIC,
-        youtube_name=None,
-        twitter_name=None,
-        twitch_name=None,
-        register_ts=datetime.now(),
-        diamonds=0,
+        email=email,
     )
 
-    user_id = await repositories.user.create(ctx, user)
-    user.id = user_id
     return user
 
 
@@ -111,15 +85,18 @@ class UserPerspective(NamedTuple):
     user: User
     rank: int
     friend_status: FriendStatus
+    friend_request: FriendRequest | None
+    messages_count: int
+    friend_request_count: int
+    friend_count: int
 
 
 async def get(
     ctx: Context,
+    request_user_id: int,
     user_id: int,
     is_own: bool = True,
 ) -> UserPerspective | ServiceError:
-    # TODO: Perform Friend Check
-    # TODO: Friend Request Check
     # TODO: Messages Check
 
     user = await repositories.user.from_id(ctx, user_id)
@@ -128,42 +105,89 @@ async def get(
 
     rank = await repositories.leaderboard.get_star_rank(ctx, user_id)
 
+    friend_status = FriendStatus.NONE
+    friend_request = None
+    messages_count = 0
+    friend_request_count = 0
+    friend_count = 0
+
     if is_own:
-        ...
+        friend_request_count = (
+            await repositories.friend_requests.get_user_friend_request_count(
+                ctx,
+                user_id,
+                is_new=True,
+            )
+        )
+        friend_count = await repositories.user_relationship.get_user_relationship_count(
+            ctx,
+            user_id,
+            UserRelationshipType.FRIEND,
+            is_new=True,
+        )
+
+    else:
+        friend_check = await repositories.user_relationship.from_user_and_target_user(
+            ctx,
+            request_user_id,
+            user_id,
+            UserRelationshipType.FRIEND,
+        )
+
+        incoming_check = await repositories.friend_requests.from_target_and_recipient(
+            ctx,
+            user_id,
+            request_user_id,
+        )
+
+        outgoing_check = await repositories.friend_requests.from_target_and_recipient(
+            ctx,
+            request_user_id,
+            user_id,
+        )
+
+        if friend_check is not None:
+            friend_status = FriendStatus.FRIEND
+
+        elif incoming_check is not None:
+            friend_status = FriendStatus.INCOMING_REQUEST
+            friend_request = incoming_check
+
+        elif outgoing_check is not None:
+            friend_status = FriendStatus.OUTGOING_REQUEST
+            friend_request = outgoing_check
 
     return UserPerspective(
         user=user,
         rank=rank,
-        friend_status=FriendStatus.NONE,
+        friend_status=friend_status,
+        friend_request=friend_request,
+        messages_count=messages_count,
+        friend_request_count=friend_request_count,
+        friend_count=friend_count,
     )
 
 
 async def update_stats(
     ctx: Context,
     user_id: int,
-    stars: int | None = None,
-    demons: int | None = None,
-    display_type: int | None = None,
-    diamonds: int | None = None,
-    primary_colour: int | None = None,
-    secondary_colour: int | None = None,
-    icon: int | None = None,
-    ship: int | None = None,
-    ball: int | None = None,
-    ufo: int | None = None,
-    wave: int | None = None,
-    robot: int | None = None,
-    spider: int | None = None,
-    glow: bool | None = None,
-    explosion: int | None = None,
-    coins: int | None = None,
-    user_coins: int | None = None,
-    message_privacy: UserPrivacySetting | None = None,
-    friend_privacy: UserPrivacySetting | None = None,
-    comment_privacy: UserPrivacySetting | None = None,
-    youtube_name: str | None = None,
-    twitter_name: str | None = None,
-    twitch_name: str | None = None,
+    stars: int,
+    demons: int,
+    display_type: int,
+    diamonds: int,
+    primary_colour: int,
+    secondary_colour: int,
+    icon: int,
+    ship: int,
+    ball: int,
+    ufo: int,
+    wave: int,
+    robot: int,
+    spider: int,
+    glow: bool,
+    explosion: int,
+    coins: int,
+    user_coins: int,
     update_rank: bool = False,
 ) -> User | ServiceError:
     # TODO: Validation
@@ -173,43 +197,66 @@ async def update_stats(
     if user is None:
         return ServiceError.USER_NOT_FOUND
 
-    updated_user = User(
-        id=user.id,
-        username=user.username,
-        email=user.email,
-        password=user.password,
-        privileges=user.privileges,
-        message_privacy=message_privacy or user.message_privacy,
-        friend_privacy=friend_privacy or user.friend_privacy,
-        comment_privacy=comment_privacy or user.comment_privacy,
-        youtube_name=youtube_name or user.youtube_name,
-        twitter_name=twitter_name or user.twitter_name,
-        twitch_name=twitch_name or user.twitch_name,
-        register_ts=user.register_ts,
-        stars=stars or user.stars,
-        demons=demons or user.demons,
-        display_type=display_type or user.display_type,
-        diamonds=diamonds or user.diamonds,
-        primary_colour=primary_colour or user.primary_colour,
-        secondary_colour=secondary_colour or user.secondary_colour,
-        icon=icon or user.icon,
-        ship=ship or user.ship,
-        ball=ball or user.ball,
-        ufo=ufo or user.ufo,
-        wave=wave or user.wave,
-        robot=robot or user.robot,
-        spider=spider or user.spider,
-        glow=glow or user.glow,
-        explosion=explosion or user.explosion,
-        coins=coins or user.coins,
-        user_coins=user_coins or user.user_coins,
-        creator_points=user.creator_points,
+    updated_user = await repositories.user.update_partial(
+        ctx,
+        user.id,
+        stars=stars,
+        demons=demons,
+        display_type=display_type,
+        diamonds=diamonds,
+        primary_colour=primary_colour,
+        secondary_colour=secondary_colour,
+        icon=icon,
+        ship=ship,
+        ball=ball,
+        ufo=ufo,
+        wave=wave,
+        robot=robot,
+        spider=spider,
+        glow=glow,
+        explosion=explosion,
+        coins=coins,
+        user_coins=user_coins,
     )
+
+    if updated_user is None:
+        return ServiceError.USER_NOT_FOUND
 
     if update_rank:
         await repositories.leaderboard.set_star_count(ctx, user.id, updated_user.stars)
 
-    await repositories.user.update(ctx, updated_user)
+    return updated_user
+
+
+async def update_user_settings(
+    ctx: Context,
+    user_id: int,
+    message_privacy: UserPrivacySetting,
+    comment_privacy: UserPrivacySetting,
+    friend_privacy: UserPrivacySetting,
+    youtube_name: str | None = None,
+    twitter_name: str | None = None,
+    twitch_name: str | None = None,
+) -> User | ServiceError:
+    user = await repositories.user.from_id(ctx, user_id)
+
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    updated_user = await repositories.user.update_partial(
+        ctx,
+        user.id,
+        youtube_name=youtube_name,
+        twitter_name=twitter_name,
+        twitch_name=twitch_name,
+        message_privacy=message_privacy,
+        comment_privacy=comment_privacy,
+        friend_privacy=friend_privacy,
+    )
+
+    if updated_user is None:
+        return ServiceError.USER_NOT_FOUND
+
     return updated_user
 
 
@@ -218,7 +265,6 @@ async def update_privileges(
     user_id: int,
     privileges: UserPrivileges,
 ) -> User | ServiceError:
-
     user = await repositories.user.from_id(ctx, user_id)
     if user is None:
         return ServiceError.USER_NOT_FOUND
@@ -227,13 +273,25 @@ async def update_privileges(
     if not privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC:
         await repositories.leaderboard.remove_star_count(ctx, user_id)
 
+    # Check if we should re-add them to the leaderboard
+    elif (
+        not user.privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC
+    ) and privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC:
+        await repositories.leaderboard.set_star_count(ctx, user_id, user.stars)
+
     if not privileges & UserPrivileges.USER_CP_LEADERBOARD_PUBLIC:
         # TODO: Add CP leaderboard
         ...
 
-    updated_user = user.copy()
-    updated_user.privileges = privileges
-    await repositories.user.update(ctx, updated_user)
+    updated_user = await repositories.user.update_partial(
+        ctx,
+        user_id,
+        privileges=privileges,
+    )
+
+    if updated_user is None:
+        return ServiceError.USER_NOT_FOUND
+
     return updated_user
 
 

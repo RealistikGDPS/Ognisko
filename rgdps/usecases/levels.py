@@ -1,17 +1,17 @@
 from __future__ import annotations
 
+import time
 from datetime import datetime
 from typing import NamedTuple
 
 from rgdps import repositories
+from rgdps.common import gd_logic
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
-from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
-from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.models.song import Song
 from rgdps.models.user import User
@@ -178,14 +178,16 @@ async def search(
         followed_list=followed_list,
     )
 
-    songs = []
+    songs = set()
     users = set()
     for level in levels_db.results:
         user = await repositories.user.from_id(ctx, level.user_id)
         assert user is not None, "User associated with level not found."
         users.add(user)
         if level.custom_song_id:
-            songs.append(await repositories.song.from_id(ctx, level.custom_song_id))
+            song = await repositories.song.from_id(ctx, level.custom_song_id)
+            if song:
+                songs.add(song)
 
     if lookup_level:
         # Move to the top.
@@ -197,7 +199,7 @@ async def search(
     return SearchResponse(
         levels=levels_db.results,
         total=levels_db.total + (1 if lookup_level else 0),
-        songs=songs,
+        songs=list(songs),
         users=list(users),
     )
 
@@ -215,9 +217,11 @@ async def get(ctx: Context, level_id: int) -> LevelResponse | ServiceError:
         return ServiceError.LEVELS_NOT_FOUND
 
     # Handle stats updates
-    level.downloads += 1
-
-    await repositories.level.update_full(ctx, level)
+    await repositories.level.update_partial(
+        ctx,
+        level.id,
+        downloads=level.downloads + 1,
+    )
 
     return LevelResponse(
         level=level,
@@ -234,8 +238,13 @@ async def delete(ctx: Context, level_id: int, user: User) -> bool | ServiceError
     if level.user_id != user.id:
         return ServiceError.LEVELS_NO_DELETE_PERMISSION
 
-    level.deleted = True
-    await repositories.level.update_full(ctx, level)
+    await repositories.level.update_partial(
+        ctx,
+        level.id,
+        deleted=True,
+    )
+
+    # TODO: Creator point recalculation.
     await repositories.level.delete_meili(ctx, level_id)
     return True
 
@@ -255,3 +264,44 @@ async def synchronise_search(ctx: Context) -> bool | ServiceError:
         await repositories.level.update_meili_full(ctx, level)
 
     return True
+
+
+async def suggest_stars(
+    ctx: Context,
+    level_id: int,
+    stars: int,
+    feature: bool,
+) -> Level | ServiceError:
+    existing_level = await repositories.level.from_id(ctx, level_id=level_id)
+
+    if existing_level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    user = await repositories.user.from_id(ctx, user_id=existing_level.user_id)
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    creator_points = user.creator_points
+    current_creator_points = gd_logic.calculate_creator_points(existing_level)
+
+    feature_order = int(time.time()) if feature else 0
+
+    difficulty = LevelDifficulty.from_stars(stars)
+
+    level = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        stars=stars,
+        feature_order=feature_order,
+        difficulty=difficulty,
+        coins_verified=True,
+    )
+    if level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    new_creator_points = gd_logic.calculate_creator_points(level)
+    creator_points += new_creator_points - current_creator_points
+
+    await repositories.user.update_partial(ctx, user.id, creator_points=creator_points)
+
+    return level

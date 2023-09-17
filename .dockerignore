@@ -4,3 +4,9 @@ __pycache__/
 /pgdata/
 Makefile
 venv/
+mysql_data/
+meilisearch_data/
+redis_data/
+rgdps_data/
+
+.github/

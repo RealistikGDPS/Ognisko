@@ -22,11 +22,13 @@ services:
     command: redis-server
     ports:
       - "6379:6379"
+    volumes:
+      - ${REDIS_DIR}:/data
 
   realistikgdps:
     image: realistikgdps:latest
     ports:
-      - "80:80"
+      - "${HTTP_PORT}:${HTTP_PORT}"
     depends_on:
       - mysql
       - redis
@@ -42,8 +44,6 @@ services:
       - SQL_DB=${SQL_DB}
       - SQL_PORT=${SQL_PORT}
       - REDIS_HOST=${REDIS_HOST}
-      - DATA_LEVELS=/data/levels
-      - DATA_SAVES=/data/saves
       - MEILI_HOST=${MEILI_HOST}
       - MEILI_PORT=${MEILI_PORT}
       - MEILI_KEY=${MEILI_KEY}
@@ -55,10 +55,11 @@ services:
       - S3_ENDPOINT=${S3_ENDPOINT}
       - S3_ACCESS_KEY=${S3_ACCESS_KEY}
       - S3_SECRET_KEY=${S3_SECRET_KEY}
+      - LOCAL_ROOT=/data
+      - APP_COMPONENT=${APP_COMPONENT:-api}
     volumes:
       - .:/app
-      - ${RGDPS_LEVELS_DIR}:/data/levels
-      - ${RGDPS_SAVES_DIR}:/data/saves
+      - ${RGDPS_DIR}:/data
 
   meilisearch:
     image: getmeili/meilisearch:latest
@@ -66,7 +67,17 @@ services:
     ports:
       - "${MEILI_PORT}:${MEILI_PORT}"
     volumes:
-      - ./meilisearch:/data.ms
+      - ${MEILI_DIR}:/meili_data
     environment:
       - MEILI_MASTER_KEY=${MEILI_KEY}
       - MEILI_HTTP_ADDR=0.0.0.0:${MEILI_PORT}
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    ports:
+      - "8080:80"
+    environment:
+      - PMA_HOST=${SQL_HOST}
+      - UPLOAD_LIMIT=500M
+    depends_on:
+      - mysql

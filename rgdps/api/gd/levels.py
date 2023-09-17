@@ -9,9 +9,11 @@ from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
+from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelSearchType
+from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.usecases import levels
 from rgdps.usecases import songs
@@ -24,7 +26,6 @@ async def song_info_get(
     ctx: HTTPContext = Depends(),
     song_id: int = Form(..., alias="songID"),
 ):
-
     song = await songs.get(ctx, song_id)
     if isinstance(song, ServiceError):
         logger.info(f"Failed to fetch song with error {song!r}.")
@@ -38,7 +39,7 @@ async def level_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     level_id: int = Form(..., alias="levelID"),
-    name: str = Form(..., alias="levelName", max_length=32),  # TODO: Verify
+    name: TextBoxString = Form(..., alias="levelName", max_length=32),
     custom_song_id: int = Form(..., alias="songID"),
     copy_password: int = Form(..., alias="password"),
     two_player: bool = Form(..., alias="twoPlayer"),
@@ -58,7 +59,6 @@ async def level_post(
     low_detail_mode: bool = Form(..., alias="ldm"),
     building_time: int = Form(..., alias="wt2"),
 ):
-
     level = await levels.create_or_update(
         ctx,
         user_id=user.id,
@@ -108,7 +108,6 @@ async def levels_get(
     custom_song_id: int | None = Form(None, alias="customSong"),
     followed_list: str | None = Form(None, alias="followed"),
 ):
-
     if level_lengths != "-":
         level_length_list = [
             LevelLength(x) for x in gd_obj.comma_separated_ints(level_lengths)
@@ -159,11 +158,10 @@ async def levels_get(
                 gd_obj.dumps(gd_obj.create_level_minimal(level))
                 for level in level_res.levels
             ),
-            "|".join(
-                gd_obj.dumps(gd_obj.create_profile(user)) for user in level_res.users
-            ),
-            "~|~".join(
-                gd_obj.dumps(gd_obj.create_song(song)) for song in level_res.songs
+            "|".join(gd_obj.create_user_str(user) for user in level_res.users),
+            "~:~".join(
+                gd_obj.dumps(gd_obj.create_song(song), sep="~|~")
+                for song in level_res.songs
             ),
             gd_obj.create_pagination_info(level_res.total, page, PAGE_SIZE),
             gd_obj.create_search_security_str(level_res.levels),
@@ -175,7 +173,6 @@ async def level_get(
     ctx: HTTPContext = Depends(),
     level_id: int = Form(..., alias="levelID"),
 ):
-
     level_res = await levels.get(ctx, level_id)
 
     if isinstance(level_res, ServiceError):
@@ -192,3 +189,16 @@ async def level_get(
             gd_obj.create_level_metadata_security_str(level_res.level),
         ),
     )
+
+
+async def suggest_level_stars(
+    ctx: HTTPContext = Depends(),
+    user: User = Depends(
+        authenticate_dependency(required_privileges=UserPrivileges.LEVEL_RATE_STARS),
+    ),
+    level_id: int = Form(..., alias="levelID"),
+    stars: int = Form(...),
+    feature: bool = Form(...),
+):
+    await levels.suggest_stars(ctx, level_id=level_id, stars=stars, feature=feature)
+    return responses.success()

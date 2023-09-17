@@ -9,17 +9,17 @@ from meilisearch_python_async import Client as MeiliClient
 from redis.asyncio import Redis
 from types_aiobotocore_s3 import S3Client
 
-from rgdps.common.cache.base import AbstractAsyncCache
-from rgdps.services.mysql import MySQLService
-
 if TYPE_CHECKING:
     from rgdps.models.user import User
+    from rgdps.common.cache.base import AbstractAsyncCache
+    from rgdps.services.mysql import AbstractMySQLService
+    from rgdps.services.storage import AbstractStorage
 
 
 class Context(ABC):
     @property
     @abstractmethod
-    def mysql(self) -> MySQLService:
+    def mysql(self) -> AbstractMySQLService:
         ...
 
     @property
@@ -34,7 +34,7 @@ class Context(ABC):
 
     @property
     @abstractmethod
-    def s3(self) -> S3Client | None:
+    def storage(self) -> AbstractStorage:
         ...
 
     @property

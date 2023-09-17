@@ -1,16 +1,20 @@
 from __future__ import annotations
 
-import base64
+import urllib.parse
 from typing import Callable
-from typing import overload
+from typing import NamedTuple
 from typing import TypeVar
 
 from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
+from rgdps.common.typing import SupportsStr
+from rgdps.constants.daily_chests import DailyChestType
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivileges
+from rgdps.models.daily_chest import DailyChest
+from rgdps.models.friend_request import FriendRequest
 from rgdps.models.level import Level
 from rgdps.models.level_comment import LevelComment
 from rgdps.models.message import Message
@@ -18,6 +22,7 @@ from rgdps.models.message import MessageDirection
 from rgdps.models.song import Song
 from rgdps.models.user import User
 from rgdps.models.user_comment import UserComment
+from rgdps.models.user_relationship import UserRelationship
 
 GDSerialisable = dict[int | str, int | str | float]
 
@@ -63,6 +68,8 @@ def create_profile(
     user: User,
     friend_status: FriendStatus = FriendStatus.NONE,
     rank: int = 0,
+    friend_request_count: int = 0,
+    friend_count: int = 0,
 ) -> GDSerialisable:
     badge_level = 0
     if user.privileges & UserPrivileges.USER_DISPLAY_ELDER_BADGE:
@@ -99,6 +106,9 @@ def create_profile(
         29: 1,  # Is Registered
         30: rank,
         31: friend_status.value,
+        38: 0,  # TODO: New messages.
+        39: friend_request_count,
+        40: friend_count,
         43: user.spider,
         44: user.twitter_name or "",
         45: user.twitch_name or "",
@@ -109,9 +119,19 @@ def create_profile(
     }
 
 
+def create_user_relationship(relationship: UserRelationship) -> GDSerialisable:
+    return {
+        41: 0 if relationship.seen_ts else 1,
+    }
+
+
+def create_user_str(user: User) -> str:
+    return f"{user.id}:{user.username}:{user.id}"
+
+
 def create_user_comment(comment: UserComment) -> GDSerialisable:
     return {
-        2: base64.b64encode(comment.content.encode()).decode(),
+        2: hashes.encode_base64(comment.content),
         4: comment.likes,
         6: comment.id,
         9: into_str_ts(comment.post_ts),
@@ -119,15 +139,41 @@ def create_user_comment(comment: UserComment) -> GDSerialisable:
     }
 
 
-def create_level_comment(comment: LevelComment, user: User) -> GDSerialisable:
+def create_friend_request(friend_request: FriendRequest) -> GDSerialisable:
+    return {
+        32: friend_request.id,
+        35: hashes.encode_base64(friend_request.message),
+        37: into_str_ts(friend_request.post_ts),
+        41: 0 if friend_request.seen_ts else 1,
+    }
+
+
+def create_friend_request_author(user: User) -> GDSerialisable:
+    return {
+        1: user.username,
+        2: user.id,
+        9: user.icon,
+        10: user.primary_colour,
+        11: user.secondary_colour,
+        14: user.display_type,
+        15: 2 if user.glow else 0,
+        16: user.id,
+    }
+
+
+def create_level_comment(
+    comment: LevelComment,
+    user: User,
+    include_level_id: bool = False,
+) -> GDSerialisable:
     badge_level = 0
     if user.privileges & UserPrivileges.USER_DISPLAY_ELDER_BADGE:
         badge_level = 2
     elif user.privileges & UserPrivileges.USER_DISPLAY_MOD_BADGE:
         badge_level = 1
 
-    return {
-        2: base64.b64encode(comment.content.encode()).decode(),
+    ret: GDSerialisable = {
+        2: hashes.encode_base64(comment.content),
         3: user.id,
         4: comment.likes,
         6: comment.id,
@@ -138,8 +184,13 @@ def create_level_comment(comment: LevelComment, user: User) -> GDSerialisable:
         12: "0,0,0",  # TODO: Colour system (privilege bound)
     }
 
+    if include_level_id:
+        ret[1] = comment.level_id
 
-def create_level_comment_author_string(user: User) -> GDSerialisable:
+    return ret
+
+
+def create_level_comment_author(user: User) -> GDSerialisable:
     return {
         1: user.username,
         9: user.icon,
@@ -159,14 +210,19 @@ def create_song(song: Song) -> GDSerialisable:
         4: song.author,
         5: song.size,
         7: song.author_youtube or "",
-        10: song.download_url,
+        8: int(not song.blocked),  # Is scouted (allowed)
+        10: urllib.parse.quote(song.download_url, safe=""),
     }
 
 
 def create_level_minimal(level: Level) -> GDSerialisable:
     """Minimal level data for level search."""
 
-    description_b64 = base64.b64encode(level.description.encode()).decode()
+    if level.description:
+        description_b64 = hashes.encode_base64(level.description)
+    else:
+        description_b64 = ""
+
     return {
         1: level.id,
         2: level.name,
@@ -190,9 +246,11 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         37: level.coins,
         38: 1 if level.coins_verified else 0,
         39: level.requested_stars,
-        42: 1 if level.search_flags & LevelSearchFlag.EPIC else 0,  # is epic
+        42: 1 if level.search_flags & LevelSearchFlag.EPIC else 0,
         43: level.demon_difficulty.value if level.demon_difficulty else 0,
         45: level.object_count,
+        46: level.building_time,
+        47: level.building_time,
     }
 
 
@@ -226,7 +284,9 @@ def create_message(
 def create_level_security_str(level: Level) -> str:
     level_id_str = str(level.id)
 
-    return f"{level_id_str[0]}{level_id_str[-1]}{level.stars}{level.coins}"
+    return (
+        f"{level_id_str[0]}{level_id_str[-1]}{level.stars}{int(level.coins_verified)}"
+    )
 
 
 def create_search_security_str(levels: list[Level]) -> str:
@@ -272,3 +332,82 @@ def comma_separated_ints(data: str) -> list[int]:
     """Parses a list of ints in the from `(1,2,3,4)`."""
 
     return [int(x) for x in data[1:-1].split(",")]
+
+
+def joined_string(*data: SupportsStr, separator: str = ",") -> str:
+    return separator.join(str(x) for x in data)
+
+
+def create_chest_rewards(chest: DailyChest) -> str:
+    return joined_string(
+        chest.mana,
+        chest.diamonds,
+        0,  # TODO: Shards,
+        chest.demon_keys,
+    )
+
+
+EMPTY_CHEST = "0,0,0,0"
+
+
+def create_chest_rewards_str(
+    chest: DailyChest | None,
+    user_id: int,
+    check_string: str,
+    device_id: str,
+    small_chest_time: int,
+    small_chest_count: int,
+    large_chest_time: int,
+    large_chest_count: int,
+) -> str:
+    if chest is None:
+        small_chest_items = EMPTY_CHEST
+        large_chest_items = EMPTY_CHEST
+        reward_type = 0
+    elif chest.type is DailyChestType.SMALL:
+        small_chest_items = create_chest_rewards(chest)
+        large_chest_items = EMPTY_CHEST
+        reward_type = 1
+    else:
+        small_chest_items = EMPTY_CHEST
+        large_chest_items = create_chest_rewards(chest)
+        reward_type = 2
+
+    return joined_string(
+        hashes.random_string(5),
+        user_id,
+        check_string,
+        device_id,
+        user_id,
+        small_chest_time,
+        small_chest_items,
+        small_chest_count,
+        large_chest_time,
+        large_chest_items,
+        large_chest_count,
+        reward_type,
+        separator=":",
+    )
+
+
+def create_chest_security_str(response: str) -> str:
+    return hashes.hash_sha1(response + "pC26fpYaQCtg")
+
+
+class EncryptedChestResponse(NamedTuple):
+    response: str
+    prefix: str
+
+
+def encrypt_chest_response(response: str) -> EncryptedChestResponse:
+    prefix = hashes.random_string(5)
+    encoded = hashes.encrypt_chests(response)
+
+    return EncryptedChestResponse(
+        response=encoded,
+        prefix=prefix,
+    )
+
+
+def decrypt_chest_check_string(check_string: str) -> str:
+    return hashes.decrypt_chest_check(check_string)

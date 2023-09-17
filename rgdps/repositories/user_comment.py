@@ -56,7 +56,6 @@ async def from_user_id_paginated(
     include_deleted: bool = False,
 ) -> list[UserComment]:
     condition = ""
-    # FIXME: Unused
     if not include_deleted:
         condition = "AND NOT deleted"
 
@@ -94,9 +93,10 @@ async def create(
     likes: int = 0,
     post_ts: datetime | None = None,
     deleted: bool = False,
+    comment_id: int = 0,
 ) -> UserComment:
     comment = UserComment(
-        id=0,
+        id=comment_id,
         user_id=user_id,
         content=content,
         likes=likes,
@@ -105,9 +105,9 @@ async def create(
     )
 
     comment.id = await ctx.mysql.execute(
-        "INSERT INTO user_comments (user_id, content, likes, post_ts, deleted) "
-        "VALUES (:user_id, :content, :likes, :post_ts, :deleted)",
-        comment.as_dict(include_id=False),
+        "INSERT INTO user_comments (id, user_id, content, likes, post_ts, deleted) "
+        "VALUES (:id, :user_id, :content, :likes, :post_ts, :deleted)",
+        comment.as_dict(include_id=True),
     )
 
     return comment
@@ -155,4 +155,8 @@ async def update_partial(
 
     await ctx.mysql.execute(query, changed_data)
 
-    return await from_id(ctx, comment_id)
+    return await from_id(ctx, comment_id, include_deleted=True)
+
+
+async def get_count(ctx: Context) -> int:
+    return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM user_comments")

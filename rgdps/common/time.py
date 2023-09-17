@@ -29,3 +29,11 @@ def into_str_ts(ts: datetime) -> str:
         value //= count
 
     return "a long time"
+
+
+def into_unix_ts(ts: datetime) -> int:
+    return int(time.mktime(ts.timetuple()))
+
+
+def from_unix_ts(ts: int) -> datetime:
+    return datetime.fromtimestamp(ts)

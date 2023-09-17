@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import copy
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -96,6 +95,7 @@ class User:
             "twitter_name": self.twitter_name,
             "youtube_name": self.youtube_name,
             "twitch_name": self.twitch_name,
+            "register_ts": self.register_ts,
             "stars": self.stars,
             "demons": self.demons,
             "primary_colour": self.primary_colour,
@@ -117,12 +117,9 @@ class User:
         }
 
         if include_id:
-            res["id"] = self.id
+            res["id"] = self.id or None
 
         return res
-
-    def copy(self) -> User:
-        return copy.copy(self)
 
     # Dunder methods
     def __str__(self) -> str:

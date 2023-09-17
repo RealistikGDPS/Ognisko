@@ -30,7 +30,7 @@ async def from_db(
     return Song.from_mapping(song_db)
 
 
-async def create_old(ctx: Context, song: Song) -> int:
+async def _create_sql(ctx: Context, song: Song) -> int:
     return await ctx.mysql.execute(
         "INSERT INTO songs (name, author_id, author, author_youtube, size, "
         "download_url, source, blocked, id) VALUES "
@@ -50,11 +50,11 @@ async def create(
     size: float = 0.0,
     source: SongSource = SongSource.CUSTOM,
     blocked: bool = False,
-    song_id: int | None = None,
+    song_id: int = 0,
 ) -> Song:
 
     song = Song(
-        id=0,
+        id=song_id,
         name=name,
         author_id=author_id,
         author=author,
@@ -65,19 +65,12 @@ async def create(
         blocked=blocked,
     )
 
-    query = "INSERT INTO songs (name, author_id, author, author_youtube, size, "
-    query += "download_url, source, blocked"
-    if song_id is not None:
-        query += ", id"
-    query += ") VALUES (:name, :author_id, :author, :author_youtube, :size, "
-    query += ":download_url, :source, :blocked"
-    if song_id is not None:
-        query += ", :id"
-    query += ")"
-
     song.id = await ctx.mysql.execute(
-        query,
-        song.as_dict(include_id=song_id is not None),
+        "INSERT INTO songs (id, name, author_id, author, author_youtube, size, "
+        "download_url, source, blocked) VALUES "
+        "(:id, :name, :author_id, :author, :author_youtube, :size, "
+        ":download_url, :source, :blocked)",
+        song.as_dict(include_id=True),
     )
 
     return song
@@ -133,7 +126,11 @@ async def from_id(
 
     song_boomlings = await from_boomlings(ctx, song_id)
     if song_boomlings is not None:
-        await create_old(ctx, song_boomlings)
+        await _create_sql(ctx, song_boomlings)
         return song_boomlings
 
     return None
+
+
+async def get_count(ctx: Context) -> int:
+    return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM songs")

@@ -14,11 +14,23 @@ class ServiceError(str, Enum):
     USER_NOT_FOUND = "user.not_found"
     USER_BLOCKED_BY_USER = "user.blocked_by_user"
     USER_PROFILE_PRIVATE = "user.profile_private"
+    USER_COMMENTS_PRIVATE = "user.comments_private"
 
     COMMENTS_INVALID_CONTENT = "comments.invalid_content"
     COMMENTS_NOT_FOUND = "comments.not_found"
     COMMENTS_INVALID_OWNER = "comments.invalid_owner"
     COMMENTS_TARGET_NOT_FOUND = "comments.target_not_found"
+
+    FRIEND_REQUEST_MESSAGE_INVALID_CONTENT = "friend_request.message_invalid_content"
+    FRIEND_REQUEST_NOT_FOUND = "friend_request.not_found"
+    FRIEND_REQUEST_EXISTS = "friend_request.exists"
+    FRIEND_REQUEST_INVALID_OWNER = "friend_request.invalid_owner"
+    FRIEND_REQUEST_INVALID_TARGET_ID = "friend_request.invalid_target_id"
+
+    RELATIONSHIP_NOT_FOUND = "relationship.not_found"
+    RELATIONSHIP_EXISTS = "relationship.exists"
+    RELATIONSHIP_INVALID_OWNER = "relationship.invalid_owner"
+    RELATIONSHIP_INVALID_TARGET_ID = "relationship.invalid_target_id"
 
     LIKES_ALREADY_LIKED = "likes.already_liked"
     LIKES_OWN_TARGET = "likes.own_target"
@@ -36,3 +48,4 @@ class ServiceError(str, Enum):
     LEVELS_NO_UPLOAD_PERMISSION = "levels.no_upload_permission"
 
     MESSAGES_INVALID_RECIPIENT = "messages.invalid_recipient"
+    DAILY_CHESTS_ALREADY_CLAIMED = "daily_chests.already_claimed"

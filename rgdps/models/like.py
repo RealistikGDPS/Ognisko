@@ -26,7 +26,7 @@ class Like:
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
-        res = {
+        res: dict[str, Any] = {
             "target_type": self.target_type.value,
             "target_id": self.target_id,
             "user_id": self.user_id,
@@ -34,7 +34,7 @@ class Like:
         }
 
         if include_id:
-            res["id"] = self.id
+            res["id"] = self.id or None
 
         return res
 
