@@ -123,7 +123,7 @@ async def create(
     )
 
     level.id = await create_sql(ctx, level)
-    await create_meili(ctx, level, level.id)
+    await create_meili(ctx, level)
     return level
 
 
@@ -155,6 +155,7 @@ def _unix_ts_as_dt(unix_ts: int) -> datetime:
 
 
 def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
+    level_dict = level_dict.copy()
     if "upload_ts" in level_dict:
         level_dict["upload_ts"] = _dt_as_unix_ts(level_dict["upload_ts"])
 
@@ -172,7 +173,8 @@ def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     return level_dict
 
 
-def _from_meili_dict(level_dict: dict[str, Any]) -> Level:
+def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
+    level_dict = level_dict.copy()
     # Meili returns unix timestamps, so we need to convert them back to datetime.
     level_dict["upload_ts"] = _unix_ts_as_dt(level_dict["upload_ts"])
     level_dict["update_ts"] = _unix_ts_as_dt(level_dict["update_ts"])
@@ -194,19 +196,14 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> Level:
     del level_dict["magic"]
     del level_dict["awarded"]
 
-    return Level.from_mapping(level_dict)
+    return level_dict
 
 
-async def create_meili(ctx: Context, level: Level, level_id: int) -> None:
+async def create_meili(ctx: Context, level: Level) -> None:
     level_dict = _make_meili_dict(level.as_dict(include_id=True))
 
     index = ctx.meili.index("levels")
     await index.add_documents([level_dict])
-
-
-async def update_meili_full(ctx: Context, level: Level) -> None:
-    index = ctx.meili.index("levels")
-    await index.add_documents([_make_meili_dict(level.as_dict(include_id=True))])
 
 
 async def update_sql_full(ctx: Context, level: Level) -> None:
@@ -377,7 +374,7 @@ async def update_meili_partial(
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
     deleted: bool | Unset = UNSET,
-) -> Level | None:
+) -> None:
     changed_data: dict[str, Any] = {
         "id": level_id,
     }
@@ -450,7 +447,8 @@ async def update_meili_partial(
 
     changed_data = _make_meili_dict(changed_data)
 
-    await ctx.meili.index("levels").update_documents([changed_data])
+    index = ctx.meili.index("levels")
+    await index.update_documents([changed_data])
 
 
 async def update_partial(
@@ -684,7 +682,9 @@ async def search(
     if (not results_db.hits) or (not results_db.estimated_total_hits):
         return SearchResults([], 0)
 
-    results = [_from_meili_dict(result) for result in results_db.hits]
+    results = [
+        Level.from_mapping(_from_meili_dict(result)) for result in results_db.hits
+    ]
     return SearchResults(results, results_db.estimated_total_hits)
 
 

@@ -261,7 +261,7 @@ async def synchronise_search(ctx: Context) -> bool | ServiceError:
         # It got deleted while we were iterating.
         if (not level) or level.deleted:
             continue
-        await repositories.level.update_meili_full(ctx, level)
+        await repositories.level.create_meili(ctx, level)
 
     return True
 

@@ -47,5 +47,15 @@ curl \
     ] \
   }"
 
+curl \
+  -X PATCH "http://${MEILI_HOST}:${MEILI_PORT}/indexes/users/settings" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${MEILI_KEY}" \
+  --data-binary " { \
+    \"filterableAttributes\": [ \
+        \"is_public\"
+    ]
+  }"
+
 echo
 echo "Done!"
