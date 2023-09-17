@@ -26,7 +26,7 @@ async def message_post(
         ),
     ),
     recipient_user_id: int = Form(..., alias="toAccountID"),
-    subject: Base64String = Form(...),
+    subject: Base64String = Form(..., max_length=35),
     content: str = Form(..., alias="body"),
 ):
     content_decoded = gd_obj.decrypt_message_content_string(content)
@@ -96,7 +96,7 @@ async def messages_get(
 
     if not is_sender_user_id:
         for message in result.messages:
-            await messages.mark_message_as_seen(ctx, user, message.message.id)
+            await messages.mark_message_as_seen(ctx, user.id, message.message.id)
 
     logger.info(f"{user} successfully viewed messages list.")
     return response
@@ -109,13 +109,13 @@ async def message_get(
     user: User = Depends(authenticate_dependency()),
     message_id: int = Form(..., alias="messageID"),
 ):
-    result = await messages.from_id(ctx, user, message_id=message_id)
+    result = await messages.from_id(ctx, user.id, message_id=message_id)
 
     if isinstance(result, ServiceError):
         logger.info(f"{user} failed to view message with error {result!r}.")
         return responses.fail()
 
-    await messages.mark_message_as_seen(ctx, user, result.message.id)
+    await messages.mark_message_as_seen(ctx, user.id, result.message.id)
 
     logger.info(f"{user} successfully viewed message.")
     return gd_obj.dumps(
@@ -143,7 +143,7 @@ async def message_delete(
         messages_list = [message_id]
 
     for message in messages_list:
-        await messages.delete_by_user(ctx, user, message_id=message)
+        await messages.delete_by_user(ctx, user.id, message_id=message)
 
     logger.info(f"{user} successfully deleted message(s).")
     return responses.success()

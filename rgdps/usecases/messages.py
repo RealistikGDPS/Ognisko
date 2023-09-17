@@ -24,7 +24,7 @@ class PaginatedMessagesResponse(NamedTuple):
 
 async def from_id(
     ctx: Context,
-    user: User,
+    user_id: int,
     message_id: int,
     include_deleted: bool = False,
 ) -> MessageResponse | ServiceError:
@@ -37,10 +37,10 @@ async def from_id(
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
 
-    if message.sender_user_id != user.id and message.recipient_user_id != user.id:
+    if message.sender_user_id != user_id and message.recipient_user_id != user_id:
         return ServiceError.MESSAGES_INVALID_OWNER
 
-    if message.sender_user_id == user.id:
+    if message.sender_user_id == user_id:
         recipient = await repositories.user.from_id(ctx, message.recipient_user_id)
     else:
         recipient = await repositories.user.from_id(ctx, message.sender_user_id)
@@ -174,7 +174,7 @@ async def create(
 
 async def mark_message_as_seen(
     ctx: Context,
-    user: User,
+    user_id: int,
     message_id: int,
 ) -> Message | ServiceError:
     message = await repositories.message.from_id(
@@ -186,7 +186,7 @@ async def mark_message_as_seen(
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
 
-    if message.recipient_user_id != user.id:
+    if message.recipient_user_id != user_id:
         return ServiceError.MESSAGES_INVALID_RECIPIENT
 
     message = await repositories.message.update_partial(
@@ -203,7 +203,7 @@ async def mark_message_as_seen(
 
 async def delete_by_user(
     ctx: Context,
-    user: User,
+    user_id: int,
     message_id: int,
 ) -> Message | ServiceError:
     message = await repositories.message.from_id(
@@ -215,14 +215,14 @@ async def delete_by_user(
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
 
-    if message.sender_user_id != user.id and message.recipient_user_id != user.id:
+    if message.sender_user_id != user_id and message.recipient_user_id != user_id:
         return ServiceError.MESSAGES_INVALID_OWNER
 
     # Turns out that geometry dash delete message just for one person.
     sender_deleted = False
     recipient_deleted = False
 
-    if message.sender_user_id == user.id:
+    if message.sender_user_id == user_id:
         sender_deleted = True
     else:
         recipient_deleted = True
@@ -242,7 +242,7 @@ async def delete_by_user(
 
 async def delete(
     ctx: Context,
-    user: User,
+    user_id: int,
     message_id: int,
 ) -> Message | ServiceError:
     message = await repositories.message.from_id(
@@ -254,7 +254,7 @@ async def delete(
     if message is None:
         return ServiceError.MESSAGES_NOT_FOUND
 
-    if message.sender_user_id != user.id and message.recipient_user_id != user.id:
+    if message.sender_user_id != user_id and message.recipient_user_id != user_id:
         return ServiceError.MESSAGES_INVALID_OWNER
 
     message = await repositories.message.update_partial(
