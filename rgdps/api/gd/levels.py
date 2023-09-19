@@ -35,6 +35,9 @@ async def song_info_get(
     return gd_obj.dumps(gd_obj.create_song(song), sep="~|~")
 
 
+DEFAULT_RENDER_STRING = "0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0"
+
+
 async def level_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
@@ -46,7 +49,7 @@ async def level_post(
     object_count: int = Form(..., alias="objects"),
     coins: int = Form(...),
     unlisted: bool = Form(..., alias="unlisted"),
-    render_str: str = Form(..., alias="extraString"),
+    render_str: str = Form(DEFAULT_RENDER_STRING, alias="extraString"),
     requested_stars: int = Form(..., alias="requestedStars", ge=0, le=10),
     level_data: str = Form(..., alias="levelString"),
     length: LevelLength = Form(..., alias="levelLength"),
