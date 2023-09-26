@@ -694,3 +694,24 @@ async def get_count(ctx: Context) -> int:
 
 async def nuke_meili(ctx: Context) -> None:
     await ctx.meili.index("levels").delete_all_documents()
+
+
+async def from_name_and_user_id(
+    ctx: Context,
+    level_name: str,
+    user_id: int,
+    include_deleted: bool = False,
+) -> Level | None:
+    condition = ""
+    if not include_deleted:
+        condition = " AND NOT deleted"
+
+    result_id = await ctx.mysql.fetch_val(
+        "SELECT id FROM levels WHERE name LIKE :name AND user_id = :user_id",
+        {"name": level_name, "user_id": user_id},
+    )
+
+    if result_id is None:
+        return None
+
+    return await from_id(ctx, result_id, include_deleted)

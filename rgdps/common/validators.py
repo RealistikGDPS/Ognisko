@@ -94,7 +94,8 @@ class SocialMediaString(str):
             raise ValueError("Input contains illegal characters")
 
         return TextBoxString(value)
-    
+
+
 class MessageContentString(str):
     @classmethod
     def __get_pydantic_core_schema__(
@@ -107,7 +108,11 @@ class MessageContentString(str):
         )
 
     @classmethod
-    def _validate(cls, value: Any, _: core_schema.ValidationInfo) -> MessageContentString:
+    def _validate(
+        cls,
+        value: Any,
+        _: core_schema.ValidationInfo,
+    ) -> MessageContentString:
         if not isinstance(value, (str, bytes)):
             raise TypeError("Value must be str or bytes")
 
@@ -115,8 +120,6 @@ class MessageContentString(str):
             value = value.decode()
 
         try:
-            return MessageContentString(
-                hashes.decrypt_message_content(value)
-            )
+            return MessageContentString(hashes.decrypt_message_content(value))
         except Exception as e:
             raise ValueError("Input is not valid base64 and xor cipher") from e

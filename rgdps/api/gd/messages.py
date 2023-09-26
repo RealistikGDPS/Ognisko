@@ -111,7 +111,7 @@ async def message_get(
     if isinstance(result, ServiceError):
         logger.info(f"{user} failed to view message with error {result!r}.")
         return responses.fail()
-    
+
     if result.message.seen_ts is None:
         await messages.mark_message_as_seen(ctx, user.id, result.message.id)
 

@@ -58,7 +58,22 @@ async def create_or_update(
         publicity = LevelPublicity.PUBLIC
 
     # Check if we are updating or creating.
-    if level_id and (old_level := await repositories.level.from_id(ctx, level_id)):
+    old_level = await repositories.level.from_id(
+        ctx,
+        level_id,
+        include_deleted=False,
+    )
+
+    if old_level is None:
+        # Name overwrite test.
+        old_level = await repositories.level.from_name_and_user_id(
+            ctx,
+            name,
+            user_id,
+            include_deleted=False,
+        )
+
+    if old_level:
         # Update
         if old_level.user_id != user_id:
             return ServiceError.LEVELS_NO_UPDATE_PERMISSION
