@@ -585,46 +585,46 @@ async def search(
     filters = []
     sort = []
 
-    # TODO: Match statement if we ever get to python 3.11?
-    if search_type is LevelSearchType.MOST_DOWNLOADED:
-        sort.append("downloads:desc")
+    match search_type:
+        case LevelSearchType.MOST_DOWNLOADED:
+            sort.append("downloads:desc")
 
-    elif search_type is LevelSearchType.MOST_LIKED:
-        sort.append("likes:desc")
+        case LevelSearchType.MOST_LIKED:
+            sort.append("likes:desc")
 
-    # TODO: Trending
-    elif search_type is LevelSearchType.RECENT:
-        sort.append("upload_ts:desc")
+        # TODO: Trending
+        case LevelSearchType.RECENT:
+            sort.append("upload_ts:desc")
 
-    elif search_type is LevelSearchType.USER_LEVELS:
-        filters.append(f"user_id = {query}")
+        case LevelSearchType.USER_LEVELS:
+            filters.append(f"user_id = {query}")
+            sort.append("id:desc")
 
-    elif search_type is LevelSearchType.FEATURED:
-        filters.append("feature_order > 0")
-        sort.append("feature_order:desc")
+        case LevelSearchType.FEATURED:
+            filters.append("feature_order > 0")
+            sort.append("feature_order:desc")
 
-    elif search_type is LevelSearchType.MAGIC:
-        filters.append(f"magic = true")
+        case LevelSearchType.MAGIC:
+            filters.append("magic = true")
 
-    elif search_type is LevelSearchType.AWARDED:
-        filters.append("awarded = true")
+        case LevelSearchType.AWARDED:
+            filters.append("awarded = true")
 
-    elif search_type is LevelSearchType.FOLLOWED:
-        assert followed_list is not None
-        filters.append(f"user_id IN {followed_list}")
+        case LevelSearchType.FOLLOWED if followed_list is not None:
+            filters.append(f"user_id IN {followed_list}")
 
-    elif search_type is LevelSearchType.FRIENDS:
-        raise NotImplementedError("Friends not implemented yet.")
+        case LevelSearchType.FRIENDS:
+            raise NotImplementedError("Friends not implemented yet.")
 
-    elif search_type is LevelSearchType.EPIC:
-        filters.append("epic = true")
-        sort.append("feature_order:desc")
+        case LevelSearchType.EPIC:
+            filters.append("epic = true")
+            sort.append("feature_order:desc")
 
-    elif search_type is LevelSearchType.DAILY:
-        raise NotImplementedError("Daily not implemented yet.")
+        case LevelSearchType.DAILY:
+            raise NotImplementedError("Daily not implemented yet.")
 
-    elif search_type is LevelSearchType.WEEKLY:
-        raise NotImplementedError("Weekly not implemented yet.")
+        case LevelSearchType.WEEKLY:
+            raise NotImplementedError("Weekly not implemented yet.")
 
     # Optional filters.
     if level_lengths is not None:
