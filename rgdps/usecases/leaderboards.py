@@ -3,18 +3,30 @@ from __future__ import annotations
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.leaderboards import LeaderboardType
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 
 LEADERBOARD_SIZE = 100
 
 
-async def get_top_stars(ctx: Context) -> list[User] | ServiceError:
-    top_user_ids = await repositories.leaderboard.get_top_stars_paginated(
-        ctx,
-        page=0,
-        page_size=LEADERBOARD_SIZE,
-    )
+async def get(ctx: Context, lb_type: LeaderboardType) -> list[User] | ServiceError:
+    match lb_type:
+        case LeaderboardType.STAR:
+            top_user_ids = await repositories.leaderboard.get_top_stars_paginated(
+                ctx,
+                page=0,
+                page_size=LEADERBOARD_SIZE,
+            )
+        case LeaderboardType.CREATOR:
+            top_user_ids = await repositories.leaderboard.get_top_creators_paginated(
+                ctx,
+                page=0,
+                page_size=LEADERBOARD_SIZE,
+            )
+        case _:
+            raise NotImplementedError
+
     res = []
 
     for user_id in top_user_ids:
