@@ -598,7 +598,7 @@ async def search(
 
         case LevelSearchType.USER_LEVELS:
             filters.append(f"user_id = {query}")
-            sort.append("id:desc")
+            sort.append("upload_ts:desc")
 
         case LevelSearchType.FEATURED:
             filters.append("feature_order > 0")
