@@ -20,6 +20,9 @@ from rgdps.models.user import User
 from rgdps.usecases import users
 
 
+PAGE_SIZE = 10
+
+
 async def register_post(
     ctx: HTTPContext = Depends(),
     username: TextBoxString = Form(..., alias="userName", min_length=3, max_length=15),
@@ -63,7 +66,6 @@ async def login_post(
     password: str = Form(..., max_length=20),
     # _: str = Form(..., alias="udid"),
 ):
-
     user = await users.authenticate(ctx, username, password)
     if isinstance(user, ServiceError):
         logger.info(
@@ -96,7 +98,7 @@ async def user_info_get(
     target_id: int = Form(..., alias="targetAccountID"),
 ):
     is_own = target_id == user.id
-    target = await users.get(ctx, target_id, is_own)
+    target = await users.get(ctx, user.id, target_id, is_own)
 
     if isinstance(target, ServiceError):
         logger.info(
@@ -133,7 +135,19 @@ async def user_info_get(
     )
 
     return gd_obj.dumps(
-        gd_obj.create_profile(target.user, target.friend_status, target.rank),
+        [
+            gd_obj.create_profile(
+                target.user,
+                target.friend_status,
+                target.rank,
+                target.messages_count,
+                target.friend_request_count,
+                target.friend_count,
+            ),
+            gd_obj.create_friend_request(target.friend_request)
+            if target.friend_request is not None
+            else {},
+        ],
     )
 
 
@@ -158,7 +172,6 @@ async def user_info_update(
     coins: int = Form(...),
     user_coins: int = Form(..., alias="userCoins"),
 ):
-
     res = await users.update_stats(
         ctx,
         user.id,
@@ -289,3 +302,27 @@ async def request_status_get(
         return responses.fail()
 
     return str(result)
+
+
+async def users_get(
+    ctx: HTTPContext = Depends(),
+    query: str = Form("", alias="str"),
+    page: int = Form(0),
+):
+    result = await users.search(ctx, page, PAGE_SIZE, query)
+
+    if isinstance(result, ServiceError):
+        logger.info(f"Failed to search for users with error {result!r}.")
+        return responses.fail()
+
+    logger.info(f"Successfully retrieved {result.total} users.")
+
+    # NOTE: Client shows garbage data if an empty list is sent.
+    if not result.results:
+        return responses.fail()
+
+    return (
+        "|".join(gd_obj.dumps(gd_obj.create_profile(user)) for user in result.results)
+        + "#"
+        + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
+    )

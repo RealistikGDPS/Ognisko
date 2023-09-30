@@ -11,7 +11,7 @@ class UserPrivileges(IntFlag):
     USER_AUTHENTICATE = 1 << 0
     USER_PROFILE_PUBLIC = 1 << 1
     USER_STAR_LEADERBOARD_PUBLIC = 1 << 2
-    USER_CP_LEADERBOARD_PUBLIC = 1 << 3
+    USER_CREATOR_LEADERBOARD_PUBLIC = 1 << 3
     USER_DISPLAY_ELDER_BADGE = 1 << 4
     USER_DISPLAY_MOD_BADGE = 1 << 5
     USER_REQUEST_ELDER = 1 << 6
@@ -70,6 +70,11 @@ class UserPrivacySetting(IntEnum):
     PRIVATE = 2
 
 
+class UserRelationshipType(IntEnum):
+    FRIEND = 0
+    BLOCKED = 1
+
+
 class UserPrivilegeLevel(IntEnumStringMixin, IntEnum):
     """Enum for determining whether a user should be displayed as a
     moderator, elder moderator, or neither.
@@ -78,3 +83,33 @@ class UserPrivilegeLevel(IntEnumStringMixin, IntEnum):
     NONE = 0
     MODERATOR = 1
     ELDER_MODERATOR = 2
+
+
+STAR_PRIVILEGES = (
+    UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC | UserPrivileges.USER_PROFILE_PUBLIC
+)
+
+CREATOR_PRIVILEGES = (
+    UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC | UserPrivileges.USER_PROFILE_PUBLIC
+)
+
+DEFAULT_PRIVILEGES = (
+    UserPrivileges.USER_AUTHENTICATE
+    | UserPrivileges.USER_PROFILE_PUBLIC
+    | UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC
+    | UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC
+    | UserPrivileges.USER_CREATE_USER_COMMENTS
+    | UserPrivileges.USER_CHANGE_CREDENTIALS_OWN
+    | UserPrivileges.LEVEL_UPLOAD
+    | UserPrivileges.LEVEL_UPDATE
+    | UserPrivileges.LEVEL_DELETE_OWN
+    | UserPrivileges.COMMENTS_POST
+    | UserPrivileges.COMMENTS_DELETE_OWN
+    | UserPrivileges.COMMENTS_TRIGGER_COMMANDS
+    | UserPrivileges.MESSAGES_SEND
+    | UserPrivileges.MESSAGES_DELETE_OWN
+    | UserPrivileges.FRIEND_REQUESTS_SEND
+    | UserPrivileges.FRIEND_REQUESTS_ACCEPT
+    | UserPrivileges.FRIEND_REQUESTS_DELETE_OWN
+    | UserPrivileges.COMMENTS_LIKE
+)

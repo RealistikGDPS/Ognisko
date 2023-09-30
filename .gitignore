@@ -131,6 +131,7 @@ dmypy.json
 config.json
 data/
 .fleet/
+.DS_Store
 
 # Docker stuff
 mysql_data/

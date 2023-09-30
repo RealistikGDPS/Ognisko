@@ -10,6 +10,7 @@ sys.path.append(".")
 # Please see the README for more information.
 import asyncio
 import base64
+from datetime import datetime
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 import urllib.parse
@@ -23,6 +24,7 @@ from types_aiobotocore_s3 import S3Client
 
 from rgdps import logger
 from rgdps import repositories
+from rgdps.common import gd_obj
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.context import Context
 from rgdps.common.time import from_unix_ts
@@ -34,6 +36,8 @@ from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivacySetting
+from rgdps.constants.users import UserRelationshipType
+from rgdps.constants.users import DEFAULT_PRIVILEGES
 from rgdps.constants.users import UserPrivileges
 from rgdps.constants.songs import SongSource
 from rgdps.services.mysql import MySQLService
@@ -47,28 +51,6 @@ if TYPE_CHECKING:
 # TODO: Customisable (without affecting the actual config)
 OLD_DB = "old_gdps"
 OLD_DB_USER = "root"
-
-# Matches CVGDPS defaults.
-DEFAULT_PRIVILEGES = (
-    UserPrivileges.USER_AUTHENTICATE
-    | UserPrivileges.USER_PROFILE_PUBLIC
-    | UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC
-    | UserPrivileges.USER_CP_LEADERBOARD_PUBLIC
-    | UserPrivileges.USER_CREATE_USER_COMMENTS
-    | UserPrivileges.USER_CHANGE_CREDENTIALS_OWN
-    | UserPrivileges.LEVEL_UPLOAD
-    | UserPrivileges.LEVEL_UPDATE
-    | UserPrivileges.LEVEL_DELETE_OWN
-    | UserPrivileges.COMMENTS_POST
-    | UserPrivileges.COMMENTS_DELETE_OWN
-    | UserPrivileges.COMMENTS_TRIGGER_COMMANDS
-    | UserPrivileges.MESSAGES_SEND
-    | UserPrivileges.MESSAGES_DELETE_OWN
-    | UserPrivileges.FRIEND_REQUESTS_SEND
-    | UserPrivileges.FRIEND_REQUESTS_ACCEPT
-    | UserPrivileges.FRIEND_REQUESTS_DELETE_OWN
-    | UserPrivileges.COMMENTS_LIKE
-)
 
 
 @dataclass
@@ -403,6 +385,12 @@ async def convert_levels(ctx: ConverterContext) -> None:
             custom_song_id = level["songID"]
             official_song_id = None
 
+        stars = level["starStars"]
+        if stars > 10:
+            stars = 10
+        elif stars < 0:
+            stars = 0
+
         await repositories.level.create(
             ctx,
             level_id=level["levelID"],
@@ -423,7 +411,7 @@ async def convert_levels(ctx: ConverterContext) -> None:
             difficulty=LevelDifficulty(level["starDifficulty"]),
             downloads=level["downloads"],
             likes=level["likes"],
-            stars=level["starStars"],
+            stars=stars,
             # NOTE: Only upload ts is varchar.
             upload_ts=from_unix_ts(int(level["uploadDate"])),
             update_ts=from_unix_ts(level["updateDate"]),
@@ -434,6 +422,90 @@ async def convert_levels(ctx: ConverterContext) -> None:
             publicity=publicity,
             demon_difficulty=demon_difficulty,
             search_flags=search_flag,
+        )
+
+
+async def convert_friend_requests(ctx: ConverterContext) -> None:
+    old_friend_requests = await ctx.old_sql.fetch_all(
+        "SELECT * FROM friendreqs",
+    )
+
+    for request in old_friend_requests:
+        post_ts = from_unix_ts(request["uploadDate"])
+
+        await repositories.friend_requests.create(
+            ctx,
+            sender_user_id=request["accountID"],
+            recipient_user_id=request["toAccountID"],
+            message=hashes.decode_base64(request["comment"])[:140],
+            post_ts=post_ts,
+            # GMDPS did not store timestamps.
+            seen_ts=datetime.now() if not request["isNew"] else None,
+        )
+
+
+async def convert_user_relationships(ctx: ConverterContext) -> None:
+    # Friends as first.
+    old_friends = await ctx.old_sql.fetch_all(
+        "SELECT * FROM friendships",
+    )
+
+    for friend in old_friends:
+        await repositories.user_relationship.create(
+            ctx,
+            user_id=friend["person1"],
+            target_user_id=friend["person2"],
+            relationship_type=UserRelationshipType.FRIEND,
+            # GMDPS did not store timestamps.
+            post_ts=datetime.now(),
+            seen_ts=datetime.now() if not friend["isNew1"] else None,
+        )
+
+        # Reverse to make mutual feeling.
+        await repositories.user_relationship.create(
+            ctx,
+            user_id=friend["person2"],
+            target_user_id=friend["person1"],
+            relationship_type=UserRelationshipType.FRIEND,
+            # GMDPS did not store timestamps.
+            post_ts=datetime.now(),
+            seen_ts=datetime.now() if not friend["isNew2"] else None,
+        )
+
+    # Now blocks.
+    old_blocks = await ctx.old_sql.fetch_all(
+        "SELECT * FROM blocks",
+    )
+
+    for block in old_blocks:
+        await repositories.user_relationship.create(
+            ctx,
+            user_id=block["person1"],
+            target_user_id=block["person2"],
+            relationship_type=UserRelationshipType.BLOCKED,
+            # GMDPS did not store timestamps.
+            post_ts=datetime.now(),
+        )
+
+
+async def convert_messages(ctx: ConverterContext) -> None:
+    old_messages = await ctx.old_sql.fetch_all(
+        "SELECT * FROM messages",
+    )
+
+    for message in old_messages:
+        content = gd_obj.decrypt_message_content_string(message["body"])[:200]
+        subject = hashes.decode_base64(message["subject"])[:35]
+
+        await repositories.message.create(
+            ctx,
+            sender_user_id=message["accID"],
+            recipient_user_id=message["toAccountID"],
+            subject=subject,
+            content=content,
+            post_ts=from_unix_ts(message["timestamp"]),
+            # GMDPS did not store timestamps.
+            seen_ts=datetime.now() if not message["isNew"] else None,
         )
 
 
@@ -476,6 +548,30 @@ async def main() -> int:
         else:
             logger.info(
                 "Skipping level comment conversion, level comments already exist.",
+            )
+
+        if not await repositories.friend_requests.get_count(ctx):
+            logger.info("Converting friend requests...")
+            await convert_friend_requests(ctx)
+        else:
+            logger.info(
+                "Skipping friend requests conversion, friend requests already exist.",
+            )
+
+        if not await repositories.user_relationship.get_count(ctx):
+            logger.info("Converting user relationships...")
+            await convert_user_relationships(ctx)
+        else:
+            logger.info(
+                "Skipping user relationships conversion, user relationships already exist.",
+            )
+
+        if not await repositories.message.get_count(ctx):
+            logger.info("Converting messages...")
+            await convert_messages(ctx)
+        else:
+            logger.info(
+                "Skipping messages conversion, messages already exist.",
             )
     except Exception:
         logger.error(

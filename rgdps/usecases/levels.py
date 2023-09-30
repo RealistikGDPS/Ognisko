@@ -12,6 +12,7 @@ from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchType
+from rgdps.constants.users import CREATOR_PRIVILEGES
 from rgdps.models.level import Level
 from rgdps.models.song import Song
 from rgdps.models.user import User
@@ -58,7 +59,22 @@ async def create_or_update(
         publicity = LevelPublicity.PUBLIC
 
     # Check if we are updating or creating.
-    if level_id and (old_level := await repositories.level.from_id(ctx, level_id)):
+    old_level = await repositories.level.from_id(
+        ctx,
+        level_id,
+        include_deleted=False,
+    )
+
+    if old_level is None:
+        # Name overwrite test.
+        old_level = await repositories.level.from_name_and_user_id(
+            ctx,
+            name,
+            user_id,
+            include_deleted=False,
+        )
+
+    if old_level:
         # Update
         if old_level.user_id != user_id:
             return ServiceError.LEVELS_NO_UPDATE_PERMISSION
@@ -261,7 +277,7 @@ async def synchronise_search(ctx: Context) -> bool | ServiceError:
         # It got deleted while we were iterating.
         if (not level) or level.deleted:
             continue
-        await repositories.level.update_meili_full(ctx, level)
+        await repositories.level.create_meili(ctx, level)
 
     return True
 
@@ -303,5 +319,8 @@ async def suggest_stars(
     creator_points += new_creator_points - current_creator_points
 
     await repositories.user.update_partial(ctx, user.id, creator_points=creator_points)
+
+    if user.privileges & CREATOR_PRIVILEGES == CREATOR_PRIVILEGES:
+        await repositories.leaderboard.set_creator_count(ctx, user.id, creator_points)
 
     return level
