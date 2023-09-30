@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import NamedTuple
 
 from rgdps import repositories
@@ -8,35 +7,13 @@ from rgdps.common import hashes
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.friends import FriendStatus
+from rgdps.constants.users import DEFAULT_PRIVILEGES
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.constants.users import UserRelationshipType
 from rgdps.models.friend_request import FriendRequest
 from rgdps.models.user import User
-
-
-# FIXME: Moved to repository
-DEFAULT_PRIVILEGES = (
-    UserPrivileges.USER_AUTHENTICATE
-    | UserPrivileges.USER_PROFILE_PUBLIC
-    | UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC
-    | UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC
-    | UserPrivileges.USER_CREATE_USER_COMMENTS
-    | UserPrivileges.USER_CHANGE_CREDENTIALS_OWN
-    | UserPrivileges.LEVEL_UPLOAD
-    | UserPrivileges.LEVEL_UPDATE
-    | UserPrivileges.LEVEL_DELETE_OWN
-    | UserPrivileges.COMMENTS_POST
-    | UserPrivileges.COMMENTS_DELETE_OWN
-    | UserPrivileges.COMMENTS_TRIGGER_COMMANDS
-    | UserPrivileges.MESSAGES_SEND
-    | UserPrivileges.MESSAGES_DELETE_OWN
-    | UserPrivileges.FRIEND_REQUESTS_SEND
-    | UserPrivileges.FRIEND_REQUESTS_ACCEPT
-    | UserPrivileges.FRIEND_REQUESTS_DELETE_OWN
-    | UserPrivileges.COMMENTS_LIKE
-)
 
 
 async def register(

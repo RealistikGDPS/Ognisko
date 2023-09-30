@@ -9,31 +9,10 @@ from rgdps.common.context import Context
 from rgdps.common.typing import is_set
 from rgdps.common.typing import UNSET
 from rgdps.common.typing import Unset
+from rgdps.constants.users import DEFAULT_PRIVILEGES
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
-
-
-DEFAULT_PRIVILEGES = (
-    UserPrivileges.USER_AUTHENTICATE
-    | UserPrivileges.USER_PROFILE_PUBLIC
-    | UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC
-    | UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC
-    | UserPrivileges.USER_CREATE_USER_COMMENTS
-    | UserPrivileges.USER_CHANGE_CREDENTIALS_OWN
-    | UserPrivileges.LEVEL_UPLOAD
-    | UserPrivileges.LEVEL_UPDATE
-    | UserPrivileges.LEVEL_DELETE_OWN
-    | UserPrivileges.COMMENTS_POST
-    | UserPrivileges.COMMENTS_DELETE_OWN
-    | UserPrivileges.COMMENTS_TRIGGER_COMMANDS
-    | UserPrivileges.MESSAGES_SEND
-    | UserPrivileges.MESSAGES_DELETE_OWN
-    | UserPrivileges.FRIEND_REQUESTS_SEND
-    | UserPrivileges.FRIEND_REQUESTS_ACCEPT
-    | UserPrivileges.FRIEND_REQUESTS_DELETE_OWN
-    | UserPrivileges.COMMENTS_LIKE
-)
 
 
 async def from_db(ctx: Context, user_id: int) -> User | None:
