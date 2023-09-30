@@ -31,3 +31,9 @@ async def user_sync_meili_handler(ctx: Context, _) -> None:
 async def leaderboard_sync_stars_handler(ctx: Context, _) -> None:
     logger.debug("Synchronising star leaderboard.")
     await leaderboards.synchronise_top_stars(ctx)
+
+
+@router.register("rgdps:leaderboards:sync_creators")
+async def leaderboard_sync_creators_handler(ctx: Context, _) -> None:
+    logger.debug("Synchronising creator leaderboard.")
+    await leaderboards.synchronise_top_creators(ctx)

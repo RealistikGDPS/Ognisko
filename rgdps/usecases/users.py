@@ -21,7 +21,7 @@ DEFAULT_PRIVILEGES = (
     UserPrivileges.USER_AUTHENTICATE
     | UserPrivileges.USER_PROFILE_PUBLIC
     | UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC
-    | UserPrivileges.USER_CP_LEADERBOARD_PUBLIC
+    | UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC
     | UserPrivileges.USER_CREATE_USER_COMMENTS
     | UserPrivileges.USER_CHANGE_CREDENTIALS_OWN
     | UserPrivileges.LEVEL_UPLOAD
@@ -285,7 +285,7 @@ async def update_privileges(
     ) and privileges & UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC:
         await repositories.leaderboard.set_star_count(ctx, user_id, user.stars)
 
-    if not privileges & UserPrivileges.USER_CP_LEADERBOARD_PUBLIC:
+    if not privileges & UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC:
         # TODO: Add CP leaderboard
         ...
 

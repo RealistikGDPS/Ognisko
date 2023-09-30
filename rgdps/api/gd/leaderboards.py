@@ -17,10 +17,7 @@ async def leaderboard_get(
     leaderboard_type: LeaderboardType = Form(..., alias="type"),
 ):
 
-    if leaderboard_type == LeaderboardType.STAR:
-        leaderboard = await leaderboards.get_top_stars(ctx)
-    else:
-        raise NotImplementedError
+    leaderboard = await leaderboards.get(ctx, leaderboard_type)
 
     if isinstance(leaderboard, ServiceError):
         logger.info(f"Failed to get with error {leaderboard!r}")
