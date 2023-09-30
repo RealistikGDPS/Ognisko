@@ -83,3 +83,12 @@ class UserPrivilegeLevel(IntEnumStringMixin, IntEnum):
     NONE = 0
     MODERATOR = 1
     ELDER_MODERATOR = 2
+
+
+STAR_PRIVILEGES = (
+    UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC | UserPrivileges.USER_PROFILE_PUBLIC
+)
+
+CREATOR_PRIVILEGES = (
+    UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC | UserPrivileges.USER_PROFILE_PUBLIC
+)

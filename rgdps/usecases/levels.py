@@ -12,6 +12,7 @@ from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchType
+from rgdps.constants.users import CREATOR_PRIVILEGES
 from rgdps.models.level import Level
 from rgdps.models.song import Song
 from rgdps.models.user import User
@@ -318,5 +319,8 @@ async def suggest_stars(
     creator_points += new_creator_points - current_creator_points
 
     await repositories.user.update_partial(ctx, user.id, creator_points=creator_points)
+
+    if user.privileges & CREATOR_PRIVILEGES == CREATOR_PRIVILEGES:
+        await repositories.leaderboard.set_creator_count(ctx, user.id, creator_points)
 
     return level
