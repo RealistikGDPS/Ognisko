@@ -243,11 +243,6 @@ def init_routers(app: FastAPI) -> None:
 
 def init_middlewares(app: FastAPI) -> None:
     @app.middleware("http")
-    async def assign_uuid(request: Request, call_next):
-        request.state.uuid = str(uuid.uuid4())
-        return await call_next(request)
-
-    @app.middleware("http")
     async def mysql_transaction(request: Request, call_next):
         logger.debug(
             "Opened a new MySQL transaction for request.",
@@ -258,6 +253,11 @@ def init_middlewares(app: FastAPI) -> None:
         async with app.state.mysql.transaction() as sql:
             request.state.mysql = sql
             return await call_next(request)
+
+    @app.middleware("http")
+    async def assign_uuid(request: Request, call_next):
+        request.state.uuid = str(uuid.uuid4())
+        return await call_next(request)
 
 
 def init_api() -> FastAPI:

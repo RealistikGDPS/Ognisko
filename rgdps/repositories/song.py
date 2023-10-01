@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import urllib.parse
 
+from rgdps import logger
 from rgdps.common import gd_obj
 from rgdps.common.context import Context
 from rgdps.constants.songs import SongSource
@@ -92,6 +93,15 @@ async def from_boomlings(ctx: Context, song_id: int) -> Song | None:
 
     # Endpoint always returns a 200 HTTP code, result to checking the format.
     response_data = song_api.content.decode()
+
+    logger.debug(
+        "Crawled song data from Boomlings.",
+        extra={
+            "song_id": song_id,
+            "response_data": response_data,
+        },
+    )
+
     if "~|~" not in response_data:
         return None
 
