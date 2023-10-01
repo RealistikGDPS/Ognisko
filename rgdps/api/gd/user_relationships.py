@@ -34,7 +34,12 @@ async def friend_requests_get(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"{user} failed to view friend requests list with error {result!r}.",
+            "Failed to view friend request list.",
+            extra={
+                "user_id": user.id,
+                "is_sender_user_id": is_sender_user_id,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
@@ -52,7 +57,13 @@ async def friend_requests_get(
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
 
-    logger.info(f"{user} successfully viewed friend requests list.")
+    logger.info(
+        "Successfully viewed friend requests list.",
+        extra={
+            "user_id": user.id,
+            "is_sender_user_id": is_sender_user_id,
+        },
+    )
     return response
 
 
@@ -71,11 +82,22 @@ async def friend_request_post(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"{user} failed to send friend request to ID {target_user_id} with error {result!r}.",
+            "Failed to send a friend request.",
+            extra={
+                "user_id": user.id,
+                "target_user_id": target_user_id,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully sent friend request to ID {target_user_id}.")
+    logger.info(
+        "Successfully sent a friend request.",
+        extra={
+            "user_id": user.id,
+            "target_user_id": target_user_id,
+        },
+    )
     return responses.success()
 
 
@@ -92,12 +114,21 @@ async def friend_request_read(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"{user} failed to mark friend request with ID {request_id} as seen with error {result!r}.",
+            f"Failed to mark friend request as seen.",
+            extra={
+                "user_id": user.id,
+                "request_id": request_id,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
     logger.info(
-        f"{user} successfully marked friend request with ID {request_id} as seen.",
+        "Successfully marked friend request as seen.",
+        extra={
+            "user_id": user.id,
+            "request_id": request_id,
+        },
     )
     return responses.success()
 
@@ -114,16 +145,34 @@ async def friend_requests_delete(
     else:
         accounts_list = [target_id]
 
-    await friend_requests.delete_multiple(
+    result = await friend_requests.delete_multiple(
         ctx,
         user.id,
         accounts_list,
         is_sender_user_id=is_sender_user_id,
     )
 
-    action = "to" if is_sender_user_id else "from"
+    if isinstance(result, ServiceError):
+        logger.info(
+            "Failed to delete friend requests.",
+            extra={
+                "user_id": user.id,
+                "target_id": target_id,
+                "is_sender_user_id": is_sender_user_id,
+                "count": len(accounts_list),
+                "error": result.value,
+            },
+        )
+        return responses.fail()
+
     logger.info(
-        f"{user} successfully deleted friend requests {action} user IDs {accounts!r}.",
+        "Successfully deleted friend requests.",
+        extra={
+            "user_id": user.id,
+            "target_id": target_id,
+            "is_sender_user_id": is_sender_user_id,
+            "count": len(accounts_list),
+        },
     )
     return responses.success()
 
@@ -143,11 +192,24 @@ async def friend_request_accept(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"{user} failed to accept friend request from ID {target_id} with error {result!r}.",
+            "Failed to accept friend request.",
+            extra={
+                "user_id": user.id,
+                "target_id": target_id,
+                "request_id": request_id,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully accepted friend request from ID {target_id}.")
+    logger.info(
+        "Successfully accepted friend request.",
+        extra={
+            "user_id": user.id,
+            "target_id": target_id,
+            "request_id": request_id,
+        },
+    )
     return responses.success()
 
 
@@ -164,7 +226,12 @@ async def user_relationships_get(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"{user} failed to view their relationships list with error {result!r}.",
+            "Failed to view relationships list.",
+            extra={
+                "user_id": user.id,
+                "relationship_type": relationship_type.value,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
@@ -183,7 +250,14 @@ async def user_relationships_get(
 
     # Mark them as seen.
     await user_relationships.mark_all_as_seen(ctx, user.id, relationship_type)
-    logger.info(f"{user} successfully viewed their relationships list.")
+    logger.info(
+        "Successfully viewed relationship list.",
+        extra={
+            "user_id": user.id,
+            "relationship_type": relationship_type.value,
+            "count": len(result.relationships),
+        },
+    )
 
     return response
 
@@ -201,29 +275,41 @@ async def friend_remove_post(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"{user} failed to remove friend of ID {target_id} with error {result!r}.",
+            "Failed to remove friend.",
+            extra={
+                "user_id": user.id,
+                "target_id": target_id,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully removed friend of ID {target_id}.")
+    logger.info(
+        "Successfully removed friend.",
+        extra={
+            "user_id": user.id,
+            "target_id": target_id,
+        },
+    )
     return responses.success()
 
 
+# TODO: Rewrite to be a single usecase.
 async def block_user_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
     target_id: int = Form(..., alias="targetAccountID"),
 ):
-    # Remove friendship if exists.
+    # TODO: Move to usecase
     result = await user_relationships.remove_friendship(
         ctx,
         user.id,
         target_id,
     )
-
+    # TODO: Temp.
     if isinstance(result, ServiceError):
         logger.info(
-            f"{user} failed remove friend with ID {target_id} on block with error {result!r}.",
+            f"Failed remove friend.",
         )
         return responses.fail()
 
@@ -236,11 +322,23 @@ async def block_user_post(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"{user} failed to block user with ID {target_id} with error {result!r}.",
+            "Failed to block user.",
+            extra={
+                "user_id": user.id,
+                "target_id": target_id,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully blocked user with ID {target_id}.")
+    logger.info(
+        "Successfully blocked user.",
+        extra={
+            "user_id": user.id,
+            "target_id": target_id,
+            "relationship_id": result.id,
+        },
+    )
     return responses.success()
 
 
@@ -258,9 +356,20 @@ async def unblock_user_post(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"{user} failed to unblock user with ID {target_id} with error {result!r}.",
+            "Failed to unblock user.",
+            extra={
+                "user_id": user.id,
+                "target_id": target_id,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully unblocked user with ID {target_id}.")
+    logger.info(
+        "Successfully unblocked user.",
+        extra={
+            "user_id": user.id,
+            "target_id": target_id,
+        },
+    )
     return responses.success()
