@@ -38,11 +38,21 @@ async def message_post(
 
     if isinstance(message, ServiceError):
         logger.info(
-            f"{user} failed to send message to ID {recipient_user_id} with error {message!r}.",
+            "Failed to send message.",
+            extra={
+                "sender_user_id": user.id,
+                "recipient_user_id": recipient_user_id,
+                "error": message.value,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully sent message to ID {recipient_user_id}.")
+    logger.info(
+        "Successfully sent a message.",
+        extra={
+            "message_id": message.id,
+        },
+    )
     return responses.success()
 
 
@@ -73,7 +83,14 @@ async def messages_get(
         )
 
     if isinstance(result, ServiceError):
-        logger.info(f"{user} failed to view messages list with error {result!r}.")
+        logger.info(
+            "Failed to view message list.",
+            extra={
+                "user_id": user.id,
+                "message_direction": message_direction.value,
+                "error": result.value,
+            },
+        )
         return responses.fail()
 
     if not result.messages:
@@ -95,7 +112,14 @@ async def messages_get(
         if not is_sender_user_id and message.message.seen_ts is None:
             await messages.mark_message_as_seen(ctx, user.id, message.message.id)
 
-    logger.info(f"{user} successfully viewed messages list.")
+    logger.info(
+        "Successfully viewed the messages list.",
+        extra={
+            "user_id": user.id,
+            "message_direction": message_direction.value,
+            "total": result.total,
+        },
+    )
     return response
 
 
@@ -109,13 +133,26 @@ async def message_get(
     result = await messages.get(ctx, user.id, message_id=message_id)
 
     if isinstance(result, ServiceError):
-        logger.info(f"{user} failed to view message with error {result!r}.")
+        logger.info(
+            "Failed to view message.",
+            extra={
+                "user_id": user.id,
+                "message_id": message_id,
+                "error": result.value,
+            },
+        )
         return responses.fail()
 
     if result.message.seen_ts is None:
         await messages.mark_message_as_seen(ctx, user.id, result.message.id)
 
-    logger.info(f"{user} successfully viewed message.")
+    logger.info(
+        "Successfully viewed message.",
+        extra={
+            "user_id": user.id,
+            "message_id": message_id,
+        },
+    )
     return gd_obj.dumps(
         gd_obj.create_message(
             result.message,
@@ -143,5 +180,11 @@ async def message_delete(
     for message in messages_list:
         await messages.delete_by_user(ctx, user.id, message_id=message)
 
-    logger.info(f"{user} successfully deleted message(s).")
+    logger.info(
+        "Successfully deleted message(s).",
+        extra={
+            "user_id": user.id,
+            "count": len(messages_list),
+        },
+    )
     return responses.success()

@@ -37,10 +37,24 @@ async def create_comment_post(
     )
 
     if isinstance(comment, ServiceError):
-        logger.info(f"Failed to add comment with error {comment!r}")
+        logger.info(
+            "Failed to post level comment.",
+            extra={
+                "user_id": user.id,
+                "level_id": level_id,
+                "content": content,
+                "percent": percent,
+                "error": comment.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully added comment {comment}!")
+    logger.info(
+        "Successfully posted level comment.",
+        extra={
+            "comment_id": comment.id,
+        },
+    )
     return str(comment.id)
 
 
@@ -60,7 +74,14 @@ async def level_comments_get(
     )
 
     if isinstance(result, ServiceError):
-        logger.info(f"Failed to load comments with error {result!r}")
+        logger.info(
+            "Failed to load level comments.",
+            extra={
+                "level_id": level_id,
+                "page": page,
+                "error": result.value,
+            },
+        )
         return responses.fail()
 
     response = "|".join(
@@ -75,7 +96,13 @@ async def level_comments_get(
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, page_size)
 
-    logger.info(f"Successfully viewed comments for level ID {level_id}.")
+    logger.info(
+        "Successfully loaded level comments.",
+        extra={
+            "level_id": level_id,
+            "page": page,
+        },
+    )
     return response
 
 
@@ -95,7 +122,14 @@ async def comment_history_get(
     )
 
     if isinstance(result, ServiceError):
-        logger.info(f"Failed to load comments with error {result!r}")
+        logger.info(
+            "Failed to load level comment history.",
+            extra={
+                "user_id": user_id,
+                "page": page,
+                "error": result.value,
+            },
+        )
         return responses.fail()
 
     response = "|".join(
@@ -114,7 +148,13 @@ async def comment_history_get(
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, page_size)
 
-    logger.info(f"Successfully viewed comments for user ID {user_id}.")
+    logger.info(
+        "Successfully loaded level comment history.",
+        extra={
+            "user_id": user_id,
+            "page": page,
+        },
+    )
     return response
 
 
@@ -134,8 +174,21 @@ async def level_comment_delete(
     )
 
     if isinstance(result, ServiceError):
-        logger.info(f"Failed to delete comment with error {result!r}")
+        logger.info(
+            "Failed to delete level comment.",
+            extra={
+                "user_id": user.id,
+                "comment_id": comment_id,
+                "error": result.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully deleted comment {comment_id}!")
+    logger.info(
+        "Successfully deleted level comment.",
+        extra={
+            "user_id": user.id,
+            "comment_id": comment_id,
+        },
+    )
     return responses.success()

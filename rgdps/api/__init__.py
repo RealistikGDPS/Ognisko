@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 import urllib.parse
+import uuid
 
 import httpx
-from aiobotocore.config import AioConfig
-from aiobotocore.session import get_session
 from databases import DatabaseURL
 from fastapi import FastAPI
 from fastapi import status
@@ -49,10 +48,14 @@ def init_events(app: FastAPI) -> None:
         e: RequestValidationError,
     ) -> Response:
         logger.error(
-            f"A validation error has occured while parsing the request to "
-            f"{request.url}",
+            f"A validation error has occured while parsing a request.",
+            extra={
+                "url": str(request.url),
+                "method": request.method,
+                "errors": e.errors(),
+                "uuid": request.state.uuid,
+            },
         )
-        logger.debug(e.errors())
 
         # If its a GD related request, give them something the client understands.
         if str(request.url).startswith(config.http_url_prefix):
@@ -73,8 +76,11 @@ def init_events(app: FastAPI) -> None:
             # GD sends an empty User-Agent header.
             if request.headers.get("User-Agent") != "":
                 logger.info(
-                    "A user has sent a request to a client endpoint with a "
-                    "non-empty User-Agent header. This implies the usage of bots.",
+                    "Client request stopped due to invalid User-Agent header.",
+                    extra={
+                        "url": str(request.url),
+                        "uuid": request.state.uuid,
+                    },
                 )
                 return Response(str(GenericResponse.FAIL))
 
@@ -97,7 +103,13 @@ def init_mysql(app: FastAPI) -> None:
     @app.on_event("startup")
     async def on_startup() -> None:
         await app.state.mysql.connect()
-        logger.info("Connected to the MySQL database.")
+        logger.info(
+            "Connected to the MySQL database.",
+            extra={
+                "host": config.sql_host,
+                "db": config.sql_db,
+            },
+        )
 
     @app.on_event("shutdown")
     async def on_shutdown() -> None:
@@ -125,7 +137,13 @@ def init_redis(app: FastAPI) -> None:
             prefix="rgdps:ratelimit",
         )
 
-        logger.info("Connected to the Redis database.")
+        logger.info(
+            "Connected to the Redis database.",
+            extra={
+                "host": config.redis_host,
+                "db": config.redis_db,
+            },
+        )
 
     @app.on_event("shutdown")
     async def on_shutdown() -> None:
@@ -142,7 +160,12 @@ def init_meili(app: FastAPI) -> None:
     @app.on_event("startup")
     async def startup() -> None:
         await app.state.meili.health()
-        logger.info("Connected to the MeiliSearch database.")
+        logger.info(
+            "Connected to the MeiliSearch database.",
+            extra={
+                "host": config.meili_host,
+            },
+        )
 
 
 def init_s3_storage(app: FastAPI) -> None:
@@ -159,7 +182,13 @@ def init_s3_storage(app: FastAPI) -> None:
     @app.on_event("startup")
     async def startup() -> None:
         app.state.storage = await app.state.storage.connect()
-        logger.info("Connected to the S3 storage.")
+        logger.info(
+            "Connected to S3 storage.",
+            extra={
+                "bucket": config.s3_bucket,
+                "region": config.s3_region,
+            },
+        )
 
     @app.on_event("shutdown")
     async def shutdown() -> None:
@@ -214,7 +243,18 @@ def init_routers(app: FastAPI) -> None:
 
 def init_middlewares(app: FastAPI) -> None:
     @app.middleware("http")
+    async def assign_uuid(request: Request, call_next):
+        request.state.uuid = str(uuid.uuid4())
+        return await call_next(request)
+
+    @app.middleware("http")
     async def mysql_transaction(request: Request, call_next):
+        logger.debug(
+            "Opened a new MySQL transaction for request.",
+            extra={
+                "uuid": request.state.uuid,
+            },
+        )
         async with app.state.mysql.transaction() as sql:
             request.state.mysql = sql
             return await call_next(request)
