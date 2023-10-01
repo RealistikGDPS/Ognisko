@@ -75,7 +75,6 @@ async def user_comments_post(
             extra={
                 "error": result.value,
                 "user_id": user.id,
-                "content": content,
             },
         )
         return responses.fail()
@@ -84,7 +83,7 @@ async def user_comments_post(
         "Successfully posted a user comment.",
         extra={
             "user_id": user.id,
-            "content": content,
+            "comment_id": result.id,
         },
     )
     return responses.success()

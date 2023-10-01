@@ -40,9 +40,9 @@ async def register_post(
         logger.info(
             "User registration failed.",
             extra={
-                "error": result.value,
                 "username": username,
                 "email": email,
+                "error": result.value,
             },
         )
         # TODO: This is currently a service error. GD doesnt know that.
@@ -66,17 +66,17 @@ async def login_post(
     password: str = Form(..., max_length=20),
     # _: str = Form(..., alias="udid"),
 ):
-    user = await users.authenticate(ctx, username, password)
-    if isinstance(user, ServiceError):
+    result = await users.authenticate(ctx, username, password)
+    if isinstance(result, ServiceError):
         logger.info(
             "User login failed",
             extra={
-                "error": user.value,
                 "username": username,
+                "error": result.value,
             },
         )
 
-        if user is ServiceError.AUTH_NO_PRIVILEGE:
+        if result is ServiceError.AUTH_NO_PRIVILEGE:
             return responses.code(LoginResponse.ACCOUNT_DISABLED)
 
         return responses.fail()
@@ -84,12 +84,11 @@ async def login_post(
     logger.info(
         "User login successful!",
         extra={
-            "user_id": user.id,
-            "username": username,
+            "user_id": result.id,
         },
     )
 
-    return f"{user.id},{user.id}"
+    return f"{result.id},{result.id}"
 
 
 async def user_info_get(

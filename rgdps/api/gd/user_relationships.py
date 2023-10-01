@@ -96,6 +96,7 @@ async def friend_request_post(
         extra={
             "user_id": user.id,
             "target_user_id": target_user_id,
+            "request_id": result.id,
         },
     )
     return responses.success()
@@ -127,7 +128,7 @@ async def friend_request_read(
         "Successfully marked friend request as seen.",
         extra={
             "user_id": user.id,
-            "request_id": request_id,
+            "request_id": result.id,
         },
     )
     return responses.success()
