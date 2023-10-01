@@ -312,10 +312,22 @@ async def users_get(
     result = await users.search(ctx, page, PAGE_SIZE, query)
 
     if isinstance(result, ServiceError):
-        logger.info(f"Failed to search for users with error {result!r}.")
+        logger.info(
+            "Failed to search users.",
+            extra={
+                "query": query,
+                "error": result.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully retrieved {result.total} users.")
+    logger.info(
+        "Successfully searched users.",
+        extra={
+            "query": query,
+            "results": result.total,
+        },
+    )
 
     # NOTE: Client shows garbage data if an empty list is sent.
     if not result.results:
