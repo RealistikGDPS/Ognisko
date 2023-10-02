@@ -24,7 +24,7 @@ _LOGGING_CONFIG = {
     "handlers": {
         "logzio": {
             "class": "logzio.handler.LogzioHandler",
-            "level": "INFO",
+            "level": "DEBUG",
             "formatter": "logzioFormat",
             "token": "",
             "logzio_type": "python",
