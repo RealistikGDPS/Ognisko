@@ -261,13 +261,13 @@ def init_middlewares(app: FastAPI) -> None:
 
 
 def init_api() -> FastAPI:
+    init_logging()
     app = FastAPI(
         title="RealistikGDPS",
         openapi_url=None,
         docs_url=None,
     )
 
-    init_logging()
     init_events(app)
     init_middlewares(app)
     init_mysql(app)
