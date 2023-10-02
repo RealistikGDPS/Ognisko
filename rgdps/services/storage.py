@@ -99,7 +99,7 @@ class S3Storage(AbstractStorage):
             try:
                 await self.__save_file(key, data)
                 return
-            except Exception:
+            except Exception as e:
                 sleep_time = i * 2
                 logger.warning(
                     "Failed to save to S3. Retrying...",
@@ -107,6 +107,7 @@ class S3Storage(AbstractStorage):
                         "key": key,
                         "sleep_time": sleep_time,
                     },
+                    exc_info=e,
                 )
                 await asyncio.sleep(sleep_time)
 

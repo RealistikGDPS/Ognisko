@@ -66,26 +66,6 @@ def init_events(app: FastAPI) -> None:
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
-    @app.middleware("http")
-    async def http_middleware(
-        request: Request,
-        call_next: RequestResponseEndpoint,
-    ) -> Response:
-        # Verifying request header for client endpoints.
-        if str(request.url).startswith(config.http_url_prefix):
-            # GD sends an empty User-Agent header.
-            if request.headers.get("User-Agent") != "":
-                logger.info(
-                    "Client request stopped due to invalid User-Agent header.",
-                    extra={
-                        "url": str(request.url),
-                        "uuid": request.state.uuid,
-                    },
-                )
-                return Response(str(GenericResponse.FAIL))
-
-        return await call_next(request)
-
 
 def init_mysql(app: FastAPI) -> None:
     database_url = DatabaseURL(
@@ -253,6 +233,44 @@ def init_middlewares(app: FastAPI) -> None:
         async with app.state.mysql.transaction() as sql:
             request.state.mysql = sql
             return await call_next(request)
+
+    @app.middleware("http")
+    async def enforce_user_agent(
+        request: Request,
+        call_next: RequestResponseEndpoint,
+    ) -> Response:
+        # Verifying request header for client endpoints.
+        if str(request.url).startswith(config.http_url_prefix):
+            # GD sends an empty User-Agent header.
+            if request.headers.get("User-Agent") != "":
+                logger.info(
+                    "Client request stopped due to invalid User-Agent header.",
+                    extra={
+                        "url": str(request.url),
+                        "uuid": request.state.uuid,
+                    },
+                )
+                return Response(str(GenericResponse.FAIL))
+
+        return await call_next(request)
+
+    @app.middleware("http")
+    async def exception_logging(
+        request: Request,
+        call_next: RequestResponseEndpoint,
+    ) -> Response:
+        try:
+            return await call_next(request)
+        except Exception as e:
+            logger.error(
+                f"An exception has occured while processing a request!",
+                extra={
+                    "url": str(request.url),
+                    "method": request.method,
+                    "uuid": request.state.uuid,
+                },
+            )
+            raise e
 
     @app.middleware("http")
     async def assign_uuid(request: Request, call_next):

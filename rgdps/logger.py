@@ -95,6 +95,8 @@ _default_excepthook: Optional[ExceptionHook] = None
 _default_threading_excepthook: Optional[ThreadingExceptionHook] = None
 
 
+# NOTE: This doesn't work on Uvicorn because it uses its own exception handler.
+# There has been an equivalent exception hook added on the FastAPI level.
 def internal_exception_handler(
     exc_type: type[BaseException],
     exc_value: BaseException,
