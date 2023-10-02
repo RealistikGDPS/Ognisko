@@ -129,7 +129,7 @@ async def like_target_post(
         return responses.fail()
 
     logger.info(
-        "Successfully liked target.",
+        "Successfully liked/disliked target.",
         extra={
             "like_id": result.id,
         },
