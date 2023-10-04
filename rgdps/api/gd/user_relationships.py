@@ -115,7 +115,7 @@ async def friend_request_read(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"Failed to mark friend request as seen.",
+            "Failed to mark friend request as seen.",
             extra={
                 "user_id": user.id,
                 "request_id": request_id,
