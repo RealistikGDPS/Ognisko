@@ -242,12 +242,14 @@ def init_middlewares(app: FastAPI) -> None:
         # Verifying request header for client endpoints.
         if str(request.url).startswith(config.http_url_prefix):
             # GD sends an empty User-Agent header.
-            if request.headers.get("User-Agent") != "":
+            user_agent = request.headers.get("User-Agent")
+            if user_agent != "":
                 logger.info(
                     "Client request stopped due to invalid User-Agent header.",
                     extra={
                         "url": str(request.url),
                         "uuid": request.state.uuid,
+                        "user_agent": user_agent,
                     },
                 )
                 return Response(str(GenericResponse.FAIL))
