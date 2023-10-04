@@ -340,8 +340,13 @@ async def update_description(
     if level.user_id != user.id:
         return ServiceError.LEVELS_NO_UPDATE_PERMISSION
 
-    return await repositories.level.update_partial(
+    result = await repositories.level.update_partial(
         ctx,
         level.id,
         description=description,
     )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
