@@ -324,3 +324,29 @@ async def suggest_stars(
         await repositories.leaderboard.set_creator_count(ctx, user.id, creator_points)
 
     return level
+
+
+async def update_description(
+    ctx: Context,
+    level_id: int,
+    user: User,
+    description: str,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    if level.user_id != user.id:
+        return ServiceError.LEVELS_NO_UPDATE_PERMISSION
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level.id,
+        description=description,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
