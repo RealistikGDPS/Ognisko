@@ -36,7 +36,11 @@ def authenticate_dependency(
 
         if isinstance(user, ServiceError):
             logger.debug(
-                f"Authentication failed for user {user_id} (service error: {user})",
+                "Authentication failed for user.",
+                extra={
+                    "user_id": user_id,
+                    "error": user.value,
+                },
             )
             raise HTTPException(
                 status_code=200,
@@ -47,7 +51,12 @@ def authenticate_dependency(
             user.privileges & required_privileges == required_privileges
         ):
             logger.debug(
-                f"Authentication failed for user {user_id} (insufficient privileges)",
+                "Authentication failed for user due to insufficient privileges.",
+                extra={
+                    "user_id": user_id,
+                    "privileges": user.privileges,
+                    "required_privileges": required_privileges,
+                },
             )
             raise HTTPException(
                 status_code=200,
@@ -77,7 +86,11 @@ def password_authenticate_dependency(
 
         if isinstance(user, ServiceError):
             logger.debug(
-                f"Authentication failed for user {username!r} (service error: {user})",
+                "Authentication failed for user.",
+                extra={
+                    "username": username,
+                    "error": user.value,
+                },
             )
             raise HTTPException(
                 status_code=200,
@@ -88,7 +101,12 @@ def password_authenticate_dependency(
             user.privileges & required_privileges == required_privileges
         ):
             logger.debug(
-                f"Authentication failed for user {user} (insufficient privileges)",
+                "Authentication failed for user due to insufficient privileges.",
+                extra={
+                    "username": username,
+                    "privileges": user.privileges,
+                    "required_privileges": required_privileges,
+                },
             )
             raise HTTPException(
                 status_code=200,

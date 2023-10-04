@@ -20,10 +20,21 @@ async def leaderboard_get(
     leaderboard = await leaderboards.get(ctx, leaderboard_type)
 
     if isinstance(leaderboard, ServiceError):
-        logger.info(f"Failed to get with error {leaderboard!r}")
+        logger.info(
+            "Failed to load the leaderboard.",
+            extra={
+                "leaderboard_type": leaderboard_type.value,
+                "error": leaderboard.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully fetched leaderboard {leaderboard_type!r}")
+    logger.info(
+        "Successfully fetched the leaderboard.",
+        extra={
+            "leaderboard_type": leaderboard_type.value,
+        },
+    )
 
     return "|".join(
         gd_obj.dumps(gd_obj.create_profile(user, rank=idx + 1))

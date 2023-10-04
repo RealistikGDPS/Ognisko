@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import asyncio
-import traceback
 from typing import Awaitable
 from typing import Callable
 
@@ -23,7 +22,12 @@ async def _listen_router(
     async with redis.pubsub() as pubsub:
         for channel in redis_handlers:
             await pubsub.subscribe(channel)
-            logger.debug(f"Subscribed to {channel}.")
+            logger.debug(
+                "Subscribed to Redis a channel.",
+                extra={
+                    "channel": channel.decode(),
+                },
+            )
 
         while True:
             # TODO: Handle errors (different message types)
@@ -37,9 +41,12 @@ async def _listen_router(
                     handler = redis_handlers[message["channel"]]
                     await handler(ctx, message["data"])
                 except Exception:
-                    logger.error(
-                        f"Error in redis handler for {message['channel']}\n"
-                        + traceback.format_exc(),
+                    logger.exception(
+                        "Error while handling Redis message.",
+                        extra={
+                            "channel": message["channel"].decode(),
+                            "data": message["data"].decode(),
+                        },
                     )
 
             # NOTE: This is a hack to prevent the event loop from blocking.
@@ -87,7 +94,12 @@ class RedisPubsubRouter:
     def merge(self, other: RedisPubsubRouter) -> None:
         for channel, handler in other.route_map().items():
             if channel in self._routes:
-                logger.warning("Overwriting existing route for {channel}.")
+                logger.warning(
+                    "Overwritten route when merging Redis routers!",
+                    extra={
+                        "channel": channel.decode(),
+                    },
+                )
             self._routes[channel] = handler
 
     def route_map(self) -> dict[bytes, RedisHandler]:

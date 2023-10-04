@@ -30,10 +30,16 @@ async def daily_chest_get(
     )
 
     if isinstance(result, ServiceError):
-        logger.info(f"Failed to fetch daily chest with error {result!r}.")
+        logger.info(
+            "Failed to fetch daily chest.",
+            extra={
+                "user_id": user.id,
+                "view": view.value,
+                "error": result.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully fetched daily chest {result}.")
     result = gd_obj.create_chest_rewards_str(
         result.chest,
         user.id,
@@ -47,5 +53,13 @@ async def daily_chest_get(
 
     encrypted_result = gd_obj.encrypt_chest_response(result)
     security_hash = gd_obj.create_chest_security_str(encrypted_result.response)
+
+    logger.info(
+        "Successfully fetched daily chest.",
+        extra={
+            "user_id": user.id,
+            "view": view.value,
+        },
+    )
 
     return f"{encrypted_result.prefix}{encrypted_result.response}|{security_hash}"

@@ -195,6 +195,7 @@ async def delete(
     return request
 
 
+# TODO: Return serviceerror
 async def delete_multiple(
     ctx: Context,
     user_id: int,

@@ -23,10 +23,21 @@ async def save_data_get(
     data = await save_data.get(ctx, user.id)
 
     if isinstance(data, ServiceError):
-        logger.info(f"Failed to fetch save data with error {data!r}.")
+        logger.info(
+            "Failed to fetch save data.",
+            extra={
+                "user_id": user.id,
+                "error": data.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully fetched save data.")
+    logger.info(
+        "Successfully fetched save data.",
+        extra={
+            "user_id": user.id,
+        },
+    )
     return data
 
 
@@ -46,10 +57,21 @@ async def save_data_post(
     )
 
     if isinstance(res, ServiceError):
-        logger.info(f"Failed to write save data with error {res!r}.")
+        logger.info(
+            "Failed to write save data.",
+            extra={
+                "user_id": user.id,
+                "error": res.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully wrote save data of {user}.")
+    logger.info(
+        "Successfully wrote save data.",
+        extra={
+            "user_id": user.id,
+        },
+    )
     return responses.success()
 
 

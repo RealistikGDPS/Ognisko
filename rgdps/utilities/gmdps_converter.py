@@ -20,7 +20,6 @@ import httpx
 from databases import DatabaseURL
 from meilisearch_python_async import Client as MeiliClient
 from redis.asyncio import Redis
-from types_aiobotocore_s3 import S3Client
 
 from rgdps import logger
 from rgdps import repositories
@@ -195,7 +194,12 @@ async def convert_songs(ctx: ConverterContext) -> None:
         try:
             size = float(song["size"])
         except ValueError:
-            logger.warning(f"Song {song_name} (ID {song['ID']}) has an invalid size.")
+            logger.warning(
+                "Converted song has an invalid file size!",
+                extra={
+                    "song_id": song["ID"],
+                },
+            )
             size = 0.0
 
         if "ngfiles" in download_url:
@@ -205,8 +209,11 @@ async def convert_songs(ctx: ConverterContext) -> None:
 
         if len(download_url) > 256:
             logger.warning(
-                f"Skipping song {song_name} (ID {song['ID']}) because the "
-                "download URL is too long.",
+                "Skipping song due to download URL being too long.",
+                extra={
+                    "song_id": song["ID"],
+                    "download_url": download_url,
+                },
             )
             continue
 
@@ -232,7 +239,10 @@ async def convert_user_comments(ctx: ConverterContext) -> None:
         account_id = ctx.user_id_map.get(comment["userID"])
         if account_id is None:
             logger.warning(
-                f"Failed to find account ID for user ID {comment['userID']}.",
+                "Failed to find account ID for a userID when converting user comments.",
+                extra={
+                    "user_id": comment["userID"],
+                },
             )
             continue
 
@@ -258,7 +268,10 @@ async def convert_level_comments(ctx: ConverterContext) -> None:
         account_id = ctx.user_id_map.get(comment["userID"])
         if account_id is None:
             logger.warning(
-                f"Failed to find account ID for user ID {comment['userID']}.",
+                "Failed to find account ID for a userID when converting level comments.",
+                extra={
+                    "user_id": comment["userID"],
+                },
             )
             continue
 
@@ -349,7 +362,12 @@ async def convert_users(ctx: ConverterContext) -> None:
                 diamonds=user["diamonds"],
             )
         except Exception:
-            logger.error(f"Failed to convert user {user_id}\n" + traceback.format_exc())
+            logger.exception(
+                "Failed to convert user!",
+                extra={
+                    "user_id": user_id,
+                },
+            )
 
 
 async def convert_levels(ctx: ConverterContext) -> None:
@@ -574,8 +592,8 @@ async def main() -> int:
                 "Skipping messages conversion, messages already exist.",
             )
     except Exception:
-        logger.error(
-            "Failed to convert data with exception:\n" + traceback.format_exc(),
+        logger.exception(
+            "Failed to convert data!",
         )
 
     logger.info("Migration complete!")

@@ -28,10 +28,21 @@ async def song_info_get(
 ):
     song = await songs.get(ctx, song_id)
     if isinstance(song, ServiceError):
-        logger.info(f"Failed to fetch song with error {song!r}.")
+        logger.info(
+            "Failed to fetch song.",
+            extra={
+                "song_id": song_id,
+                "error": song.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully fetched song {song}.")
+    logger.info(
+        "Successfully fetched song.",
+        extra={
+            "song_id": song_id,
+        },
+    )
     return gd_obj.dumps(gd_obj.create_song(song), sep="~|~")
 
 
@@ -88,10 +99,23 @@ async def level_post(
     )
 
     if isinstance(level, ServiceError):
-        logger.info(f"Failed to upload level with error {level!r}.")
+        logger.info(
+            "Failed to upload level.",
+            extra={
+                "user_id": user.id,
+                "level_id": level_id,
+                "error": level.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully uploaded level {level}.")
+    logger.info(
+        "Successfully uploaded/updated level.",
+        extra={
+            "user_id": user.id,
+            "level_id": level.id,
+        },
+    )
     return str(level.id)
 
 
@@ -147,12 +171,43 @@ async def levels_get(
     )
 
     if isinstance(level_res, ServiceError):
-        logger.info(f"Failed to search levels with error {level_res!r}.")
+        logger.info(
+            "Failed to search levels.",
+            extra={
+                "query": query,
+                "page": page,
+                "page_size": PAGE_SIZE,
+                "search_type": search_type.value,
+                "level_lengths": level_length_list,
+                "featured": featured,
+                "original": original,
+                "two_player": two_player,
+                "unrated": unrated,
+                "rated": rated,
+                "song_id": song_id,
+                "custom_song_id": custom_song_id,
+                "error": level_res.value,
+            },
+        )
         return responses.fail()
 
     logger.info(
-        f"Successfully fulfilled the search for query {query!r} with "
-        f"{level_res.total} results.",
+        "Successfully searched levels.",
+        extra={
+            "query": query,
+            "page": page,
+            "page_size": PAGE_SIZE,
+            "search_type": search_type.value,
+            "level_lengths": level_length_list,
+            "featured": featured,
+            "original": original,
+            "two_player": two_player,
+            "unrated": unrated,
+            "rated": rated,
+            "song_id": song_id,
+            "custom_song_id": custom_song_id,
+            "result_count": level_res.total,
+        },
     )
 
     return "#".join(
@@ -179,10 +234,21 @@ async def level_get(
     level_res = await levels.get(ctx, level_id)
 
     if isinstance(level_res, ServiceError):
-        logger.info(f"Failed to fetch level with error {level_res!r}.")
+        logger.info(
+            "Failed to fetch level.",
+            extra={
+                "level_id": level_id,
+                "error": level_res.value,
+            },
+        )
         return responses.fail()
 
-    logger.info(f"Successfully fetched level {level_res.level}.")
+    logger.info(
+        "Successfully fetched level.",
+        extra={
+            "level_id": level_id,
+        },
+    )
 
     return "#".join(
         (
@@ -203,5 +269,34 @@ async def suggest_level_stars(
     stars: int = Form(...),
     feature: bool = Form(...),
 ):
-    await levels.suggest_stars(ctx, level_id=level_id, stars=stars, feature=feature)
+    result = await levels.suggest_stars(
+        ctx,
+        level_id=level_id,
+        stars=stars,
+        feature=feature,
+    )
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            "Failed to suggest stars.",
+            extra={
+                "user_id": user.id,
+                "level_id": level_id,
+                "stars": stars,
+                "feature": feature,
+                "error": result.value,
+            },
+        )
+        return responses.fail()
+
+    logger.info(
+        "Successfully suggested stars.",
+        extra={
+            "user_id": user.id,
+            "level_id": level_id,
+            "stars": stars,
+            "feature": feature,
+        },
+    )
+
     return responses.success()

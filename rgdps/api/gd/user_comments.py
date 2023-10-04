@@ -33,7 +33,12 @@ async def user_comments_get(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"Failed to view comments of {target_id} with error {result!r}.",
+            "Failed to view user comments.",
+            extra={
+                "error": result.value,
+                "target_id": target_id,
+                "page": page,
+            },
         )
         return responses.fail()
 
@@ -43,7 +48,13 @@ async def user_comments_get(
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
 
-    logger.info(f"Successfully viewed comments for user ID {target_id}.")
+    logger.info(
+        "Successfully viewed user comments.",
+        extra={
+            "target_id": target_id,
+            "page": page,
+        },
+    )
     return response
 
 
@@ -54,17 +65,27 @@ async def user_comments_post(
             required_privileges=UserPrivileges.USER_CREATE_USER_COMMENTS,
         ),
     ),
-    content: Base64String = Form(..., alias="comment"),
+    content: Base64String = Form(..., alias="comment", max_length=256),
 ):
     result = await user_comments.create(ctx, user.id, content)
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"Failed to post comment on {user}'s profile with error {result!r}.",
+            "Failed to post user comment.",
+            extra={
+                "error": result.value,
+                "user_id": user.id,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully posted a profile comment.")
+    logger.info(
+        "Successfully posted a user comment.",
+        extra={
+            "user_id": user.id,
+            "comment_id": result.id,
+        },
+    )
     return responses.success()
 
 
@@ -79,6 +100,7 @@ async def like_target_post(
     is_positive: bool = Form(..., alias="like"),
 ):
 
+    # TODO: Move this logic to a single usecase.
     result = None
     if target_type is LikeType.USER_COMMENT:
         result = await likes.like_user_comment(
@@ -90,13 +112,28 @@ async def like_target_post(
     elif target_type is LikeType.LEVEL:
         result = await likes.like_level(ctx, user.id, target_id, int(is_positive))
 
+    else:
+        raise NotImplementedError
+
     if isinstance(result, ServiceError):
         logger.info(
-            f"Failed to like {target_type!r} {target_id} with error {result!r}.",
+            f"Failed to like/dislike target.",
+            extra={
+                "user_id": user.id,
+                "target_type": target_type.value,
+                "target_id": target_id,
+                "is_positive": is_positive,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully liked {target_type!r} {target_id}.")
+    logger.info(
+        "Successfully liked/disliked target.",
+        extra={
+            "like_id": result.id,
+        },
+    )
     return responses.success()
 
 
@@ -109,9 +146,20 @@ async def user_comment_delete(
 
     if isinstance(result, ServiceError):
         logger.info(
-            f"Failed to delete comment {comment_id} with error {result!r}.",
+            "Failed to delete user comment.",
+            extra={
+                "user_id": user.id,
+                "comment_id": comment_id,
+                "error": result.value,
+            },
         )
         return responses.fail()
 
-    logger.info(f"{user} successfully deleted comment {comment_id}.")
+    logger.info(
+        "Successfully deleted comment.",
+        extra={
+            "user_id": user.id,
+            "comment_id": comment_id,
+        },
+    )
     return responses.success()

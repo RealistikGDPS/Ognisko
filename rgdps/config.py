@@ -22,7 +22,6 @@ class Config:
     sql_port: int = 3306
     srv_name: str = "RealistikGDPS"
     srv_stateless: bool = False
-    log_level: str = "INFO"
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
@@ -36,6 +35,9 @@ class Config:
     s3_access_key: str = ""
     s3_secret_key: str = ""
     local_root: str = "/data"
+    log_level: str = "INFO"
+    logzio_enabled: bool = False
+    logzio_token: str = ""
 
 
 def read_config_json() -> dict[str, Any]:
