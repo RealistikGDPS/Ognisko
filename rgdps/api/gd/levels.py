@@ -300,3 +300,41 @@ async def suggest_level_stars(
     )
 
     return responses.success()
+
+
+async def level_desc_post(
+    ctx: HTTPContext = Depends(),
+    user: User = Depends(
+        authenticate_dependency(required_privileges=UserPrivileges.LEVEL_UPDATE),
+    ),
+    level_id: int = Form(..., alias="levelID"),
+    level_desc: Base64String = Form(..., alias="levelDesc"),
+):
+    result = await levels.update_description(
+        ctx,
+        level_id=level_id,
+        level_desc=level_desc,
+    )
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            "Failed to update description.",
+            extra={
+                "user_id": user.id,
+                "level_id": level_id,
+                "level_desc": level_desc,
+                "error": result.value,
+            },
+        )
+        return responses.fail()
+
+    logger.info(
+        "Successfully updated description.",
+        extra={
+            "user_id": user.id,
+            "level_id": level_id,
+            "level_desc": level_desc,
+        },
+    )
+
+    return responses.success()

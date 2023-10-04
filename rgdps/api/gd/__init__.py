@@ -288,3 +288,9 @@ router.add_api_route(
     users.users_get,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/updateGJDesc20.php",
+    levels.level_desc_post,
+    methods=["POST"],
+)
