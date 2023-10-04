@@ -40,14 +40,13 @@ async def _listen_router(
                     # is a good idea.
                     handler = redis_handlers[message["channel"]]
                     await handler(ctx, message["data"])
-                except Exception as e:
-                    logger.error(
+                except Exception:
+                    logger.exception(
                         "Error while handling Redis message.",
                         extra={
                             "channel": message["channel"].decode(),
                             "data": message["data"].decode(),
                         },
-                        exc_info=e,
                     )
 
             # NOTE: This is a hack to prevent the event loop from blocking.

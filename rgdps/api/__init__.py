@@ -47,7 +47,7 @@ def init_events(app: FastAPI) -> None:
         request: Request,
         e: RequestValidationError,
     ) -> Response:
-        logger.error(
+        logger.exception(
             f"A validation error has occured while parsing a request.",
             extra={
                 "url": str(request.url),
@@ -262,7 +262,7 @@ def init_middlewares(app: FastAPI) -> None:
         try:
             return await call_next(request)
         except Exception as e:
-            logger.error(
+            logger.exception(
                 f"An exception has occured while processing a request!",
                 extra={
                     "url": str(request.url),

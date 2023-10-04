@@ -361,13 +361,12 @@ async def convert_users(ctx: ConverterContext) -> None:
                 user_coins=user["userCoins"],
                 diamonds=user["diamonds"],
             )
-        except Exception as e:
-            logger.error(
+        except Exception:
+            logger.exception(
                 "Failed to convert user!",
                 extra={
                     "user_id": user_id,
                 },
-                exc_info=e,
             )
 
 
@@ -592,10 +591,9 @@ async def main() -> int:
             logger.info(
                 "Skipping messages conversion, messages already exist.",
             )
-    except Exception as e:
-        logger.error(
+    except Exception:
+        logger.exception(
             "Failed to convert data!",
-            exc_info=e,
         )
 
     logger.info("Migration complete!")
