@@ -4,13 +4,25 @@ from dataclasses import dataclass
 from typing import Any
 from typing import get_type_hints
 from typing import Type
+from typing import TYPE_CHECKING
 from typing import TypeVar
 
 from rgdps import logger
 from rgdps import repositories
+from rgdps.common.context import Context
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.models.user import User
+
+if TYPE_CHECKING:
+    import httpx
+    from meilisearch_python_async import Client as MeiliClient
+    from redis.asyncio import Redis
+
+    from rgdps.models.user import User
+    from rgdps.common.cache.base import AbstractAsyncCache
+    from rgdps.services.mysql import AbstractMySQLService
+    from rgdps.services.storage import AbstractStorage
 
 
 async def _level_by_ref(ctx: CommandContext, ref_value: str) -> Level:
@@ -50,26 +62,6 @@ async def _user_by_ref(ctx: CommandContext, ref_value: str) -> User:
     return res
 
 
-# TODO: Inject connection context (subclass of Context)
-@dataclass
-class CommandContext:
-    user: User
-    # Cases for comment and message commands.
-    level: Level | None
-    target_user: User | None
-
-    # Debugging details
-    params_str: str  # Prefix stripped.
-
-    @property
-    def is_level(self) -> bool:
-        return self.level is not None
-
-    @property
-    def is_message(self) -> bool:
-        return self.target_user is not None
-
-
 _CASTABLE = [
     str,
     int,
@@ -107,6 +99,57 @@ def _bool_parse(data: str) -> bool:
         return False
 
     raise ValueError("Incorrect bool type provided.")
+
+
+# TODO: Inject connection context (subclass of Context)
+@dataclass
+class CommandContext(Context):
+    user: User
+    # Cases for comment and message commands.
+    level: Level | None
+    target_user: User | None
+
+    # Debugging details
+    params_str: str  # Prefix stripped.
+
+    _base_context: Context
+
+    @property
+    def is_level(self) -> bool:
+        return self.level is not None
+
+    @property
+    def is_message(self) -> bool:
+        return self.target_user is not None
+
+    # Implementation of context requirements
+    @property
+    def mysql(self) -> AbstractMySQLService:
+        return self._base_context.mysql
+
+    @property
+    def redis(self) -> Redis:
+        return self._base_context.redis
+
+    @property
+    def meili(self) -> MeiliClient:
+        return self._base_context.meili
+
+    @property
+    def storage(self) -> AbstractStorage:
+        return self._base_context.storage
+
+    @property
+    def user_cache(self) -> AbstractAsyncCache[User]:
+        return self._base_context.user_cache
+
+    @property
+    def password_cache(self) -> AbstractAsyncCache[str]:
+        return self._base_context.password_cache
+
+    @property
+    def http(self) -> httpx.AsyncClient:
+        return self._base_context.http
 
 
 class Command:
@@ -156,11 +199,39 @@ class Command:
     async def on_privilege_fail(self, ctx: CommandContext) -> str:
         return "You have insufficient privileges to run this command."
 
+    # TODO: Provide more information.
+    async def on_argument_fail(self, ctx: CommandContext) -> str:
+        return "Incorrect arguments provided!"
+
+    async def on_cannot_run(self, ctx: CommandContext) -> str:
+        return "Insufficient conditions to run this command!"
+
     async def execute(self, ctx: CommandContext) -> str:
         """Called by the command router to perform command checks and execution."""
 
-        # TODO: Parse `ctx.params_str`
-        ...
+        if not self.__has_privileges(ctx):
+            return await self.on_privilege_fail()
+
+        if not await self.should_run(ctx):
+            return await self.on_cannot_run(ctx)
+
+        try:
+            params = await self.__parse_params(ctx)
+        except ValueError:
+            return await self.on_argument_fail(ctx)
+
+        try:
+            return await self.handle(ctx, *params)
+        except Exception as e:
+            logger.exception(
+                "Failed to run command handler!",
+                extra={
+                    "command_name": self.name,
+                    "command_input": ctx.params_str,
+                    "user_id": ctx.user.id,
+                },
+            )
+            return await self.on_exception(ctx, e)
 
     # Private API
     def __has_privileges(self, ctx: CommandContext) -> bool:
@@ -188,9 +259,15 @@ class LevelCommand(Command):
     async def should_run(self, ctx: CommandContext) -> bool:
         return ctx.is_level
 
+    async def on_cannot_run(self, ctx: CommandContext) -> str:
+        return "This command can only be ran on levels!"
+
 
 class MessageCommand(Command):
     """Variant of command that may only be run on messages."""
 
     async def should_run(self, ctx: CommandContext) -> bool:
         return ctx.is_message
+
+    async def on_cannot_run(self, ctx: CommandContext) -> str:
+        return "This command can only be ran in user messages!"
