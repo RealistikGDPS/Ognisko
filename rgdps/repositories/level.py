@@ -715,3 +715,25 @@ async def from_name_and_user_id(
         return None
 
     return await from_id(ctx, result_id, include_deleted)
+
+
+async def from_name(
+    ctx: Context,
+    level_name: str,
+    include_deleted: bool = False,
+) -> Level | None:
+    condition = ""
+    if not include_deleted:
+        condition = " AND NOT deleted"
+
+    result_id = await ctx.mysql.fetch_val(
+        "SELECT id FROM levels WHERE name LIKE :name" + condition,
+        {
+            "name": level_name,
+        },
+    )
+
+    if result_id is None:
+        return None
+
+    return await from_id(ctx, result_id, include_deleted)

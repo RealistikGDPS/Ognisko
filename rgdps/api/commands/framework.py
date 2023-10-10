@@ -2,11 +2,52 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from typing import Any
+from typing import get_type_hints
+from typing import Type
+from typing import TypeVar
 
 from rgdps import logger
+from rgdps import repositories
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.models.user import User
+
+
+async def _level_by_ref(ctx: CommandContext, ref_value: str) -> Level:
+    if ref_value.isnumeric():
+        res = await repositories.level.from_id(
+            ctx,
+            int(ref_value),
+        )
+    else:
+        res = await repositories.level.from_name(
+            ctx,
+            ref_value,
+        )
+
+    if res is None:
+        raise ValueError(...)
+
+    return res
+
+
+async def _user_by_ref(ctx: CommandContext, ref_value: str) -> User:
+    if ref_value.isnumeric():
+        res = await repositories.user.from_id(
+            ctx,
+            int(ref_value),
+        )
+
+    else:
+        res = await repositories.user.from_name(
+            ctx,
+            ref_value,
+        )
+
+    if res is None:
+        raise ValueError(...)
+
+    return res
 
 
 # TODO: Inject connection context (subclass of Context)
@@ -27,6 +68,45 @@ class CommandContext:
     @property
     def is_message(self) -> bool:
         return self.target_user is not None
+
+
+_CASTABLE = [
+    str,
+    int,
+    float,
+]
+
+
+T = TypeVar("T")
+
+
+async def _parse_to_type(ctx: CommandContext, value: str, cast: Type[T]) -> T:
+    if cast in _CASTABLE:
+        return cast(value)
+    elif issubclass(cast, bool):
+        return _bool_parse(value)
+    elif issubclass(cast, Level):
+        return await _level_by_ref(ctx, value)
+    elif issubclass(cast, User):
+        return await _user_by_ref(ctx, value)
+
+    logger.error(
+        "Command parser tried to parse an unsupported type!",
+        extra={
+            "value": value,
+            "type": repr(cast),
+        },
+    )
+    raise ValueError("Unsupported type!")
+
+
+def _bool_parse(data: str) -> bool:
+    if data in ("true", "1"):
+        return True
+    elif data in ("false", "0"):
+        return False
+
+    raise ValueError("Incorrect bool type provided.")
 
 
 class Command:
@@ -92,9 +172,14 @@ class Command:
         return True
 
     async def __parse_params(self, ctx: CommandContext) -> list[Any]:
-        # TODO: Parse the function signature of `self.handle`
+        annotations = get_type_hints(self.execute)
+        split_params = ctx.params_str.split(" ")
+        params = []
 
-        ...
+        for arg_type, value in zip(annotations.keys(), split_params):
+            params.append(await _parse_to_type(ctx, value, arg_type))
+
+        return params
 
 
 class LevelCommand(Command):
