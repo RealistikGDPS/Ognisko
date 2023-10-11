@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from abc import ABC
+from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Any
 from typing import get_type_hints
@@ -110,7 +112,7 @@ class CommandContext(Context):
     target_user: User | None
 
     # Debugging details
-    params_str: str  # Prefix stripped.
+    params_str: str  # Prefix and name stripped.
 
     _base_context: Context
 
@@ -152,7 +154,38 @@ class CommandContext(Context):
         return self._base_context.http
 
 
-class Command:
+"""
+def register(
+        self,
+        channel: str,
+    ) -> Callable[[RedisHandler], RedisHandler]:
+        def decorator(handler: RedisHandler) -> RedisHandler:
+            self._routes[channel.encode()] = handler
+            return handler
+
+        return decorator
+"""
+
+
+class CommandRouter:
+    def __init__(self) -> None:
+        self._routes: dict[str, CommandRoutable] = {}
+
+    def register_command(self, command: CommandRoutable) -> None:
+        self._routes[command.name] = command
+
+    # def register(self) ->
+
+
+class CommandRoutable(ABC):
+    name: str
+
+    @abstractmethod
+    async def execute(self, ctx: CommandContext) -> str:
+        ...
+
+
+class Command(CommandRoutable):
     """Inheritable command structure for implementing custom commands."""
 
     __slots__ = (
