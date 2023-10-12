@@ -4,6 +4,7 @@ from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Any
+from typing import Callable
 from typing import get_type_hints
 from typing import Protocol
 from typing import Type
@@ -26,6 +27,15 @@ if TYPE_CHECKING:
     from rgdps.common.cache.base import AbstractAsyncCache
     from rgdps.services.mysql import AbstractMySQLService
     from rgdps.services.storage import AbstractStorage
+
+
+# Private parsing functions.
+_CASTABLE = [
+    str,
+    int,
+    float,
+]
+SupportedTypes = str | int | float | bool | Level | User
 
 
 async def _level_by_ref(ctx: CommandContext, ref_value: str) -> Level:
@@ -63,14 +73,6 @@ async def _user_by_ref(ctx: CommandContext, ref_value: str) -> User:
         raise ValueError("Could not find user from the given reference!")
 
     return res
-
-
-_CASTABLE = [
-    str,
-    int,
-    float,
-]
-SupportedTypes = str | int | float | bool | Level | User
 
 
 T = TypeVar("T")
@@ -183,19 +185,6 @@ async def _cast_params(
         params.append(await _parse_to_type(ctx, value, arg_type))
 
     return params
-
-
-"""
-def register(
-        self,
-        channel: str,
-    ) -> Callable[[RedisHandler], RedisHandler]:
-        def decorator(handler: RedisHandler) -> RedisHandler:
-            self._routes[channel.encode()] = handler
-            return handler
-
-        return decorator
-"""
 
 
 class CommandRoutable(ABC):
@@ -472,3 +461,39 @@ class CommandFunction(Command):
     async def _parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = get_type_hints(self._handler)
         return await _cast_params(ctx, annotations)
+
+
+"""
+def register(
+        self,
+        channel: str,
+    ) -> Callable[[RedisHandler], RedisHandler]:
+        def decorator(handler: RedisHandler) -> RedisHandler:
+            self._routes[channel.encode()] = handler
+            return handler
+
+        return decorator
+"""
+
+
+def make_command(
+    name: str | None = None,
+    description: str | None = None,
+    required_privileges: UserPrivileges | None = None,
+) -> Callable[[HandlerFunctionProtocol], CommandFunction]:
+    """A decorator for defining a command in a single function.
+    Creates an instance of `CommandFunction` with the provided arguments,
+    or tries to work them out from the function name and docstring."""
+
+    def decorator(handler: HandlerFunctionProtocol) -> CommandFunction:
+        command_name = name or handler.__name__  # type: ignore
+        command_description = description or handler.__doc__ or ""
+
+        return CommandFunction(
+            command_name,
+            command_description,
+            handler,
+            required_privileges,
+        )
+
+    return decorator
