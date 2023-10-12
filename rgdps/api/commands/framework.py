@@ -247,7 +247,14 @@ class CommandRouter:
                 )
             self._routes[key] = value
 
-    # def register(self) ->
+    def register(self) -> Callable[[CommandRoutable], CommandRoutable]:
+        """A decorator version of `register_command`."""
+
+        def decorator(command: CommandRoutable) -> CommandRoutable:
+            self.register_command(command)
+            return command
+
+        return decorator
 
     async def entrypoint(
         self,
@@ -484,17 +491,13 @@ class CommandFunction(Command):
         return await _cast_params(ctx, annotations)
 
 
-"""
-def register(
-        self,
-        channel: str,
-    ) -> Callable[[RedisHandler], RedisHandler]:
-        def decorator(handler: RedisHandler) -> RedisHandler:
-            self._routes[channel.encode()] = handler
-            return handler
+class UnparsedCommand(Command):
+    """A child class of `Command` that bypasses the annotation-based
+    command parsing and passes the raw string arguments to the command handler
+    as a single string."""
 
-        return decorator
-"""
+    async def _parse_params(self, ctx: CommandContext) -> list[Any]:
+        return [" ".join(ctx.params)]
 
 
 def make_command(
