@@ -5,6 +5,7 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import Any
 from typing import get_type_hints
+from typing import Protocol
 from typing import Type
 from typing import TYPE_CHECKING
 from typing import TypeVar
@@ -40,7 +41,7 @@ async def _level_by_ref(ctx: CommandContext, ref_value: str) -> Level:
         )
 
     if res is None:
-        raise ValueError(...)
+        raise ValueError("Could not find level from the given reference!")
 
     return res
 
@@ -59,7 +60,7 @@ async def _user_by_ref(ctx: CommandContext, ref_value: str) -> User:
         )
 
     if res is None:
-        raise ValueError(...)
+        raise ValueError("Could not find user from the given reference!")
 
     return res
 
@@ -69,6 +70,7 @@ _CASTABLE = [
     int,
     float,
 ]
+SupportedTypes = str | int | float | bool | Level | User
 
 
 T = TypeVar("T")
@@ -95,6 +97,7 @@ async def _parse_to_type(ctx: CommandContext, value: str, cast: Type[T]) -> T:
 
 
 def _bool_parse(data: str) -> bool:
+    data = data.lower()
     if data in ("true", "1"):
         return True
     elif data in ("false", "0"):
@@ -106,6 +109,8 @@ def _bool_parse(data: str) -> bool:
 # TODO: Inject connection context (subclass of Context)
 @dataclass
 class CommandContext(Context):
+    """A context object for command handlers."""
+
     user: User
     # Cases for comment and message commands.
     level: Level | None
@@ -157,7 +162,27 @@ class CommandContext(Context):
 def _parse_params(param_str: str) -> list[str]:
     # TODO: Implement multi-word strings surrounded by quotations marks.
     # TODO: maybe kwargs?
-    return param_str.split(" ")
+    res = param_str.split(" ")
+
+    if not res:
+        raise ValueError("Could not parse parameters!")
+
+    return res
+
+
+async def _cast_params(
+    ctx: CommandContext,
+    annotations: dict[str, Any],
+) -> list[Any]:
+    params = []
+
+    if len(annotations) != len(ctx.params):
+        raise ValueError("Insufficient number of command parametres provided.")
+
+    for arg_type, value in zip(annotations.keys(), ctx.params):
+        params.append(await _parse_to_type(ctx, value, arg_type))
+
+    return params
 
 
 """
@@ -173,30 +198,10 @@ def register(
 """
 
 
-class CommandRouter:
-    def __init__(self) -> None:
-        self._routes: dict[str, CommandRoutable] = {}
-
-    def register_command(self, command: CommandRoutable) -> None:
-        self._routes[command.name] = command
-
-    # def register(self) ->
-
-    async def execute(self, command: str, base_ctx: Context) -> str:
-        try:
-            parsed_params = _parse_params(command)
-        except ValueError:
-            return await self.on_invalid_format()
-
-    # Events
-    async def on_command_not_found(self, ctx: CommandContext, name: str) -> str:
-        return "Could not find a command with the given name!"
-
-    async def on_invalid_format(self) -> str:
-        return "Incorrect command format! Could not parse the given input."
-
-
 class CommandRoutable(ABC):
+    """An abstract class defining interfaces that `CommandRouter` can use to
+    execute commands."""
+
     name: str
 
     @abstractmethod
@@ -204,19 +209,113 @@ class CommandRoutable(ABC):
         ...
 
 
+class CommandRouter:
+    """An (optionally) inheritable command router class, responible for
+    registering and executing commands handlers. Supports nesting routers
+    for command groups."""
+
+    def __init__(self, name: str) -> None:
+        self.name = name
+        self._routes: dict[str, CommandRoutable] = {}
+
+    def register_command(self, command: CommandRoutable) -> None:
+        self._routes[command.name] = command
+
+    def merge(self, router: CommandRouter) -> None:
+        """Combines the routes of two routers, overriding old entries
+        with new ones (raises a warning)."""
+
+        for key, value in router._routes.items():
+            if key in self._routes:
+                logger.warning(
+                    "Command router merge has overwritten an existing command!",
+                    extra={
+                        "command": key,
+                        "source": router.name,
+                        "target": self.name,
+                    },
+                )
+            self._routes[key] = value
+
+    # def register(self) ->
+
+    async def entrypoint(
+        self,
+        command: str,
+        user: User,
+        base_ctx: Context,
+        level: Level | None = None,
+        target_user: User | None = None,
+    ) -> str:
+        """Defines an entrypoint for command execution. This method is
+        supposed to be the first one called when executing a command."""
+
+        try:
+            parsed_params = _parse_params(command)
+        except ValueError:
+            return await self.on_invalid_format()
+
+        command_name = parsed_params[0]
+        params = parsed_params[1:]
+
+        ctx = CommandContext(
+            user=user,
+            level=level,
+            target_user=target_user,
+            params=params,
+            _base_context=base_ctx,
+        )
+
+        command_handler = self._routes.get(command_name)
+        if command_handler is None:
+            return await self.on_command_not_found(ctx, command_name)
+
+        return await command_handler.execute(ctx)
+
+    async def execute(
+        self,
+        ctx: CommandContext,
+    ) -> str:
+        """Implements support for nesting routers."""
+
+        command_name = ctx.params[0]
+        ctx.params = ctx.params[1:]
+
+        if not await self.should_run(ctx):
+            return await self.on_cannot_run(ctx)
+
+        command_handler = self._routes.get(command_name)
+        if command_handler is None:
+            return await self.on_command_not_found(ctx, command_name)
+
+        return await command_handler.execute(ctx)
+
+    async def should_run(self, ctx: CommandContext) -> bool:
+        """Overridable function for custom definitions of execution criteria."""
+
+        return True
+
+    # Events
+    async def on_command_not_found(self, ctx: CommandContext, name: str) -> str:
+        return f"Could not find a command with the name {name!r}!"
+
+    async def on_invalid_format(self) -> str:
+        return "Incorrect command format! Could not parse the given input."
+
+    async def on_cannot_run(self, ctx: CommandContext) -> str:
+        """An event called when the custom `should_run` function returns false."""
+
+        return "Insufficient conditions to run this command!"
+
+
 class Command(CommandRoutable):
     """Inheritable command structure for implementing custom commands."""
-
-    __slots__ = (
-        "name",
-        "description",
-    )
 
     def __init__(
         self,
         name: str,
         description: str,
-        required_privileges: UserPrivileges | None,
+        required_privileges: UserPrivileges | None = None,
     ) -> None:
         self.name = name
         self.description = description
@@ -230,10 +329,14 @@ class Command(CommandRoutable):
 
     async def should_run(self, ctx: CommandContext) -> bool:
         """Overridable function for custom definitions of execution criteria."""
+
         return True
 
     # Events
     async def on_exception(self, ctx: CommandContext, exception: Exception) -> str:
+        """An event called when an unhandled exception occurs while executing
+        the command."""
+
         logger.exception(
             "An exception has occurred while executing command!",
             extra={
@@ -249,20 +352,32 @@ class Command(CommandRoutable):
         )
 
     async def on_privilege_fail(self, ctx: CommandContext) -> str:
+        """An event called when the user does not have the required privileges
+        to run the command, defined in the `required_privileges` attribute."""
+
         return "You have insufficient privileges to run this command."
 
     # TODO: Provide more information.
     async def on_argument_fail(self, ctx: CommandContext) -> str:
+        """An event called when parsing the command arguments into the
+        required format fails, usually due to user mis-input."""
+
         return "Incorrect arguments provided!"
 
     async def on_cannot_run(self, ctx: CommandContext) -> str:
+        """An event called when the custom `should_run` function returns false."""
+
         return "Insufficient conditions to run this command!"
 
     async def execute(self, ctx: CommandContext) -> str:
-        """Called by the command router to perform command checks and execution."""
+        """Called by the command router to perform command checks and execution.
+        Do not override this method."""
+
+        # Modify params to remove the command name.
+        ctx.params = ctx.params[1:]
 
         if not self.__has_privileges(ctx):
-            return await self.on_privilege_fail()
+            return await self.on_privilege_fail(ctx)
 
         if not await self.should_run(ctx):
             return await self.on_cannot_run(ctx)
@@ -273,7 +388,15 @@ class Command(CommandRoutable):
             return await self.on_argument_fail(ctx)
 
         try:
-            return await self.handle(ctx, *params)
+            result = await self.handle(ctx, *params)
+            logger.info(
+                "Successfully executed command!",
+                extra={
+                    "command_name": self.name,
+                    "user_id": ctx.user.id,
+                },
+            )
+            return result
         except Exception as e:
             logger.exception(
                 "Failed to run command handler!",
@@ -295,20 +418,13 @@ class Command(CommandRoutable):
         return True
 
     async def __parse_params(self, ctx: CommandContext) -> list[Any]:
-        annotations = get_type_hints(self.execute)
-        params = []
-
-        if len(annotations) != len(ctx.params):
-            raise ValueError("Insufficient number of command parametres provided.")
-
-        for arg_type, value in zip(annotations.keys(), ctx.params):
-            params.append(await _parse_to_type(ctx, value, arg_type))
-
-        return params
+        annotations = get_type_hints(self.handle)
+        return await _cast_params(ctx, annotations)
 
 
 class LevelCommand(Command):
-    """Variant of command that may only be run on levels."""
+    """A child class of `Command` with a default `should_run` implementation
+    that only allows the command to be ran on levels."""
 
     async def should_run(self, ctx: CommandContext) -> bool:
         return ctx.is_level
@@ -318,10 +434,41 @@ class LevelCommand(Command):
 
 
 class MessageCommand(Command):
-    """Variant of command that may only be run on messages."""
+    """A child class of `Command` with a default `should_run` implementation
+    that only allows the command to be ran on messages."""
 
     async def should_run(self, ctx: CommandContext) -> bool:
         return ctx.is_message
 
     async def on_cannot_run(self, ctx: CommandContext) -> str:
         return "This command can only be ran in user messages!"
+
+
+class HandlerFunctionProtocol(Protocol):
+    """A protocol for defining a command handler function."""
+
+    async def __call__(self, ctx: CommandContext, *args: SupportedTypes) -> str:
+        ...
+
+
+class CommandFunction(Command):
+    """A child class of `Command` that allows for defining an entire command
+    in a single function. Used for simple commands that do not require
+    a lot of boilerplate or custom functionality."""
+
+    def __init__(
+        self,
+        name: str,
+        description: str,
+        handler: HandlerFunctionProtocol,
+        required_privileges: UserPrivileges | None = None,
+    ) -> None:
+        super().__init__(name, description, required_privileges)
+        self._handler = handler
+
+    async def handle(self, ctx: CommandContext, *args: SupportedTypes) -> str:
+        return await self._handler(ctx, *args)
+
+    async def __parse_params(self, ctx: CommandContext) -> list[Any]:
+        annotations = get_type_hints(self._handler)
+        return await _cast_params(ctx, annotations)
