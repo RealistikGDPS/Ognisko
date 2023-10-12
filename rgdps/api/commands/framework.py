@@ -112,7 +112,7 @@ class CommandContext(Context):
     target_user: User | None
 
     # Debugging details
-    params_str: str  # Prefix and name stripped.
+    params: list[str]  # Prefix and name stripped.
 
     _base_context: Context
 
@@ -154,6 +154,12 @@ class CommandContext(Context):
         return self._base_context.http
 
 
+def _parse_params(param_str: str) -> list[str]:
+    # TODO: Implement multi-word strings surrounded by quotations marks.
+    # TODO: maybe kwargs?
+    return param_str.split(" ")
+
+
 """
 def register(
         self,
@@ -175,6 +181,19 @@ class CommandRouter:
         self._routes[command.name] = command
 
     # def register(self) ->
+
+    async def execute(self, command: str, base_ctx: Context) -> str:
+        try:
+            parsed_params = _parse_params(command)
+        except ValueError:
+            return await self.on_invalid_format()
+
+    # Events
+    async def on_command_not_found(self, ctx: CommandContext, name: str) -> str:
+        return "Could not find a command with the given name!"
+
+    async def on_invalid_format(self) -> str:
+        return "Incorrect command format! Could not parse the given input."
 
 
 class CommandRoutable(ABC):
@@ -219,7 +238,7 @@ class Command(CommandRoutable):
             "An exception has occurred while executing command!",
             extra={
                 "command_name": self.name,
-                "command_input": ctx.params_str,
+                "command_input": ctx.params,
                 "user_id": ctx.user.id,
             },
             exc_info=exception,
@@ -260,7 +279,7 @@ class Command(CommandRoutable):
                 "Failed to run command handler!",
                 extra={
                     "command_name": self.name,
-                    "command_input": ctx.params_str,
+                    "command_input": ctx.params,
                     "user_id": ctx.user.id,
                 },
             )
@@ -277,10 +296,12 @@ class Command(CommandRoutable):
 
     async def __parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = get_type_hints(self.execute)
-        split_params = ctx.params_str.split(" ")
         params = []
 
-        for arg_type, value in zip(annotations.keys(), split_params):
+        if len(annotations) != len(ctx.params):
+            raise ValueError("Insufficient number of command parametres provided.")
+
+        for arg_type, value in zip(annotations.keys(), ctx.params):
             params.append(await _parse_to_type(ctx, value, arg_type))
 
         return params
