@@ -108,10 +108,54 @@ def _bool_parse(data: str) -> bool:
     raise ValueError("Incorrect bool type provided.")
 
 
-# TODO: Inject connection context (subclass of Context)
+def _parse_params(param_str: str) -> list[str]:
+    # TODO cleanup.
+    # TODO: maybe kwargs?
+    if param_str.count('"') % 2 != 0:
+        raise ValueError("Unbalanced quotes!")
+
+    param_str = param_str.strip()
+    if not param_str:
+        raise ValueError("Could not parse parameters!")
+
+    quote_detection = param_str.split('"')
+    # Issue if the last character is a quote, it will be an empty string.
+    if param_str[-1] == '"':
+        quote_detection = quote_detection[:-1]
+
+    # All even indexes are outside quotes, all odd indexes are inside quotes.
+    params = []
+    for idx, value in enumerate(quote_detection):
+        value = value.strip()
+        if idx % 2 == 0:
+            # Outside quotes, split by spaces.
+            params.extend(value.split(" "))
+        else:
+            # Inside quotes, do not split.
+            params.append(value)
+
+    return params
+
+
+async def _cast_params(
+    ctx: CommandContext,
+    annotations: dict[str, Any],
+) -> list[Any]:
+    params = []
+
+    if len(annotations) != len(ctx.params):
+        raise ValueError("Insufficient number of command parametres provided.")
+
+    for arg_type, value in zip(annotations.keys(), ctx.params):
+        params.append(await _parse_to_type(ctx, value, arg_type))
+
+    return params
+
+
 @dataclass
 class CommandContext(Context):
-    """A context object for command handlers."""
+    """A context object for command handlers, implementing the common
+    `Context` API."""
 
     user: User
     # Cases for comment and message commands.
@@ -159,32 +203,6 @@ class CommandContext(Context):
     @property
     def http(self) -> httpx.AsyncClient:
         return self._base_context.http
-
-
-def _parse_params(param_str: str) -> list[str]:
-    # TODO: Implement multi-word strings surrounded by quotations marks.
-    # TODO: maybe kwargs?
-    res = param_str.split(" ")
-
-    if not res:
-        raise ValueError("Could not parse parameters!")
-
-    return res
-
-
-async def _cast_params(
-    ctx: CommandContext,
-    annotations: dict[str, Any],
-) -> list[Any]:
-    params = []
-
-    if len(annotations) != len(ctx.params):
-        raise ValueError("Insufficient number of command parametres provided.")
-
-    for arg_type, value in zip(annotations.keys(), ctx.params):
-        params.append(await _parse_to_type(ctx, value, arg_type))
-
-    return params
 
 
 class CommandRoutable(ABC):
