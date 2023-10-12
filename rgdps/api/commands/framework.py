@@ -383,7 +383,7 @@ class Command(CommandRoutable):
             return await self.on_cannot_run(ctx)
 
         try:
-            params = await self.__parse_params(ctx)
+            params = await self._parse_params(ctx)
         except ValueError:
             return await self.on_argument_fail(ctx)
 
@@ -417,7 +417,7 @@ class Command(CommandRoutable):
 
         return True
 
-    async def __parse_params(self, ctx: CommandContext) -> list[Any]:
+    async def _parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = get_type_hints(self.handle)
         return await _cast_params(ctx, annotations)
 
@@ -469,6 +469,6 @@ class CommandFunction(Command):
     async def handle(self, ctx: CommandContext, *args: SupportedTypes) -> str:
         return await self._handler(ctx, *args)
 
-    async def __parse_params(self, ctx: CommandContext) -> list[Any]:
+    async def _parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = get_type_hints(self._handler)
         return await _cast_params(ctx, annotations)
