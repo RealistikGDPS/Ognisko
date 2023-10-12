@@ -146,6 +146,9 @@ async def _cast_params(
     if len(annotations) != len(ctx.params):
         raise ValueError("Insufficient number of command parametres provided.")
 
+    if "return" in annotations:
+        annotations.pop("return")
+
     for arg_type, value in zip(annotations.keys(), ctx.params):
         params.append(await _parse_to_type(ctx, value, arg_type))
 
