@@ -140,10 +140,12 @@ def _parse_params(param_str: str) -> list[str]:
 async def _cast_params(
     ctx: CommandContext,
     annotations: dict[str, Any],
+    defaults: tuple[Any],
 ) -> list[Any]:
     params = []
 
-    if len(annotations) != len(ctx.params):
+    required_len = len(annotations) - len(defaults)
+    if len(ctx.params) < required_len or len(ctx.params) > len(annotations):
         raise ValueError("Insufficient number of command parametres provided.")
 
     if "return" in annotations:
@@ -436,7 +438,8 @@ class Command(CommandRoutable):
 
     async def _parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = get_type_hints(self.handle)
-        return await _cast_params(ctx, annotations)
+        default_params = self.handle.__defaults__ or ()
+        return await _cast_params(ctx, annotations, default_params)
 
 
 class LevelCommand(Command):
@@ -464,6 +467,9 @@ class MessageCommand(Command):
 class HandlerFunctionProtocol(Protocol):
     """A protocol for defining a command handler function."""
 
+    __name__: str
+    __defaults__: tuple[Any, ...] | None
+
     async def __call__(self, ctx: CommandContext, *args: SupportedTypes) -> str:
         ...
 
@@ -488,7 +494,8 @@ class CommandFunction(Command):
 
     async def _parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = get_type_hints(self._handler)
-        return await _cast_params(ctx, annotations)
+        default_params = self._handler.__defaults__ or ()
+        return await _cast_params(ctx, annotations, default_params)
 
 
 class UnparsedCommand(Command):
@@ -510,7 +517,7 @@ def make_command(
     or tries to work them out from the function name and docstring."""
 
     def decorator(handler: HandlerFunctionProtocol) -> CommandFunction:
-        command_name = name or handler.__name__  # type: ignore
+        command_name = name or handler.__name__
         command_description = description or handler.__doc__ or ""
 
         return CommandFunction(
