@@ -3,6 +3,7 @@ from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any
 from typing import Callable
 from typing import get_type_hints
@@ -35,7 +36,7 @@ _CASTABLE = [
     int,
     float,
 ]
-SupportedTypes = str | int | float | bool | Level | User
+SupportedTypes = str | int | float | bool | Level | User | Enum
 
 
 async def _level_by_ref(ctx: CommandContext, ref_value: str) -> Level:
@@ -87,6 +88,8 @@ async def _parse_to_type(ctx: CommandContext, value: str, cast: Type[T]) -> T:
         return await _level_by_ref(ctx, value)
     elif issubclass(cast, User):
         return await _user_by_ref(ctx, value)
+    elif issubclass(cast, Enum):
+        return cast(value)
 
     logger.error(
         "Command parser tried to parse an unsupported type!",
