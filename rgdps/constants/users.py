@@ -36,7 +36,7 @@ class UserPrivileges(IntFlag):
     COMMENTS_POST = 1 << 23
     COMMENTS_DELETE_OWN = 1 << 24
     COMMENTS_DELETE_OTHER = 1 << 25
-    COMMENTS_TRIGGER_COMMANDS = 1 << 26
+    COMMANDS_TRIGGER = 1 << 26
     COMMENTS_BYPASS_SPAM_FILTER = 1 << 27
 
     MESSAGES_SEND = 1 << 28
@@ -105,7 +105,7 @@ DEFAULT_PRIVILEGES = (
     | UserPrivileges.LEVEL_DELETE_OWN
     | UserPrivileges.COMMENTS_POST
     | UserPrivileges.COMMENTS_DELETE_OWN
-    | UserPrivileges.COMMENTS_TRIGGER_COMMANDS
+    | UserPrivileges.COMMANDS_TRIGGER
     | UserPrivileges.MESSAGES_SEND
     | UserPrivileges.MESSAGES_DELETE_OWN
     | UserPrivileges.FRIEND_REQUESTS_SEND

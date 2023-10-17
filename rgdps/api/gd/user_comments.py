@@ -4,6 +4,7 @@ from fastapi import Depends
 from fastapi import Form
 
 from rgdps import logger
+from rgdps.api import commands
 from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
@@ -67,6 +68,22 @@ async def user_comments_post(
     ),
     content: Base64String = Form(..., alias="comment", max_length=256),
 ):
+    # Allow users to run commands on themselves.
+    if commands.is_command(content):
+        result_str = await commands.router.entrypoint(
+            command=commands.strip_prefix(content),
+            user=user,
+            base_ctx=ctx,
+            level_id=None,
+            target_user_id=user.id,
+        )
+
+        # Comment bans allow you to show text to the user instead of posting the comment.
+        return gd_obj.comment_ban_string(
+            0,
+            result_str,
+        )
+
     result = await user_comments.create(ctx, user.id, content)
 
     if isinstance(result, ServiceError):

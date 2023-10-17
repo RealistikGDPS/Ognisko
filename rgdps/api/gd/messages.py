@@ -2,6 +2,7 @@ from fastapi import Depends
 from fastapi import Form
 
 from rgdps import logger
+from rgdps.api import commands
 from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
@@ -28,6 +29,16 @@ async def message_post(
     subject: Base64String = Form(..., max_length=35),
     content: MessageContentString = Form(..., alias="body", max_length=200),
 ):
+    # Commands hijack GD client requests to allow interaction directly through the client.
+    if commands.is_command(content):
+        return await commands.router.entrypoint(
+            command=commands.strip_prefix(content),
+            user=user,
+            base_ctx=ctx,
+            level_id=None,
+            target_user_id=recipient_user_id,
+        )
+
     message = await messages.create(
         ctx,
         sender_user_id=user.id,

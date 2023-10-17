@@ -170,13 +170,20 @@ async def _cast_params(
             f"{required_len} and {max_len}, got {provided_len}!",
         )
 
-    if "return" in annotations:
-        annotations.pop("return")
-
-    for arg_type, value in zip(annotations.keys(), ctx.params):
+    for arg_type, value in zip(annotations.values(), ctx.params):
         params.append(await _resolve_from_type(ctx, value, arg_type))
 
     return params
+
+
+def _get_command_types(func: HandlerFunctionProtocol) -> dict[str, Any]:
+    annotations = get_type_hints(func)
+
+    return {
+        key: value
+        for key, value in annotations.items()
+        if value is not CommandContext and key != "return"
+    }
 
 
 @dataclass
@@ -285,8 +292,8 @@ class CommandRouter:
         command: str,
         user: User,
         base_ctx: Context,
-        level: Level | None = None,
-        target_user: User | None = None,
+        level_id: int | None = None,
+        target_user_id: int | None = None,
     ) -> str:
         """Defines an entrypoint for command execution. This method is
         supposed to be the first one called when executing a command."""
@@ -297,13 +304,33 @@ class CommandRouter:
             return await self.on_invalid_format(e)
 
         command_name = parsed_params[0]
-        params = parsed_params[1:]
+
+        # Resolve context details
+        level = None
+        if level_id is not None:
+            level = await repositories.level.from_id(base_ctx, level_id)
+            if level is None:
+                logger.error(
+                    "Failed to resolve the command level!",
+                    extra={"level_id": level_id},
+                )
+                return await self.on_misc_error()
+
+        target_user = None
+        if target_user_id is not None:
+            target_user = await repositories.user.from_id(base_ctx, target_user_id)
+            if target_user is None:
+                logger.error(
+                    "Failed to resolve the command target user!",
+                    extra={"target_user_id": target_user_id},
+                )
+                return await self.on_misc_error()
 
         ctx = CommandContext(
             user=user,
             level=level,
             target_user=target_user,
-            params=params,
+            params=parsed_params,
             _base_context=base_ctx,
         )
 
@@ -351,6 +378,12 @@ class CommandRouter:
 
         return "Insufficient conditions to run this command!"
 
+    async def on_misc_error(self) -> str:
+        """An event called when an internal logic error occurs. Used for
+        errors where the user does not need to know the specifics."""
+
+        return "An internal error has occurred while executing this command!"
+
 
 class Command(CommandRoutable):
     """Inheritable command structure for implementing custom commands."""
@@ -364,6 +397,9 @@ class Command(CommandRoutable):
         self.name = name
         self.description = description
         self.required_privileges = required_privileges
+
+        if self.required_privileges:
+            self.required_privileges |= UserPrivileges.COMMANDS_TRIGGER
 
     # Overridable definitions.
     async def handle(self, ctx: CommandContext) -> str:
@@ -463,7 +499,7 @@ class Command(CommandRoutable):
         return True
 
     async def _parse_params(self, ctx: CommandContext) -> list[Any]:
-        annotations = get_type_hints(self.handle)
+        annotations = _get_command_types(self.handle)
         default_params = self.handle.__defaults__ or ()
         return await _cast_params(ctx, annotations, default_params)
 
@@ -519,7 +555,7 @@ class CommandFunction(Command):
         return await self._handler(ctx, *args)
 
     async def _parse_params(self, ctx: CommandContext) -> list[Any]:
-        annotations = get_type_hints(self._handler)
+        annotations = _get_command_types(self._handler)
         default_params = self._handler.__defaults__ or ()
         return await _cast_params(ctx, annotations, default_params)
 
