@@ -79,7 +79,7 @@ async def _user_by_ref(ctx: CommandContext, ref_value: str) -> User:
 T = TypeVar("T")
 
 
-async def _parse_to_type(ctx: CommandContext, value: str, cast: Type[T]) -> T:
+async def _parse_to_type(ctx: CommandContext, value: str, cast: type[T]) -> T:
     if cast in _CASTABLE:
         return cast(value)
     elif issubclass(cast, bool):
