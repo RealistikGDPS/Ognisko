@@ -4,7 +4,7 @@ from rgdps.api.commands.framework import CommandContext
 from rgdps.api.commands.framework import CommandRouter
 from rgdps.api.commands.framework import make_command
 
-router = CommandRouter("misc")
+router = CommandRouter("misc_root")
 
 
 @router.register()

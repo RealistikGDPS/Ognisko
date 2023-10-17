@@ -11,6 +11,7 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
+from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
 from rgdps.constants.users import CREATOR_PRIVILEGES
 from rgdps.models.level import Level
@@ -344,6 +345,50 @@ async def update_description(
         ctx,
         level.id,
         description=description,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def award(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    search_flags = level.search_flags | LevelSearchFlag.AWARDED
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def unaward(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    search_flags = level.search_flags & ~LevelSearchFlag.AWARDED
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
     )
 
     if result is None:

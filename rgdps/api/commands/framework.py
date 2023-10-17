@@ -251,7 +251,7 @@ class CommandRoutable(ABC):
         ...
 
 
-class CommandRouter:
+class CommandRouter(CommandRoutable):
     """An (optionally) inheritable command router class, responible for
     registering and executing commands handlers. Supports nesting routers
     for command groups."""
@@ -279,10 +279,17 @@ class CommandRouter:
                 )
             self._routes[key] = value
 
-    def register(self) -> Callable[[CommandRoutable], CommandRoutable]:
+    def register(
+        self,
+    ) -> Callable[[CommandRoutable | type[CommandRoutable]], CommandRoutable]:
         """A decorator version of `register_command`."""
 
-        def decorator(command: CommandRoutable) -> CommandRoutable:
+        def decorator(
+            command: CommandRoutable | type[CommandRoutable],
+        ) -> CommandRoutable:
+            if isinstance(command, type):
+                command = command()
+
             self.register_command(command)
             return command
 
@@ -347,8 +354,8 @@ class CommandRouter:
     ) -> str:
         """Implements support for nesting routers."""
 
-        command_name = ctx.params[0]
         ctx.params = ctx.params[1:]
+        command_name = ctx.params[0]
 
         if not await self.should_run(ctx):
             return await self.on_cannot_run(ctx)
