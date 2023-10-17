@@ -6,10 +6,13 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import Any
 from typing import Callable
+from typing import get_args
+from typing import get_origin
 from typing import get_type_hints
 from typing import Protocol
 from typing import TYPE_CHECKING
 from typing import TypeVar
+from typing import Union
 
 from rgdps import logger
 from rgdps import repositories
@@ -76,7 +79,20 @@ async def _user_by_ref(ctx: CommandContext, ref_value: str) -> User:
     return res
 
 
+def _unwrap_cast(cast: type[T]) -> type[T]:
+    origin_type = get_origin(cast)
+    origin_args = get_args(cast)
+
+    # Handling for `T | None` types.
+    if origin_type is Union and len(origin_args) == 2 and None in origin_args:
+        return origin_args[1 - origin_args.index(None)]
+
+    return cast
+
+
 async def _resolve_from_type(ctx: CommandContext, value: str, cast: type[T]) -> T:
+    cast = _unwrap_cast(cast)
+
     if cast in _CASTABLE:
         return cast(value)
     elif issubclass(cast, bool):
