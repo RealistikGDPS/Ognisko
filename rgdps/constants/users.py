@@ -56,6 +56,8 @@ class UserPrivileges(IntFlag):
     USER_VIEW_PRIVATE_PROFILE = 1 << 37
     COMMENTS_LIKE = 1 << 38
 
+    LEVEL_CHANGE_DESCRIPTION_OTHER = 1 << 39
+
     def as_bytes(self) -> bytes:
         return self.to_bytes(16, "little", signed=False)
 

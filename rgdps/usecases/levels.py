@@ -246,13 +246,17 @@ async def get(ctx: Context, level_id: int) -> LevelResponse | ServiceError:
     )
 
 
-async def delete(ctx: Context, level_id: int, user: User) -> bool | ServiceError:
+async def delete(
+    ctx: Context,
+    level_id: int,
+    user_id: int,
+    can_delete_other: bool = False,
+) -> bool | ServiceError:
     level = await repositories.level.from_id(ctx, level_id)
     if not level:
         return ServiceError.LEVELS_NOT_FOUND
 
-    # TODO: Check if user has permission to delete.
-    if level.user_id != user.id:
+    if level.user_id != user_id and not can_delete_other:
         return ServiceError.LEVELS_NO_DELETE_PERMISSION
 
     await repositories.level.update_partial(
@@ -327,18 +331,19 @@ async def suggest_stars(
     return level
 
 
-async def update_description(
+async def set_description(
     ctx: Context,
     level_id: int,
-    user: User,
+    user_id: int,
     description: str,
+    can_update_other: bool = False,
 ) -> Level | ServiceError:
     level = await repositories.level.from_id(ctx, level_id)
 
     if not level:
         return ServiceError.LEVELS_NOT_FOUND
 
-    if level.user_id != user.id:
+    if level.user_id != user_id and not can_update_other:
         return ServiceError.LEVELS_NO_UPDATE_PERMISSION
 
     result = await repositories.level.update_partial(
@@ -353,7 +358,7 @@ async def update_description(
     return result
 
 
-async def award(
+async def set_award(
     ctx: Context,
     level_id: int,
 ) -> Level | ServiceError:
@@ -375,7 +380,7 @@ async def award(
     return result
 
 
-async def unaward(
+async def set_unaward(
     ctx: Context,
     level_id: int,
 ) -> Level | ServiceError:
@@ -389,6 +394,62 @@ async def unaward(
         ctx,
         level_id=level_id,
         search_flags=search_flags,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def set_unlisted(
+    ctx: Context,
+    level_id: int,
+    user_id: int,
+    friends_only: bool = False,
+    can_unlist_other: bool = False,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    if level.user_id != user_id and not can_unlist_other:
+        return ServiceError.LEVELS_NO_UPDATE_PERMISSION
+
+    if friends_only:
+        publicity = LevelPublicity.FRIENDS_UNLISTED
+    else:
+        publicity = LevelPublicity.GLOBAL_UNLISTED
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        publicity=publicity,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def set_listed(
+    ctx: Context,
+    level_id: int,
+    user_id: int,
+    can_list_other: bool = False,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    if level.user_id != user_id and not can_list_other:
+        return ServiceError.LEVELS_NO_UPDATE_PERMISSION
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        publicity=LevelPublicity.PUBLIC,
     )
 
     if result is None:
