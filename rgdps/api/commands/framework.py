@@ -8,7 +8,6 @@ from typing import Any
 from typing import Callable
 from typing import get_type_hints
 from typing import Protocol
-from typing import Type
 from typing import TYPE_CHECKING
 from typing import TypeVar
 
@@ -37,6 +36,7 @@ _CASTABLE = [
     float,
 ]
 SupportedTypes = str | int | float | bool | Level | User | Enum
+T = TypeVar("T")
 
 
 async def _level_by_ref(ctx: CommandContext, ref_value: str) -> Level:
@@ -76,10 +76,7 @@ async def _user_by_ref(ctx: CommandContext, ref_value: str) -> User:
     return res
 
 
-T = TypeVar("T")
-
-
-async def _parse_to_type(ctx: CommandContext, value: str, cast: type[T]) -> T:
+async def _resolve_from_type(ctx: CommandContext, value: str, cast: type[T]) -> T:
     if cast in _CASTABLE:
         return cast(value)
     elif issubclass(cast, bool):
@@ -98,28 +95,29 @@ async def _parse_to_type(ctx: CommandContext, value: str, cast: type[T]) -> T:
             "type": repr(cast),
         },
     )
-    raise ValueError("Unsupported type!")
+    raise ValueError(
+        f"A resolver for the defined type {cast!r} has not been implemented!",
+    )
 
 
 def _bool_parse(data: str) -> bool:
     data = data.lower()
-    if data in ("true", "1"):
+    if data in ("true", "1", "t"):
         return True
-    elif data in ("false", "0"):
+    elif data in ("false", "0", "f"):
         return False
 
-    raise ValueError("Incorrect bool type provided.")
+    raise ValueError(f"Could not parse {data!r} as a boolean (true/false) value!")
 
 
 def _parse_params(param_str: str) -> list[str]:
-    # TODO cleanup.
     # TODO: maybe kwargs?
     if param_str.count('"') % 2 != 0:
-        raise ValueError("Unbalanced quotes!")
+        raise ValueError("Unclosed quotes in command parameters!")
 
     param_str = param_str.strip()
     if not param_str:
-        raise ValueError("Could not parse parameters!")
+        raise ValueError("No command parameters provided!")
 
     quote_detection = param_str.split('"')
     # Issue if the last character is a quote, it will be an empty string.
@@ -148,14 +146,19 @@ async def _cast_params(
     params = []
 
     required_len = len(annotations) - len(defaults)
-    if len(ctx.params) < required_len or len(ctx.params) > len(annotations):
-        raise ValueError("Insufficient number of command parametres provided.")
+    max_len = len(annotations)
+    provided_len = len(ctx.params)
+    if provided_len < required_len or provided_len > max_len:
+        raise ValueError(
+            "Invalid number of parameters provided! Expected between "
+            f"{required_len} and {max_len}, got {provided_len}!",
+        )
 
     if "return" in annotations:
         annotations.pop("return")
 
     for arg_type, value in zip(annotations.keys(), ctx.params):
-        params.append(await _parse_to_type(ctx, value, arg_type))
+        params.append(await _resolve_from_type(ctx, value, arg_type))
 
     return params
 
@@ -274,8 +277,8 @@ class CommandRouter:
 
         try:
             parsed_params = _parse_params(command)
-        except ValueError:
-            return await self.on_invalid_format()
+        except ValueError as e:
+            return await self.on_invalid_format(e)
 
         command_name = parsed_params[0]
         params = parsed_params[1:]
@@ -321,8 +324,11 @@ class CommandRouter:
     async def on_command_not_found(self, ctx: CommandContext, name: str) -> str:
         return f"Could not find a command with the name {name!r}!"
 
-    async def on_invalid_format(self) -> str:
-        return "Incorrect command format! Could not parse the given input."
+    async def on_invalid_format(self, exception: Exception) -> str:
+        return (
+            "Incorrect command format! Could not parse the given "
+            f"input with error {exception}."
+        )
 
     async def on_cannot_run(self, ctx: CommandContext) -> str:
         """An event called when the custom `should_run` function returns false."""
@@ -379,12 +385,13 @@ class Command(CommandRoutable):
 
         return "You have insufficient privileges to run this command."
 
-    # TODO: Provide more information.
-    async def on_argument_fail(self, ctx: CommandContext) -> str:
+    async def on_argument_fail(self, ctx: CommandContext, exception: Exception) -> str:
         """An event called when parsing the command arguments into the
         required format fails, usually due to user mis-input."""
 
-        return "Incorrect arguments provided!"
+        return "Matching the given command arguments has failed with error " + str(
+            exception,
+        )
 
     async def on_cannot_run(self, ctx: CommandContext) -> str:
         """An event called when the custom `should_run` function returns false."""
@@ -406,8 +413,8 @@ class Command(CommandRoutable):
 
         try:
             params = await self._parse_params(ctx)
-        except ValueError:
-            return await self.on_argument_fail(ctx)
+        except ValueError as e:
+            return await self.on_argument_fail(ctx, e)
 
         try:
             result = await self.handle(ctx, *params)
