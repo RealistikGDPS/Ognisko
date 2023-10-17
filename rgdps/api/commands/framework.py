@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import typing
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
@@ -96,11 +97,11 @@ async def _resolve_from_type(ctx: CommandContext, value: str, cast: type[T]) -> 
     if cast in _CASTABLE:
         return cast(value)
     elif issubclass(cast, bool):
-        return _bool_parse(value)
+        return typing.cast(T, _bool_parse(value))
     elif issubclass(cast, Level):
-        return await _level_by_ref(ctx, value)
+        return typing.cast(T, await _level_by_ref(ctx, value))
     elif issubclass(cast, User):
-        return await _user_by_ref(ctx, value)
+        return typing.cast(T, await _user_by_ref(ctx, value))
     elif issubclass(cast, Enum):
         return cast(value)
 
@@ -532,7 +533,7 @@ class HandlerFunctionProtocol(Protocol):
     __name__: str
     __defaults__: tuple[Any, ...] | None
 
-    async def __call__(self, ctx: CommandContext, *args: SupportedTypes) -> str:
+    async def __call__(self, ctx: CommandContext, *args: Any) -> str:
         ...
 
 
