@@ -358,7 +358,7 @@ async def set_description(
     return result
 
 
-async def set_award(
+async def nominate_awarded(
     ctx: Context,
     level_id: int,
 ) -> Level | ServiceError:
@@ -380,7 +380,7 @@ async def set_award(
     return result
 
 
-async def set_unaward(
+async def revoke_awarded(
     ctx: Context,
     level_id: int,
 ) -> Level | ServiceError:
@@ -496,3 +496,47 @@ async def rate_level(
     )
 
     return level
+
+
+async def nominate_magic(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    search_flags = level.search_flags | LevelSearchFlag.MAGIC
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def revoke_magic(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    search_flags = level.search_flags & ~LevelSearchFlag.MAGIC
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result

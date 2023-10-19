@@ -22,9 +22,9 @@ async def award_level(ctx: CommandContext, level: Level | None = None) -> str:
         level = ctx.level
 
     if level is None:
-        return "You need to specify a level to delete."
+        return "You need to specify a level to award."
 
-    res = await levels.set_award(ctx, level.id)
+    res = await levels.nominate_awarded(ctx, level.id)
 
     if isinstance(res, ServiceError):
         return f"Failed to award level with error {res!r}!"
@@ -39,9 +39,9 @@ async def unaward_level(ctx: CommandContext, level: Level | None = None) -> str:
         level = ctx.level
 
     if level is None:
-        return "You need to specify a level to delete."
+        return "You need to specify a level to unaward."
 
-    res = await levels.set_unaward(ctx, level.id)
+    res = await levels.revoke_awarded(ctx, level.id)
 
     if isinstance(res, ServiceError):
         return f"Failed to unaward level with error {res!r}!"
@@ -125,7 +125,7 @@ async def relist_level(
 
 @level_group.register()
 @make_command(name="description")
-async def set_level_description(
+async def set_description_command(
     ctx: CommandContext,
     description: str,
     level: Level | None = None,
@@ -173,3 +173,40 @@ async def rate_command(
         return f"Rating the level failed with error {res!r}!"
 
     return f"The level {ctx.level.name} has been rated!"
+
+
+@level_group.register()
+@make_command(name="magic")
+async def nominate_magic_command(
+    ctx: CommandContext,
+    level: Level | None = None,
+) -> str:
+    if level is None:
+        level = ctx.level
+
+    if level is None:
+        return "You need to specify a level to nominate as magic."
+
+    res = await levels.nominate_magic(ctx, level.id)
+
+    if isinstance(res, ServiceError):
+        return f"Failed to nominate level with error {res!r}!"
+
+    return f"The level {level.name!r} has been nominated as magic."
+
+
+@level_group.register()
+@make_command(name="unmagic")
+async def revoke_magic_command(ctx: CommandContext, level: Level | None = None) -> str:
+    if level is None:
+        level = ctx.level
+
+    if level is None:
+        return "You need to specify a level to revoke magic status."
+
+    res = await levels.revoke_magic(ctx, level.id)
+
+    if isinstance(res, ServiceError):
+        return f"Failed to nominate level with error {res!r}!"
+
+    return f"The level {level.name!r}'s magic status has been revoked."
