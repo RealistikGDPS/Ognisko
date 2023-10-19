@@ -456,3 +456,43 @@ async def set_listed(
         return ServiceError.LEVELS_NOT_FOUND
 
     return result
+
+
+async def rate_level(
+    ctx: Context,
+    level_id: int,
+    stars: int,
+    difficulty: LevelDifficulty,
+    coins_verified: bool,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+
+    if level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    creator = await repositories.user.from_id(ctx, level.user_id)
+    if creator is None:
+        return ServiceError.USER_NOT_FOUND  # NOTE: Should never happen
+
+    old_creator_points = gd_logic.calculate_creator_points(level)
+
+    level = await repositories.level.update_partial(
+        ctx,
+        level_id,
+        stars=stars,
+        difficulty=difficulty,
+        coins_verified=coins_verified,
+    )
+
+    if level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    creator_delta = gd_logic.calculate_creator_points(level) - old_creator_points
+
+    await repositories.user.update_partial(
+        ctx,
+        creator.id,
+        creator_points=creator.creator_points + creator_delta,
+    )
+
+    return level

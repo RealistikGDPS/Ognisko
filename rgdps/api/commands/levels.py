@@ -5,6 +5,7 @@ from rgdps.api.commands.framework import CommandRouter
 from rgdps.api.commands.framework import LevelCommand
 from rgdps.api.commands.framework import make_command
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.levels import LevelDifficultyName
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.usecases import levels
@@ -15,7 +16,7 @@ router.register_command(level_group)
 
 
 @level_group.register()
-@make_command(name="award")
+@make_command(name="award", required_privileges=UserPrivileges.LEVEL_MARK_AWARDED)
 async def award_level(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         level = ctx.level
@@ -32,7 +33,7 @@ async def award_level(ctx: CommandContext, level: Level | None = None) -> str:
 
 
 @level_group.register()
-@make_command(name="unaward")
+@make_command(name="unaward", required_privileges=UserPrivileges.LEVEL_MARK_AWARDED)
 async def unaward_level(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         level = ctx.level
@@ -147,3 +148,28 @@ async def set_level_description(
         return f"Failed to set level description with error {res!r}!"
 
     return f"The level {level.name!r} has had its description set."
+
+
+@level_group.register()
+@make_command(name="rate", required_privileges=UserPrivileges.LEVEL_RATE_STARS)
+async def rate_command(
+    ctx: CommandContext,
+    difficulty: LevelDifficultyName,
+    stars: int = 0,
+    coins_verified: bool = False,
+) -> str:
+    if ctx.level is None:
+        return "This command can only be ran on levels."
+
+    res = await levels.rate_level(
+        ctx,
+        ctx.level.id,
+        stars,
+        difficulty.as_difficulty(),
+        coins_verified,
+    )
+
+    if isinstance(res, ServiceError):
+        return f"Rating the level failed with error {res!r}!"
+
+    return f"The level {ctx.level.name} has been rated!"
