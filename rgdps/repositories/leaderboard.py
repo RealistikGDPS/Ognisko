@@ -83,3 +83,10 @@ async def get_top_creators_paginated(
         page * page_size,
         (page + 1) * page_size,
     )
+
+
+async def remove_creator_count(ctx: Context, user_id: int) -> None:
+    await ctx.redis.zrem(
+        "rgdps:leaderboards:creators",
+        user_id,
+    )

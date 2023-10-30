@@ -435,7 +435,7 @@ class CommandRouter(CommandRoutable):
 
         command_handler = self._routes.get(command_name)
         if command_handler is None:
-            return await self._event_command_not_found(ctx)
+            return await self._event_command_not_found(ctx, command_name)
 
         return await command_handler.execute(ctx)
 

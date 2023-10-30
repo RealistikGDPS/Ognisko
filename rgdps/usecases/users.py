@@ -322,3 +322,64 @@ async def search(
         page_size,
         query,
     )
+
+
+RESTRICTED_PRIVILEGES = (
+    UserPrivileges.USER_PROFILE_PUBLIC
+    | UserPrivileges.FRIEND_REQUESTS_SEND
+    | UserPrivileges.MESSAGES_SEND
+    | UserPrivileges.USER_STAR_LEADERBOARD_PUBLIC
+    | UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC
+)
+
+
+async def restrict(
+    ctx: Context,
+    user_id: int,
+) -> User | ServiceError:
+    user = await repositories.user.from_id(ctx, user_id)
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    new_privileges = user.privileges & ~RESTRICTED_PRIVILEGES
+
+    updated_user = await repositories.user.update_partial(
+        ctx,
+        user_id,
+        privileges=new_privileges,
+    )
+
+    if updated_user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    # Delete their ranks
+    await repositories.leaderboard.remove_star_count(ctx, user_id)
+    await repositories.leaderboard.remove_creator_count(ctx, user_id)
+
+    return updated_user
+
+
+async def unrestrict(
+    ctx: Context,
+    user_id: int,
+) -> User | ServiceError:
+    user = await repositories.user.from_id(ctx, user_id)
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    new_privileges = user.privileges | RESTRICTED_PRIVILEGES
+
+    updated_user = await repositories.user.update_partial(
+        ctx,
+        user_id,
+        privileges=new_privileges,
+    )
+
+    if updated_user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    # Re-add their ranks
+    await repositories.leaderboard.set_star_count(ctx, user_id, user.stars)
+    await repositories.leaderboard.set_creator_count(ctx, user_id, user.creator_points)
+
+    return updated_user
