@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from rgdps.api.commands.framework import CommandContext
 from rgdps.api.commands.framework import CommandRouter
-from rgdps.api.commands.framework import LevelCommand
-from rgdps.api.commands.framework import make_command
+from rgdps.api.commands.framework import unwrap_service
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelDifficultyName
 from rgdps.constants.users import UserPrivileges
@@ -23,10 +22,7 @@ async def award(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         return "You need to specify a level to award."
 
-    res = await levels.nominate_awarded(ctx, level.id)
-
-    if isinstance(res, ServiceError):
-        return f"Failed to award level with error {res!r}!"
+    res = unwrap_service(await levels.nominate_awarded(ctx, level.id))
 
     return f"The level {level.name!r} has been awarded."
 
@@ -39,10 +35,7 @@ async def unaward(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         return "You need to specify a level to unaward."
 
-    res = await levels.revoke_awarded(ctx, level.id)
-
-    if isinstance(res, ServiceError):
-        return f"Failed to unaward level with error {res!r}!"
+    res = unwrap_service(await levels.revoke_awarded(ctx, level.id))
 
     return f"The level {level.name!r} has been unawarded."
 
@@ -55,15 +48,14 @@ async def delete(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         return "You need to specify a level to delete."
 
-    res = await levels.delete(
-        ctx,
-        level.id,
-        ctx.user.id,
-        ctx.user.privileges & UserPrivileges.LEVEL_DELETE_OTHER > 0,
+    res = unwrap_service(
+        await levels.delete(
+            ctx,
+            level.id,
+            ctx.user.id,
+            ctx.user.privileges & UserPrivileges.LEVEL_DELETE_OTHER > 0,
+        ),
     )
-
-    if isinstance(res, ServiceError):
-        return f"Failed to delete level with error {res!r}!"
 
     return f"The level {level.name!r} has been deleted."
 
@@ -80,16 +72,15 @@ async def unlist(
     if level is None:
         return "You need to specify a level to unlist."
 
-    res = await levels.set_unlisted(
-        ctx,
-        level.id,
-        ctx.user.id,
-        friends_only,
-        ctx.user.privileges & UserPrivileges.LEVEL_MODIFY_VISIBILITY > 0,
+    res = unwrap_service(
+        await levels.set_unlisted(
+            ctx,
+            level.id,
+            ctx.user.id,
+            friends_only,
+            ctx.user.privileges & UserPrivileges.LEVEL_MODIFY_VISIBILITY > 0,
+        ),
     )
-
-    if isinstance(res, ServiceError):
-        return f"Failed to unlist level with error {res!r}!"
 
     return f"The level {level.name!r} has been unlisted."
 
@@ -105,15 +96,14 @@ async def relist(
     if level is None:
         return "You need to specify a level to relist."
 
-    res = await levels.set_listed(
-        ctx,
-        level.id,
-        ctx.user.id,
-        ctx.user.privileges & UserPrivileges.LEVEL_MODIFY_VISIBILITY > 0,
+    res = unwrap_service(
+        await levels.set_listed(
+            ctx,
+            level.id,
+            ctx.user.id,
+            ctx.user.privileges & UserPrivileges.LEVEL_MODIFY_VISIBILITY > 0,
+        ),
     )
-
-    if isinstance(res, ServiceError):
-        return f"Failed to relist level with error {res!r}!"
 
     return f"The level {level.name!r} has been re-listed."
 
@@ -130,16 +120,15 @@ async def description(
     if level is None:
         return "You need to specify a level to set the description of."
 
-    res = await levels.set_description(
-        ctx,
-        level.id,
-        ctx.user.id,
-        description,
-        ctx.user.privileges & UserPrivileges.LEVEL_CHANGE_DESCRIPTION_OTHER > 0,
+    res = unwrap_service(
+        await levels.set_description(
+            ctx,
+            level.id,
+            ctx.user.id,
+            description,
+            ctx.user.privileges & UserPrivileges.LEVEL_CHANGE_DESCRIPTION_OTHER > 0,
+        ),
     )
-
-    if isinstance(res, ServiceError):
-        return f"Failed to set level description with error {res!r}!"
 
     return f"The level {level.name!r} has had its description set."
 
@@ -154,16 +143,15 @@ async def rate(
     if ctx.level is None:
         return "This command can only be ran on levels."
 
-    res = await levels.rate_level(
-        ctx,
-        ctx.level.id,
-        stars,
-        difficulty.as_difficulty(),
-        coins_verified,
+    res = unwrap_service(
+        await levels.rate_level(
+            ctx,
+            ctx.level.id,
+            stars,
+            difficulty.as_difficulty(),
+            coins_verified,
+        ),
     )
-
-    if isinstance(res, ServiceError):
-        return f"Rating the level failed with error {res!r}!"
 
     return f"The level {ctx.level.name} has been rated!"
 
@@ -179,10 +167,7 @@ async def magic(
     if level is None:
         return "You need to specify a level to nominate as magic."
 
-    res = await levels.nominate_magic(ctx, level.id)
-
-    if isinstance(res, ServiceError):
-        return f"Failed to nominate level with error {res!r}!"
+    res = unwrap_service(await levels.nominate_magic(ctx, level.id))
 
     return f"The level {level.name!r} has been nominated as magic."
 
@@ -195,9 +180,6 @@ async def unmagic(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         return "You need to specify a level to revoke magic status."
 
-    res = await levels.revoke_magic(ctx, level.id)
-
-    if isinstance(res, ServiceError):
-        return f"Failed to nominate level with error {res!r}!"
+    res = unwrap_service(await levels.revoke_magic(ctx, level.id))
 
     return f"The level {level.name!r}'s magic status has been revoked."

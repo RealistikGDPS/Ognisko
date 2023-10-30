@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import asyncio
 import typing
 from abc import ABC
 from abc import abstractmethod
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any
+from typing import Awaitable
 from typing import Callable
 from typing import get_args
 from typing import get_origin
@@ -19,6 +19,7 @@ from typing import Union
 from rgdps import logger
 from rgdps import repositories
 from rgdps.common.context import Context
+from rgdps.constants.errors import ServiceError
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.models.user import User
@@ -200,7 +201,7 @@ class CommandContext(Context):
 
     # Debugging details
     params: list[str]  # Prefix and name stripped.
-
+    layer: CommandRoutable
     _base_context: Context
 
     @property
@@ -241,6 +242,14 @@ class CommandContext(Context):
         return self._base_context.http
 
 
+CommandEventHandler = Callable[[CommandContext], Awaitable[str]]
+CommandErrorHandler = Callable[[CommandContext, Exception], Awaitable[str]]
+CommandBareErrorHandler = Callable[[Exception], Awaitable[str]]
+CommandConditional = Callable[[CommandContext], Awaitable[bool]]
+CommandInfoHandler = Callable[[CommandContext, str], Awaitable[str]]
+CommandMiscHandler = Callable[[], Awaitable[str]]
+
+
 class CommandRoutable(ABC):
     """An abstract class defining interfaces that `CommandRouter` can use to
     execute commands."""
@@ -252,14 +261,51 @@ class CommandRoutable(ABC):
         ...
 
 
+class CommandException(Exception):
+    """A user defined exception that can be raised in command handlers."""
+
+    def __init__(self, message: str) -> None:
+        super().__init__(message)
+
+
+# Default event handlers for routers.
+async def _event_command_not_found(ctx: CommandContext, name: str) -> str:
+    return f"Could not find a command with the name {name!r}!"
+
+
+async def _event_invalid_format(exception: Exception) -> str:
+    return (
+        "Incorrect command format! Could not parse the given "
+        f"input with error {exception}."
+    )
+
+
+async def _event_insufficient_conditions(ctx: CommandContext) -> str:
+    return "Insufficient conditions to run this command!"
+
+
+async def _event_misc_error() -> str:
+    return "An internal error has occurred while executing this command!"
+
+
 class CommandRouter(CommandRoutable):
-    """An (optionally) inheritable command router class, responible for
-    registering and executing commands handlers. Supports nesting routers
-    for command groups."""
+    """An command router class, responible for registering and executing
+    commands handlers. Supports nesting routers for command groups."""
 
     def __init__(self, name: str) -> None:
         self.name = name
         self._routes: dict[str, CommandRoutable] = {}
+
+        # Event handlers
+        self._event_command_not_found: CommandInfoHandler = _event_command_not_found
+
+        self._event_invalid_format: CommandBareErrorHandler = _event_invalid_format
+        self._event_insufficient_conditions: CommandEventHandler = (
+            _event_insufficient_conditions
+        )
+        self._event_misc_error: CommandMiscHandler = _event_misc_error
+
+        self._execution_conditions: list[CommandConditional] = []
 
     def register_command(self, command: CommandRoutable) -> None:
         self._routes[command.name] = command
@@ -328,7 +374,7 @@ class CommandRouter(CommandRoutable):
         try:
             parsed_params = _parse_params(command)
         except ValueError as e:
-            return await self.on_invalid_format(e)
+            return await self._event_invalid_format(e)
 
         command_name = parsed_params[0]
 
@@ -341,7 +387,7 @@ class CommandRouter(CommandRoutable):
                     "Failed to resolve the command level!",
                     extra={"level_id": level_id},
                 )
-                return await self.on_misc_error()
+                return await self._event_misc_error()
 
         target_user = None
         if target_user_id is not None:
@@ -351,7 +397,7 @@ class CommandRouter(CommandRoutable):
                     "Failed to resolve the command target user!",
                     extra={"target_user_id": target_user_id},
                 )
-                return await self.on_misc_error()
+                return await self._event_misc_error()
 
         ctx = CommandContext(
             user=user,
@@ -359,13 +405,20 @@ class CommandRouter(CommandRoutable):
             target_user=target_user,
             params=parsed_params,
             _base_context=base_ctx,
+            layer=self,
         )
 
         command_handler = self._routes.get(command_name)
         if command_handler is None:
-            return await self.on_command_not_found(ctx, command_name)
+            return await self._event_command_not_found(ctx, command_name)
 
         return await command_handler.execute(ctx)
+
+    async def should_run(self, ctx: CommandContext) -> bool:
+        """Function checking if all conditions for command execution
+        are met."""
+
+        return all(await condition(ctx) for condition in self._execution_conditions)
 
     async def execute(
         self,
@@ -373,43 +426,110 @@ class CommandRouter(CommandRoutable):
     ) -> str:
         """Implements support for nesting routers."""
 
+        ctx.layer = self
         ctx.params = ctx.params[1:]
         command_name = ctx.params[0]
 
         if not await self.should_run(ctx):
-            return await self.on_cannot_run(ctx)
+            return await self._event_insufficient_conditions(ctx)
 
         command_handler = self._routes.get(command_name)
         if command_handler is None:
-            return await self.on_command_not_found(ctx, command_name)
+            return await self._event_command_not_found(ctx)
 
         return await command_handler.execute(ctx)
 
-    async def should_run(self, ctx: CommandContext) -> bool:
-        """Overridable function for custom definitions of execution criteria."""
+    # Decorators for setting event handlers
+    def on_command_not_found(
+        self,
+    ) -> Callable[[CommandInfoHandler], CommandInfoHandler]:
+        """Decorator setting an event handler for whenever a command
+        with the given name cannot be found."""
 
-        return True
+        def decorator(func: CommandInfoHandler) -> CommandInfoHandler:
+            self._event_command_not_found = func
+            return func
 
-    # Events
-    async def on_command_not_found(self, ctx: CommandContext, name: str) -> str:
-        return f"Could not find a command with the name {name!r}!"
+        return decorator
 
-    async def on_invalid_format(self, exception: Exception) -> str:
-        return (
-            "Incorrect command format! Could not parse the given "
-            f"input with error {exception}."
-        )
+    def on_invalid_format(
+        self,
+    ) -> Callable[[CommandBareErrorHandler], CommandBareErrorHandler]:
+        """Decorator setting an event handler for whenever malformed input
+        is provided to a command."""
 
-    async def on_cannot_run(self, ctx: CommandContext) -> str:
-        """An event called when the custom `should_run` function returns false."""
+        def decorator(func: CommandBareErrorHandler) -> CommandBareErrorHandler:
+            self._event_invalid_format = func
+            return func
 
-        return "Insufficient conditions to run this command!"
+        return decorator
 
-    async def on_misc_error(self) -> str:
-        """An event called when an internal logic error occurs. Used for
-        errors where the user does not need to know the specifics."""
+    def on_insufficient_conditions(
+        self,
+    ) -> Callable[[CommandEventHandler], CommandEventHandler]:
+        """Decorator setting an event handler for whenever a command's
+        custom defined pre-requisites are not met."""
 
-        return "An internal error has occurred while executing this command!"
+        def decorator(func: CommandEventHandler) -> CommandEventHandler:
+            self._event_insufficient_conditions = func
+            return func
+
+        return decorator
+
+    def on_misc_error(
+        self,
+    ) -> Callable[[CommandMiscHandler], CommandMiscHandler]:
+        """Decorator setting an event handler for whenever a misc error
+        that does not concern the user occurs."""
+
+        def decorator(func: CommandMiscHandler) -> CommandMiscHandler:
+            self._event_misc_error = func
+            return func
+
+        return decorator
+
+    def execution_condition(
+        self,
+    ) -> Callable[[CommandConditional], CommandConditional]:
+        """Decorator adding a condition that must be met for the command
+        to be executed. May be used multiple times."""
+
+        def decorator(func: CommandConditional) -> CommandConditional:
+            self._execution_conditions.append(func)
+            return func
+
+        return decorator
+
+
+# Command specific event handlers
+async def _event_on_exception(ctx: CommandContext, exception: Exception) -> str:
+    logger.exception(
+        "An exception has occurred while executing command!",
+        extra={
+            "command_name": ctx.layer.name,
+            "command_input": ctx.params,
+            "user_id": ctx.user.id,
+        },
+        exc_info=exception,
+    )
+    return (
+        "An exeption has occurred while executing this command! "
+        "The developers have been notified."
+    )
+
+
+async def _event_insufficient_privileges(ctx: CommandContext) -> str:
+    return "You have insufficient privileges to run this command."
+
+
+async def _event_invalid_arguments(ctx: CommandContext, exception: Exception) -> str:
+    return "Matching the given command arguments has failed with error " + str(
+        exception,
+    )
+
+
+async def _event_interruption(ctx: CommandContext, exception: Exception) -> str:
+    return "The command has been interrupted with error " + str(exception)
 
 
 class Command(CommandRoutable):
@@ -428,72 +548,45 @@ class Command(CommandRoutable):
         if self.required_privileges:
             self.required_privileges |= UserPrivileges.COMMANDS_TRIGGER
 
-    # Overridable definitions.
+        # Event handlers
+        self._event_on_exception: CommandErrorHandler = _event_on_exception
+        self._event_insufficient_privileges: CommandEventHandler = (
+            _event_insufficient_privileges
+        )
+        self._event_invalid_arguments: CommandErrorHandler = _event_invalid_arguments
+        self._event_insufficient_conditions: CommandEventHandler = (
+            _event_insufficient_conditions
+        )
+        self._event_interruption: CommandErrorHandler = _event_interruption
+        self._execution_conditions: list[CommandConditional] = []
+
     async def handle(self, ctx: CommandContext) -> str:
-        """Main command definition."""
+        """Default command handler. May be overridden by subclasses."""
 
         return "Hello, world!"
 
     async def should_run(self, ctx: CommandContext) -> bool:
-        """Overridable function for custom definitions of execution criteria."""
+        """Checks if all defined execution criteria has been met."""
 
-        return True
-
-    # Events
-    async def on_exception(self, ctx: CommandContext, exception: Exception) -> str:
-        """An event called when an unhandled exception occurs while executing
-        the command."""
-
-        logger.exception(
-            "An exception has occurred while executing command!",
-            extra={
-                "command_name": self.name,
-                "command_input": ctx.params,
-                "user_id": ctx.user.id,
-            },
-            exc_info=exception,
-        )
-        return (
-            "An exeption has occurred while executing this command! "
-            "The developers have been notified."
-        )
-
-    async def on_privilege_fail(self, ctx: CommandContext) -> str:
-        """An event called when the user does not have the required privileges
-        to run the command, defined in the `required_privileges` attribute."""
-
-        return "You have insufficient privileges to run this command."
-
-    async def on_argument_fail(self, ctx: CommandContext, exception: Exception) -> str:
-        """An event called when parsing the command arguments into the
-        required format fails, usually due to user mis-input."""
-
-        return "Matching the given command arguments has failed with error " + str(
-            exception,
-        )
-
-    async def on_cannot_run(self, ctx: CommandContext) -> str:
-        """An event called when the custom `should_run` function returns false."""
-
-        return "Insufficient conditions to run this command!"
+        return all(await condition(ctx) for condition in self._execution_conditions)
 
     async def execute(self, ctx: CommandContext) -> str:
-        """Called by the command router to perform command checks and execution.
-        Do not override this method."""
+        """Called by the command router to perform command checks and execution."""
 
+        ctx.layer = self
         # Modify params to remove the command name.
         ctx.params = ctx.params[1:]
 
         if not self.__has_privileges(ctx):
-            return await self.on_privilege_fail(ctx)
+            return await self._event_insufficient_privileges(ctx)
 
         if not await self.should_run(ctx):
-            return await self.on_cannot_run(ctx)
+            return await self._event_insufficient_conditions(ctx)
 
         try:
             params = await self._parse_params(ctx)
         except ValueError as e:
-            return await self.on_argument_fail(ctx, e)
+            return await self._event_invalid_arguments(ctx, e)
 
         try:
             result = await self.handle(ctx, *params)
@@ -505,6 +598,8 @@ class Command(CommandRoutable):
                 },
             )
             return result
+        except CommandException as e:
+            return await self._event_interruption(ctx, e)
         except Exception as e:
             logger.exception(
                 "Failed to run command handler!",
@@ -514,7 +609,7 @@ class Command(CommandRoutable):
                     "user_id": ctx.user.id,
                 },
             )
-            return await self.on_exception(ctx, e)
+            return await self._event_on_exception(ctx, e)
 
     # Private API
     def __has_privileges(self, ctx: CommandContext) -> bool:
@@ -530,27 +625,78 @@ class Command(CommandRoutable):
         default_params = self.handle.__defaults__ or ()
         return await _cast_params(ctx, annotations, default_params)
 
+    # Decorators
+    def on_exception(
+        self,
+    ) -> Callable[[CommandErrorHandler], CommandErrorHandler]:
+        """Decorator setting an event handler for whenever an exception
+        occurs during command execution."""
 
-class LevelCommand(Command):
-    """A child class of `Command` with a default `should_run` implementation
-    that only allows the command to be ran on levels."""
+        def decorator(func: CommandErrorHandler) -> CommandErrorHandler:
+            self._event_on_exception = func
+            return func
 
-    async def should_run(self, ctx: CommandContext) -> bool:
-        return ctx.is_level
+        return decorator
 
-    async def on_cannot_run(self, ctx: CommandContext) -> str:
-        return "This command can only be ran on levels!"
+    def on_insufficient_privileges(
+        self,
+    ) -> Callable[[CommandEventHandler], CommandEventHandler]:
+        """Decorator setting an event handler for whenever a user attempts
+        to execute a command without sufficient privileges."""
 
+        def decorator(func: CommandEventHandler) -> CommandEventHandler:
+            self._event_insufficient_privileges = func
+            return func
 
-class MessageCommand(Command):
-    """A child class of `Command` with a default `should_run` implementation
-    that only allows the command to be ran on messages."""
+        return decorator
 
-    async def should_run(self, ctx: CommandContext) -> bool:
-        return ctx.is_message
+    def on_invalid_arguments(
+        self,
+    ) -> Callable[[CommandErrorHandler], CommandErrorHandler]:
+        """Decorator setting an event handler for whenever a user attempts
+        to execute a command with invalid arguments."""
 
-    async def on_cannot_run(self, ctx: CommandContext) -> str:
-        return "This command can only be ran in user messages!"
+        def decorator(func: CommandErrorHandler) -> CommandErrorHandler:
+            self._event_invalid_arguments = func
+            return func
+
+        return decorator
+
+    def on_insufficient_conditions(
+        self,
+    ) -> Callable[[CommandEventHandler], CommandEventHandler]:
+        """Decorator setting an event handler for whenever a user attempts
+        to execute a command without meeting the custom execution criteria."""
+
+        def decorator(func: CommandEventHandler) -> CommandEventHandler:
+            self._event_insufficient_conditions = func
+            return func
+
+        return decorator
+
+    def on_interruption(
+        self,
+    ) -> Callable[[CommandErrorHandler], CommandErrorHandler]:
+        """Decorator setting an event handler for whenever a `CommandException`
+        is raised during command execution."""
+
+        def decorator(func: CommandErrorHandler) -> CommandErrorHandler:
+            self._event_interruption = func
+            return func
+
+        return decorator
+
+    def execution_condition(
+        self,
+    ) -> Callable[[CommandConditional], CommandConditional]:
+        """Decorator adding a condition that must be met for the command
+        to be executed. May be used multiple times."""
+
+        def decorator(func: CommandConditional) -> CommandConditional:
+            self._execution_conditions.append(func)
+            return func
+
+        return decorator
 
 
 class HandlerFunctionProtocol(Protocol):
@@ -635,3 +781,12 @@ def make_command(
         )
 
     return decorator
+
+
+def unwrap_service(value: T | ServiceError) -> T:
+    """Raises a `CommandExcpetion` interrupt if a usecase returns a service error."""
+
+    if isinstance(value, ServiceError):
+        raise CommandException(value.value)
+
+    return value
