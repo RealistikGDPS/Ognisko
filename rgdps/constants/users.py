@@ -58,6 +58,8 @@ class UserPrivileges(IntFlag):
 
     LEVEL_CHANGE_DESCRIPTION_OTHER = 1 << 39
 
+    SERVER_RESYNC_LEADERBOARDS = 1 << 40
+
     def as_bytes(self) -> bytes:
         return self.to_bytes(16, "little", signed=False)
 
