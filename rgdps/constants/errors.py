@@ -55,3 +55,6 @@ class ServiceError(str, Enum):
     MESSAGES_INVALID_RECIPIENT = "messages.invalid_recipient"
 
     DAILY_CHESTS_ALREADY_CLAIMED = "daily_chests.already_claimed"
+
+    def __bool__(self) -> bool:
+        return False

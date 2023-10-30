@@ -5,6 +5,7 @@ from rgdps.api.commands.framework import CommandRouter
 from rgdps.api.commands.framework import LevelCommand
 from rgdps.api.commands.framework import make_command
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.levels import LevelDifficultyName
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.usecases import levels
@@ -14,15 +15,15 @@ level_group = CommandRouter("level")
 router.register_command(level_group)
 
 
-@level_group.register_function()
+@level_group.register_function(required_privileges=UserPrivileges.LEVEL_MARK_AWARDED)
 async def award(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         level = ctx.level
 
     if level is None:
-        return "You need to specify a level to delete."
+        return "You need to specify a level to award."
 
-    res = await levels.set_award(ctx, level.id)
+    res = await levels.nominate_awarded(ctx, level.id)
 
     if isinstance(res, ServiceError):
         return f"Failed to award level with error {res!r}!"
@@ -30,15 +31,15 @@ async def award(ctx: CommandContext, level: Level | None = None) -> str:
     return f"The level {level.name!r} has been awarded."
 
 
-@level_group.register_function()
+@level_group.register_function(required_privileges=UserPrivileges.LEVEL_MARK_AWARDED)
 async def unaward(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         level = ctx.level
 
     if level is None:
-        return "You need to specify a level to delete."
+        return "You need to specify a level to unaward."
 
-    res = await levels.set_unaward(ctx, level.id)
+    res = await levels.revoke_awarded(ctx, level.id)
 
     if isinstance(res, ServiceError):
         return f"Failed to unaward level with error {res!r}!"
@@ -141,3 +142,62 @@ async def description(
         return f"Failed to set level description with error {res!r}!"
 
     return f"The level {level.name!r} has had its description set."
+
+
+@level_group.register_function(required_privileges=UserPrivileges.LEVEL_RATE_STARS)
+async def rate(
+    ctx: CommandContext,
+    difficulty: LevelDifficultyName,
+    stars: int = 0,
+    coins_verified: bool = False,
+) -> str:
+    if ctx.level is None:
+        return "This command can only be ran on levels."
+
+    res = await levels.rate_level(
+        ctx,
+        ctx.level.id,
+        stars,
+        difficulty.as_difficulty(),
+        coins_verified,
+    )
+
+    if isinstance(res, ServiceError):
+        return f"Rating the level failed with error {res!r}!"
+
+    return f"The level {ctx.level.name} has been rated!"
+
+
+@level_group.register_function(required_privileges=UserPrivileges.LEVEL_MARK_MAGIC)
+async def magic(
+    ctx: CommandContext,
+    level: Level | None = None,
+) -> str:
+    if level is None:
+        level = ctx.level
+
+    if level is None:
+        return "You need to specify a level to nominate as magic."
+
+    res = await levels.nominate_magic(ctx, level.id)
+
+    if isinstance(res, ServiceError):
+        return f"Failed to nominate level with error {res!r}!"
+
+    return f"The level {level.name!r} has been nominated as magic."
+
+
+@level_group.register_function(required_privileges=UserPrivileges.LEVEL_MARK_MAGIC)
+async def unmagic(ctx: CommandContext, level: Level | None = None) -> str:
+    if level is None:
+        level = ctx.level
+
+    if level is None:
+        return "You need to specify a level to revoke magic status."
+
+    res = await levels.revoke_magic(ctx, level.id)
+
+    if isinstance(res, ServiceError):
+        return f"Failed to nominate level with error {res!r}!"
+
+    return f"The level {level.name!r}'s magic status has been revoked."

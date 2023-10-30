@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from enum import Enum
 from enum import IntEnum
 from enum import IntFlag
 
@@ -36,6 +37,30 @@ _DIFFICULTY_STAR_MAP = {
     7: LevelDifficulty.HARDER,
     8: LevelDifficulty.INSANE,
     9: LevelDifficulty.INSANE,
+}
+
+
+class LevelDifficultyName(Enum):
+    """A string equivalent of `LevelDifficulty` enum used for validation."""
+
+    NA = "na"
+    EASY = "easy"
+    NORMAL = "normal"
+    HARD = "hard"
+    HARDER = "harder"
+    INSANE = "insane"
+
+    def as_difficulty(self) -> LevelDifficulty:
+        return _NAME_DIFFICULTY_MAP[self]
+
+
+_NAME_DIFFICULTY_MAP = {
+    LevelDifficultyName.NA: LevelDifficulty.NA,
+    LevelDifficultyName.EASY: LevelDifficulty.EASY,
+    LevelDifficultyName.NORMAL: LevelDifficulty.NORMAL,
+    LevelDifficultyName.HARD: LevelDifficulty.HARD,
+    LevelDifficultyName.HARDER: LevelDifficulty.HARDER,
+    LevelDifficultyName.INSANE: LevelDifficulty.INSANE,
 }
 
 
