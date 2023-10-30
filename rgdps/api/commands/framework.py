@@ -157,7 +157,7 @@ def _parse_params(param_str: str) -> list[str]:
     return params
 
 
-async def _cast_params(
+async def _resolve_params(
     ctx: CommandContext,
     annotations: dict[str, Any],
     defaults: tuple[Any],
@@ -623,7 +623,7 @@ class Command(CommandRoutable):
     async def _parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = _get_command_types(self.handle)
         default_params = self.handle.__defaults__ or ()
-        return await _cast_params(ctx, annotations, default_params)
+        return await _resolve_params(ctx, annotations, default_params)
 
     # Decorators
     def on_exception(
@@ -730,7 +730,7 @@ class CommandFunction(Command):
     async def _parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = _get_command_types(self._handler)
         default_params = self._handler.__defaults__ or ()
-        return await _cast_params(ctx, annotations, default_params)
+        return await _resolve_params(ctx, annotations, default_params)
 
 
 class UnparsedCommand(Command):
