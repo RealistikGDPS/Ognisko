@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import typing
 from abc import ABC
 from abc import abstractmethod
@@ -295,6 +296,24 @@ class CommandRouter(CommandRoutable):
 
         return decorator
 
+    def register_function(
+        self,
+        name: str | None = None,
+        description: str | None = None,
+        required_privileges: UserPrivileges | None = None,
+    ) -> Callable[[HandlerFunctionProtocol], CommandFunction]:
+        def decorator(func: HandlerFunctionProtocol) -> CommandFunction:
+            command = handler_as_command(
+                func,
+                name=name,
+                description=description,
+                required_privileges=required_privileges,
+            )
+            self.register_command(command)
+            return command
+
+        return decorator
+
     async def entrypoint(
         self,
         command: str,
@@ -577,6 +596,26 @@ class UnparsedCommand(Command):
         return [" ".join(ctx.params)]
 
 
+def handler_as_command(
+    handler: HandlerFunctionProtocol,
+    name: str | None = None,
+    description: str | None = None,
+    required_privileges: UserPrivileges | None = None,
+) -> CommandFunction:
+    """Creates an instance of `CommandFunction` from a handler function and its
+    signature."""
+
+    command_name = name or handler.__name__
+    command_description = description or handler.__doc__ or ""
+
+    return CommandFunction(
+        command_name,
+        command_description,
+        handler,
+        required_privileges,
+    )
+
+
 def make_command(
     name: str | None = None,
     description: str | None = None,
@@ -584,16 +623,14 @@ def make_command(
 ) -> Callable[[HandlerFunctionProtocol], CommandFunction]:
     """A decorator for defining a command in a single function.
     Creates an instance of `CommandFunction` with the provided arguments,
-    or tries to work them out from the function name and docstring."""
+    or tries to work them out from the function name and docstring.
+    The decorator equivalent of `handler_as_command`."""
 
     def decorator(handler: HandlerFunctionProtocol) -> CommandFunction:
-        command_name = name or handler.__name__
-        command_description = description or handler.__doc__ or ""
-
-        return CommandFunction(
-            command_name,
-            command_description,
+        return handler_as_command(
             handler,
+            name,
+            description,
             required_privileges,
         )
 

@@ -14,9 +14,8 @@ level_group = CommandRouter("level")
 router.register_command(level_group)
 
 
-@level_group.register()
-@make_command(name="award")
-async def award_level(ctx: CommandContext, level: Level | None = None) -> str:
+@level_group.register_function()
+async def award(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         level = ctx.level
 
@@ -31,9 +30,8 @@ async def award_level(ctx: CommandContext, level: Level | None = None) -> str:
     return f"The level {level.name!r} has been awarded."
 
 
-@level_group.register()
-@make_command(name="unaward")
-async def unaward_level(ctx: CommandContext, level: Level | None = None) -> str:
+@level_group.register_function()
+async def unaward(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         level = ctx.level
 
@@ -48,9 +46,8 @@ async def unaward_level(ctx: CommandContext, level: Level | None = None) -> str:
     return f"The level {level.name!r} has been unawarded."
 
 
-@level_group.register()
-@make_command(name="delete")
-async def delete_level(ctx: CommandContext, level: Level | None = None) -> str:
+@level_group.register_function()
+async def delete(ctx: CommandContext, level: Level | None = None) -> str:
     if level is None:
         level = ctx.level
 
@@ -70,9 +67,8 @@ async def delete_level(ctx: CommandContext, level: Level | None = None) -> str:
     return f"The level {level.name!r} has been deleted."
 
 
-@level_group.register()
-@make_command(name="unlist")
-async def unlist_level(
+@level_group.register_function()
+async def unlist(
     ctx: CommandContext,
     friends_only: bool = False,
     level: Level | None = None,
@@ -97,9 +93,8 @@ async def unlist_level(
     return f"The level {level.name!r} has been unlisted."
 
 
-@level_group.register()
-@make_command(name="relist")
-async def relist_level(
+@level_group.register_function()
+async def relist(
     ctx: CommandContext,
     level: Level | None = None,
 ) -> str:
@@ -122,9 +117,8 @@ async def relist_level(
     return f"The level {level.name!r} has been re-listed."
 
 
-@level_group.register()
-@make_command(name="description")
-async def set_level_description(
+@level_group.register_function()
+async def description(
     ctx: CommandContext,
     description: str,
     level: Level | None = None,
