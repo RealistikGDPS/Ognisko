@@ -7,7 +7,7 @@ fastapi == 0.101.1
 fastapi-limiter == 0.1.5
 httpx == 0.24.1
 logzio-python-handler == 4.1.0
-meilisearch-python-async == 1.6.2
+meilisearch-python-sdk == 2.0.1
 python-multipart
 redis == 4.6.0
 types-aiobotocore[s3] == 2.5.2

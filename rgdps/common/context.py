@@ -5,7 +5,7 @@ from abc import abstractmethod
 from typing import TYPE_CHECKING
 
 import httpx
-from meilisearch_python_async import Client as MeiliClient
+from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 from types_aiobotocore_s3 import S3Client
 

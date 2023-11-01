@@ -12,7 +12,7 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 from fastapi_limiter import FastAPILimiter
-from meilisearch_python_async import Client as MeiliClient
+from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 from starlette.middleware.base import RequestResponseEndpoint
 

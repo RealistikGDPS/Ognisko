@@ -18,7 +18,7 @@ import traceback
 
 import httpx
 from databases import DatabaseURL
-from meilisearch_python_async import Client as MeiliClient
+from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 
 from rgdps import logger
