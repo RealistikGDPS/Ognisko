@@ -15,7 +15,7 @@ router.register_command(user_group)
 
 
 @user_group.register_function(required_privileges=UserPrivileges.USER_MODIFY_PRIVILEGES)
-async def restrict(ctx: CommandContext, user: User | None) -> str:
+async def restrict(ctx: CommandContext, user: User | None = None) -> str:
     if user is None:
         user = ctx.user
 
@@ -28,7 +28,7 @@ async def restrict(ctx: CommandContext, user: User | None) -> str:
 
 
 @user_group.register_function(required_privileges=UserPrivileges.USER_MODIFY_PRIVILEGES)
-async def unrestrict(ctx: CommandContext, user: User | None) -> str:
+async def unrestrict(ctx: CommandContext, user: User | None = None) -> str:
     if user is None:
         user = ctx.user
 

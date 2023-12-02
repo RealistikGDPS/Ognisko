@@ -418,7 +418,8 @@ class CommandRouter(CommandRoutable):
         """Function checking if all conditions for command execution
         are met."""
 
-        return all(await condition(ctx) for condition in self._execution_conditions)
+        # The list comprehension is required as we need to await
+        return all([await condition(ctx) for condition in self._execution_conditions])
 
     async def execute(
         self,
@@ -568,7 +569,8 @@ class Command(CommandRoutable):
     async def should_run(self, ctx: CommandContext) -> bool:
         """Checks if all defined execution criteria has been met."""
 
-        return all(await condition(ctx) for condition in self._execution_conditions)
+        # The list comprehension is required as we need to await
+        return all([await condition(ctx) for condition in self._execution_conditions])
 
     async def execute(self, ctx: CommandContext) -> str:
         """Called by the command router to perform command checks and execution."""
@@ -699,14 +701,16 @@ class Command(CommandRoutable):
         return decorator
 
 
-class HandlerFunctionProtocol(Protocol):
-    """A protocol for defining a command handler function."""
+# class HandlerFunctionProtocol(Protocol):
+#    """A protocol for defining a command handler function."""
+#
+#    __name__: str
+#    __defaults__: tuple[Any, ...] | None
+#
+#    async def __call__(self, ctx: CommandContext, *args: Any) -> str:
+#        ...
 
-    __name__: str
-    __defaults__: tuple[Any, ...] | None
-
-    async def __call__(self, ctx: CommandContext, *args: Any) -> str:
-        ...
+HandlerFunctionProtocol = Callable[..., Awaitable[str]]
 
 
 class CommandFunction(Command):
