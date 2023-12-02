@@ -11,6 +11,7 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
+from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
 from rgdps.constants.users import CREATOR_PRIVILEGES
 from rgdps.models.level import Level
@@ -245,13 +246,17 @@ async def get(ctx: Context, level_id: int) -> LevelResponse | ServiceError:
     )
 
 
-async def delete(ctx: Context, level_id: int, user: User) -> bool | ServiceError:
+async def delete(
+    ctx: Context,
+    level_id: int,
+    user_id: int,
+    can_delete_other: bool = False,
+) -> bool | ServiceError:
     level = await repositories.level.from_id(ctx, level_id)
     if not level:
         return ServiceError.LEVELS_NOT_FOUND
 
-    # TODO: Check if user has permission to delete.
-    if level.user_id != user.id:
+    if level.user_id != user_id and not can_delete_other:
         return ServiceError.LEVELS_NO_DELETE_PERMISSION
 
     await repositories.level.update_partial(
@@ -326,24 +331,209 @@ async def suggest_stars(
     return level
 
 
-async def update_description(
+async def set_description(
     ctx: Context,
     level_id: int,
-    user: User,
+    user_id: int,
     description: str,
+    can_update_other: bool = False,
 ) -> Level | ServiceError:
     level = await repositories.level.from_id(ctx, level_id)
 
     if not level:
         return ServiceError.LEVELS_NOT_FOUND
 
-    if level.user_id != user.id:
+    if level.user_id != user_id and not can_update_other:
         return ServiceError.LEVELS_NO_UPDATE_PERMISSION
 
     result = await repositories.level.update_partial(
         ctx,
         level.id,
         description=description,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def nominate_awarded(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    search_flags = level.search_flags | LevelSearchFlag.AWARDED
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def revoke_awarded(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    search_flags = level.search_flags & ~LevelSearchFlag.AWARDED
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def set_unlisted(
+    ctx: Context,
+    level_id: int,
+    user_id: int,
+    friends_only: bool = False,
+    can_unlist_other: bool = False,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    if level.user_id != user_id and not can_unlist_other:
+        return ServiceError.LEVELS_NO_UPDATE_PERMISSION
+
+    if friends_only:
+        publicity = LevelPublicity.FRIENDS_UNLISTED
+    else:
+        publicity = LevelPublicity.GLOBAL_UNLISTED
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        publicity=publicity,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def set_listed(
+    ctx: Context,
+    level_id: int,
+    user_id: int,
+    can_list_other: bool = False,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    if level.user_id != user_id and not can_list_other:
+        return ServiceError.LEVELS_NO_UPDATE_PERMISSION
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        publicity=LevelPublicity.PUBLIC,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def rate_level(
+    ctx: Context,
+    level_id: int,
+    stars: int,
+    difficulty: LevelDifficulty,
+    coins_verified: bool,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+
+    if level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    creator = await repositories.user.from_id(ctx, level.user_id)
+    if creator is None:
+        return ServiceError.USER_NOT_FOUND  # NOTE: Should never happen
+
+    old_creator_points = gd_logic.calculate_creator_points(level)
+
+    level = await repositories.level.update_partial(
+        ctx,
+        level_id,
+        stars=stars,
+        difficulty=difficulty,
+        coins_verified=coins_verified,
+    )
+
+    if level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    creator_delta = gd_logic.calculate_creator_points(level) - old_creator_points
+
+    await repositories.user.update_partial(
+        ctx,
+        creator.id,
+        creator_points=creator.creator_points + creator_delta,
+    )
+
+    return level
+
+
+async def nominate_magic(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    search_flags = level.search_flags | LevelSearchFlag.MAGIC
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def revoke_magic(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    search_flags = level.search_flags & ~LevelSearchFlag.MAGIC
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
     )
 
     if result is None:

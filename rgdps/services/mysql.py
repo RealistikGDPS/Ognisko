@@ -15,8 +15,7 @@ from databases.core import Connection
 from databases.core import Transaction
 
 
-# TODO: Verify that these are the correct types.
-MySQLValue = str | int | float | bytes | None | bool | datetime
+MySQLValue = Any
 MySQLRow = Mapping[str, MySQLValue]
 MySQLValues = dict[str, MySQLValue]
 

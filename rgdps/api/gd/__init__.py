@@ -215,7 +215,7 @@ router.add_api_route(
     level_comments.create_comment_post,
     methods=["POST"],
     dependencies=[
-        Depends(RateLimiter(times=4, minutes=1)),
+        Depends(RateLimiter(times=15, minutes=1)),
     ],
 )
 

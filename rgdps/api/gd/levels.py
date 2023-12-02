@@ -310,10 +310,11 @@ async def level_desc_post(
     level_id: int = Form(..., alias="levelID"),
     level_desc: Base64String = Form(..., alias="levelDesc"),
 ):
-    result = await levels.update_description(
+    result = await levels.set_description(
         ctx,
         level_id=level_id,
-        level_desc=level_desc,
+        user_id=user.id,
+        description=level_desc,
     )
 
     if isinstance(result, ServiceError):

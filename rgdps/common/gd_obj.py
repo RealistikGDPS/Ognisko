@@ -423,3 +423,10 @@ def encrypt_message_content_string(content: str) -> str:
 
 def decrypt_message_content_string(content: str) -> str:
     return hashes.decrypt_message_content(content)
+
+
+def comment_ban_string(
+    remaining_duration: int,
+    ban_reason: str,
+) -> str:
+    return f"temp_{remaining_duration}_{ban_reason}"

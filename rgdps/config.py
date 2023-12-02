@@ -22,6 +22,7 @@ class Config:
     sql_port: int = 3306
     srv_name: str = "RealistikGDPS"
     srv_stateless: bool = False
+    srv_command_prefix: str = "/"
     redis_host: str = "localhost"
     redis_port: int = 6379
     redis_db: int = 0
