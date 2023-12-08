@@ -37,4 +37,5 @@ COLOUR_PRESETS: dict[str, RGB] = {
     "turquoise": RGB(204, 229, 255),
     "mint": RGB(204, 255, 235),
     "gold": RGB(255, 236, 153),
+    "black": RGB(0, 0, 0)
 }
