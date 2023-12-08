@@ -92,8 +92,7 @@ comments_group.register_command(colour_group)
 async def comments_colour_set(
     ctx: CommandContext,
     comment_colour_rgb: RGB,
-    user: User,
 ) -> str:
-    unwrap_service(await users.update_comment_colour(ctx, user.id, comment_colour_rgb))
+    unwrap_service(await users.update_comment_colour(ctx, ctx.user.id, comment_colour_rgb))
 
     return f"Your comment colour has been updated to the following RGB: {comment_colour_rgb!r}"
