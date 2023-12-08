@@ -7,6 +7,7 @@ from . import leaderboard
 from . import level
 from . import level_comment
 from . import level_data
+from . import level_schedule
 from . import like
 from . import message
 from . import save_data
