@@ -28,12 +28,8 @@ async def get(ctx: Context, lb_type: LeaderboardType) -> list[User] | ServiceErr
         case _:
             raise NotImplementedError
 
-    res = []
-
     users = await repositories.user.multiple_from_id(ctx, top_user_ids)
-    res.extend(users)
-
-    return res
+    return users
 
 
 async def synchronise_top_stars(ctx: Context) -> bool | ServiceError:
