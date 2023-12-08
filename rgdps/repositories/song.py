@@ -162,6 +162,9 @@ async def multiple_from_id(
     song_ids: list[int],
     allow_blocked: bool = False,
 ) -> list[Song]:
+    if not song_ids:
+        return []
+
     songs: list[Song] = []
 
     db_songs = await multiple_from_db(ctx, song_ids, allow_blocked)
