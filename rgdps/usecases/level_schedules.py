@@ -2,11 +2,13 @@ from __future__ import annotations
 
 from datetime import datetime
 from datetime import timedelta
+from typing import NamedTuple
 
 from rgdps import repositories
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
+from rgdps.models.level import Level
 from rgdps.models.level_schedule import LevelSchedule
 
 
@@ -47,3 +49,27 @@ async def schedule_next(
     )
 
     return schedule
+
+
+class ScheduledLevel(NamedTuple):
+    schedule: LevelSchedule
+    level: Level
+
+
+async def get_current(
+    ctx: Context,
+    schedule_type: LevelScheduleType,
+) -> ScheduledLevel | ServiceError:
+    schedule = await repositories.level_schedule.get_current(
+        ctx,
+        schedule_type,
+    )
+
+    if schedule is None:
+        # TODO: Algorithm to automatically nominate a level. (should be implemented soon)
+        return ServiceError.LEVEL_SCHEDULE_UNSET
+
+    level = await repositories.level.from_id(
+        ctx,
+        schedule.level_id,
+    )
