@@ -51,6 +51,51 @@ async def schedule_next(
     return schedule
 
 
+# XXX: This may benefit from locking.
+# For daily levels, we will have an algorithm that automatically nominates a level
+# iff there is no level that has been scheduled for today.
+# Conditions for a level to be automatically nominated:
+# - Rated over 1 star
+# - Rated below 8 stars
+# - High like to download ratio, with an emphasis on lower downloads.
+# - At least medium length
+# - Hasn't been daily in the last 20 days.
+
+DAILY_LEVELS_TO_EXCLUDE = 20
+# Helper function to separate the algorithm.
+async def _auto_nominate_daily(ctx: Context) -> LevelSchedule | None:
+    last_n = await repositories.level_schedule.get_last_n(
+        ctx,
+        LevelScheduleType.DAILY,
+        DAILY_LEVELS_TO_EXCLUDE,
+    )
+
+    excluded_level_ids = [schedule.level_id for schedule in last_n]
+
+    return None
+
+
+# For weekly levels, we have a less strict algorithm.
+# Conditions for a level to be automatically nominated:
+# - Easy to Hard demon.
+# - High like to download ratio, with an emphasis on lower downloads.
+# - At least medium length
+# - Hasn't been daily in the last 52 days.
+
+WEEKLY_LEVELS_TO_EXCLUDE = 52 // 7
+
+
+async def _auto_nominate_weekly(ctx: Context) -> LevelSchedule | None:
+    last_n = await repositories.level_schedule.get_last_n(
+        ctx,
+        LevelScheduleType.DAILY,
+        WEEKLY_LEVELS_TO_EXCLUDE,
+    )
+
+    excluded_level_ids = [schedule.level_id for schedule in last_n]
+    return None
+
+
 class ScheduledLevel(NamedTuple):
     schedule: LevelSchedule
     level: Level
@@ -66,7 +111,12 @@ async def get_current(
     )
 
     if schedule is None:
-        # TODO: Algorithm to automatically nominate a level. (should be implemented soon)
+        if schedule_type == LevelScheduleType.DAILY:
+            schedule = await _auto_nominate_daily(ctx)
+        elif schedule_type == LevelScheduleType.WEEKLY:
+            schedule = await _auto_nominate_weekly(ctx)
+
+    if schedule is None:
         return ServiceError.LEVEL_SCHEDULE_UNSET
 
     level = await repositories.level.from_id(

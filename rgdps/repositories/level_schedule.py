@@ -115,3 +115,20 @@ async def get_last(
         return None
 
     return LevelSchedule.from_mapping(schedule_db)
+
+
+async def get_last_n(
+    ctx: Context,
+    schedule_type: LevelScheduleType,
+    n: int,
+) -> list[LevelSchedule]:
+    schedule_dbs = await ctx.mysql.fetch_all(
+        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
+        "FROM level_schedule WHERE type = :schedule_type AND end_time <= NOW() ORDER BY end_time DESC LIMIT :n",
+        {
+            "schedule_type": schedule_type.value,
+            "n": n,
+        },
+    )
+
+    return [LevelSchedule.from_mapping(schedule_db) for schedule_db in schedule_dbs]
