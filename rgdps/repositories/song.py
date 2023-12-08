@@ -37,7 +37,7 @@ async def multiple_from_db(
     songs_db = await ctx.mysql.fetch_all(
         "SELECT id, name, author_id, author, author_youtube, size, "
         "download_url, source, blocked FROM songs WHERE id IN :song_ids "
-        "AND blocked = :blocked",
+        "AND blocked IN :blocked",
         {
             "song_ids": tuple(song_ids),
             "blocked": (0, 1) if allow_blocked else (0,),
