@@ -46,6 +46,7 @@ class User:
     coins: int
     user_coins: int
     diamonds: int
+    comment_colour: str
 
     @staticmethod
     def from_mapping(user_dict: Mapping[str, Any]) -> User:
@@ -81,6 +82,7 @@ class User:
             coins=user_dict["coins"],
             user_coins=user_dict["user_coins"],
             diamonds=user_dict["diamonds"],
+            comment_colour=user_dict["comment_colour"],
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
@@ -114,6 +116,7 @@ class User:
             "coins": self.coins,
             "user_coins": self.user_coins,
             "diamonds": self.diamonds,
+            "comment_colour": self.comment_colour,
         }
 
         if include_id:
