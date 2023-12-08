@@ -5,6 +5,7 @@ from . import errors
 from . import friends
 from . import leaderboards
 from . import level_comments
+from . import level_schedules
 from . import levels
 from . import likes
 from . import responses
