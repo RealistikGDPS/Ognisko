@@ -692,7 +692,7 @@ async def all(ctx: Context, include_deleted: bool = False) -> AsyncGenerator[Lev
         "search_flags, low_detail_mode, object_count, copy_password, building_time, "
         "update_locked, deleted FROM levels WHERE deleted IN :deleted",
         {
-            "deleted": [0, 1] if include_deleted else [0],
+            "deleted": (0, 1) if include_deleted else (0,),
         },
     ):
         yield Level.from_mapping(level_db)
@@ -711,13 +711,13 @@ async def from_name_and_user_id(
     user_id: int,
     include_deleted: bool = False,
 ) -> Level | None:
-    condition = ""
-    if not include_deleted:
-        condition = " AND NOT deleted"
-
     result_id = await ctx.mysql.fetch_val(
-        "SELECT id FROM levels WHERE name LIKE :name AND user_id = :user_id",
-        {"name": level_name, "user_id": user_id},
+        "SELECT id FROM levels WHERE name LIKE :name AND user_id = :user_id AND deleted = :deleted",
+        {
+            "name": level_name,
+            "user_id": user_id,
+            "deleted": (0, 1) if include_deleted else (0,),
+        },
     )
 
     if result_id is None:

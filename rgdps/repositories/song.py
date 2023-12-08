@@ -20,7 +20,7 @@ async def from_db(
         "AND blocked IN :blocked",
         {
             "song_id": song_id,
-            "blocked": [0, 1] if allow_blocked else [0],
+            "blocked": (0, 1) if allow_blocked else (0,),
         },
     )
 
@@ -39,8 +39,8 @@ async def multiple_from_db(
         "download_url, source, blocked FROM songs WHERE id IN :song_ids "
         "AND blocked = :blocked",
         {
-            "song_ids": song_ids,
-            "blocked": allow_blocked,
+            "song_ids": tuple(song_ids),
+            "blocked": (0, 1) if allow_blocked else (0,),
         },
     )
 

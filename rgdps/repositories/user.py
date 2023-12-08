@@ -38,7 +38,7 @@ async def multiple_from_db(ctx: Context, user_ids: list[int]) -> list[User]:
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
         "user_coins, diamonds FROM users WHERE id IN :id",
-        {"ids": user_ids},
+        {"ids": tuple(user_ids)},
     )
 
     return [User.from_mapping(user_db) for user_db in users_db]
