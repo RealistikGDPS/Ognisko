@@ -162,7 +162,7 @@ async def multiple_from_id(
     song_ids: list[int],
     allow_blocked: bool = False,
 ) -> list[Song]:
-    songs = []
+    songs: list[Song] = []
 
     db_songs = await multiple_from_db(ctx, song_ids, allow_blocked)
     songs.extend(db_songs)
@@ -177,7 +177,7 @@ async def multiple_from_id(
 
     # since we fetch from cache first and db for the rest
     # songs may not be in the same order they were provided in
-    songs.sort(key=lambda song: song_ids.index(song))
+    songs.sort(key=lambda song: song_ids.index(song.id))
 
     return songs
 
