@@ -5,9 +5,9 @@ from __future__ import annotations
 
 from abc import ABC
 from abc import abstractmethod
-from datetime import datetime
 from typing import Any
 from typing import Mapping
+from typing import AsyncGenerator
 
 from databases import Database
 from databases import DatabaseURL
@@ -49,6 +49,14 @@ class AbstractMySQLService(ABC):
     async def execute(self, query: str, values: MySQLValues | None = None) -> Any:
         ...
 
+    @abstractmethod
+    async def iterate(
+        self,
+        query: str,
+        values: MySQLValues | None = None
+    ) -> AsyncGenerator[MySQLRow, None]:
+        ...
+
 
 class MySQLService(AbstractMySQLService):
     def __init__(self, database_url: DatabaseURL) -> None:
@@ -86,6 +94,13 @@ class MySQLService(AbstractMySQLService):
 
     async def execute(self, query: str, values: MySQLValues | None = None) -> Any:
         return await self._pool.execute(query, values)  # type: ignore
+    
+    async def iterate(
+        self,
+        query: str,
+        values: MySQLValues | None = None,
+    ) -> AsyncGenerator[MySQLRow, None]:
+        return await self._pool.iterate(query, values)  # type: ignore
 
     def transaction(self) -> MySQLTransaction:
         return MySQLTransaction(self._pool)
@@ -139,3 +154,10 @@ class MySQLTransaction(AbstractMySQLService):
 
     async def execute(self, query: str, values: MySQLValues | None = None) -> Any:
         return await self._connection.execute(query, values)  # type: ignore
+    
+    async def iterate(
+        self,
+        query: str,
+        values: MySQLValues | None = None,
+    ) -> AsyncGenerator[MySQLRow, None]:
+        return await self._connection.iterate(query, values)  # type: ignore

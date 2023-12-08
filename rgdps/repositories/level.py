@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 from typing import NamedTuple
+from typing import AsyncGenerator
 
 from rgdps.common import data_utils
 from rgdps.common import time as time_utils
@@ -195,6 +196,11 @@ async def create_meili(ctx: Context, level: Level) -> None:
     index = ctx.meili.index("levels")
     await index.add_documents([level_dict])
 
+async def multiple_create_meili(ctx: Context, levels: list[Level]) -> None:
+    level_dicts = [_make_meili_dict(level.as_dict(include_id=True)) for level in levels]
+
+    index = ctx.meili.index("levels")
+    await index.add_documents(level_dicts)
 
 async def update_sql_full(ctx: Context, level: Level) -> None:
     await ctx.mysql.execute(
@@ -677,16 +683,19 @@ async def search(
     ]
     return LevelSearchResults(results, results_db.estimated_total_hits)
 
-
-async def all_ids(ctx: Context, include_deleted: bool = False) -> list[int]:
-    condition = ""
-    if not include_deleted:
-        condition = " WHERE NOT deleted"
-
-    return [
-        x["id"] for x in await ctx.mysql.fetch_all("SELECT id FROM levels" + condition)
-    ]
-
+async def all(ctx: Context, include_deleted: bool = False) -> AsyncGenerator[Level, None]:
+    async for level_db in ctx.mysql.iterate(
+        "SELECT id, name, user_id, description, custom_song_id, official_song_id, "
+        "version, length, two_player, publicity, render_str, game_version, "
+        "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
+        "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
+        "search_flags, low_detail_mode, object_count, copy_password, building_time, "
+        "update_locked, deleted FROM levels WHERE deleted IN :deleted",
+        {
+            "deleted": [0, 1] if include_deleted else [0],
+        },
+    ):
+        yield Level.from_mapping(level_db)
 
 async def get_count(ctx: Context) -> int:
     return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM levels")

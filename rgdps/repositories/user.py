@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any
 from typing import NamedTuple
+from typing import AsyncGenerator
 
 from rgdps.common import time as time_utils
 from rgdps.common.context import Context
@@ -30,6 +31,17 @@ async def from_db(ctx: Context, user_id: int) -> User | None:
 
     return User.from_mapping(user_db)
 
+async def multiple_from_db(ctx: Context, user_ids: list[int]) -> list[User]:
+    users_db = await ctx.mysql.fetch_all(
+        "SELECT id, username, email, password, privileges, message_privacy, friend_privacy, "
+        "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
+        "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
+        "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
+        "user_coins, diamonds FROM users WHERE id IN :id",
+        {"ids": user_ids},
+    )
+
+    return [User.from_mapping(user_db) for user_db in users_db]
 
 async def create(
     ctx: Context,
@@ -474,6 +486,25 @@ async def update_partial(
 async def drop_cache(ctx: Context, user_id: int) -> None:
     await ctx.user_cache.delete(user_id)
 
+async def multiple_from_id(ctx: Context, user_ids: list[int]) -> list[User]:
+    users = []
+    uncached_ids = []
+
+    for user_id in user_ids:
+        cache_user = await ctx.user_cache.get(user_id)
+        if cache_user is not None:
+            users.append(cache_user)
+        else:
+            uncached_ids.append(user_id)
+
+    db_users = await multiple_from_db(ctx, uncached_ids)
+    users.extend(db_users)
+
+    # since we fetch from cache first and db for the rest
+    # users may not be in the same order they were provided in
+    users.sort(key=lambda user: user_ids.index(user.id))
+
+    return users
 
 async def from_id(ctx: Context, user_id: int) -> User | None:
     cache_user = await ctx.user_cache.get(user_id)
@@ -522,10 +553,15 @@ async def from_name(ctx: Context, username: str) -> User | None:
 async def get_count(ctx: Context) -> int:
     return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM users")
 
-
-async def all_ids(ctx: Context) -> list[int]:
-    return [x["id"] for x in await ctx.mysql.fetch_all("SELECT id FROM users")]
-
+async def all(ctx: Context) -> AsyncGenerator[User, None]:
+    async for db_user in ctx.mysql.iterate(
+        "SELECT id, username, email, password, privileges, message_privacy, friend_privacy, "
+        "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
+        "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
+        "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
+        "user_coins, diamonds FROM users"
+    ):
+        yield User.from_mapping(db_user)
 
 class UserSearchResults(NamedTuple):
     results: list[User]

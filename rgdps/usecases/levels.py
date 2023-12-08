@@ -195,23 +195,23 @@ async def search(
         followed_list=followed_list,
     )
 
-    songs = set()
-    users = set()
-    for level in levels_db.results:
-        user = await repositories.user.from_id(ctx, level.user_id)
-        assert user is not None, "User associated with level not found."
-        users.add(user)
-        if level.custom_song_id:
-            song = await repositories.song.from_id(ctx, level.custom_song_id)
-            if song:
-                songs.add(song)
+    songs = set(
+        await repositories.song.multiple_from_id(
+            ctx,
+            [level.custom_song_id for level in levels_db.results if level.custom_song_id is not None]
+        )
+    )
+    users = set(await repositories.user.multiple_from_id(ctx, [level.user_id for level in levels_db.results]))
 
     if lookup_level:
         # Move to the top.
         if lookup_level in levels_db.results:
             levels_db.results.remove(lookup_level)
         levels_db.results.insert(0, lookup_level)
-        users.add(await repositories.user.from_id(ctx, lookup_level.user_id))
+
+        lookup_user = await repositories.user.from_id(ctx, lookup_level.user_id)
+        assert lookup_user is not None, "Lookup level user not found."
+        users.add(lookup_user)
 
     return SearchResponse(
         levels=levels_db.results,
@@ -274,15 +274,8 @@ async def synchronise_search(ctx: Context) -> bool | ServiceError:
     """Synchronise the search index with the backing database.
     Should be rarely used as its demanding on resources.
     """
-
-    levels = await repositories.level.all_ids(ctx)
-
-    for level_id in levels:
-        level = await repositories.level.from_id(ctx, level_id)
-        # It got deleted while we were iterating.
-        if (not level) or level.deleted:
-            continue
-        await repositories.level.create_meili(ctx, level)
+    levels = [level async for level in repositories.level.all(ctx)]
+    await repositories.level.multiple_create_meili(ctx, levels)
 
     return True
 

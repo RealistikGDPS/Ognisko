@@ -66,14 +66,8 @@ async def get_sent(
         include_deleted=include_deleted,
     )
 
-    messages_resp = []
-    for message in messages:
-        user = await repositories.user.from_id(ctx, message.sender_user_id)
-
-        if user is None:
-            continue
-
-        messages_resp.append(MessageResponse(message=message, user=user))
+    users = await repositories.user.multiple_from_id(ctx, [message.sender_user_id for message in messages])
+    messages_resp = [MessageResponse(message, user) for message, user in zip(messages, users)]
 
     messages_count = await repositories.message.from_recipient_user_id_count(
         ctx,
@@ -102,14 +96,8 @@ async def get_user(
         include_deleted=include_deleted,
     )
 
-    messages_resp = []
-    for message in messages:
-        user = await repositories.user.from_id(ctx, message.recipient_user_id)
-
-        if user is None:
-            continue
-
-        messages_resp.append(MessageResponse(message=message, user=user))
+    users = await repositories.user.multiple_from_id(ctx, [message.recipient_user_id for message in messages])
+    messages_resp = [MessageResponse(message, user) for message, user in zip(messages, users)]
 
     messages_count = await repositories.message.from_sender_user_id_count(
         ctx,

@@ -30,46 +30,30 @@ async def get(ctx: Context, lb_type: LeaderboardType) -> list[User] | ServiceErr
 
     res = []
 
-    for user_id in top_user_ids:
-        user = await repositories.user.from_id(ctx, user_id)
-        if user is None:
-            continue
-
-        res.append(user)
+    users = await repositories.user.multiple_from_id(ctx, top_user_ids)
+    res.extend(users)
 
     return res
 
 
 async def synchronise_top_stars(ctx: Context) -> bool | ServiceError:
-    user_ids = await repositories.user.all_ids(ctx)
-
-    for user_id in user_ids:
-        user = await repositories.user.from_id(ctx, user_id)
-        if user is None:
-            continue
-
+    async for user in repositories.user.all(ctx):
         if not (user.privileges & STAR_PRIVILEGES == STAR_PRIVILEGES):
             continue
 
-        await repositories.leaderboard.set_star_count(ctx, user_id, user.stars)
+        await repositories.leaderboard.set_star_count(ctx, user.id, user.stars)
 
     return True
 
 
 async def synchronise_top_creators(ctx: Context) -> bool | ServiceError:
-    user_ids = await repositories.user.all_ids(ctx)
-
-    for user_id in user_ids:
-        user = await repositories.user.from_id(ctx, user_id)
-        if user is None:
-            continue
-
+    async for user in repositories.user.all(ctx):
         if not (user.privileges & CREATOR_PRIVILEGES == CREATOR_PRIVILEGES):
             continue
 
         await repositories.leaderboard.set_creator_count(
             ctx,
-            user_id,
+            user.id,
             user.creator_points,
         )
 
