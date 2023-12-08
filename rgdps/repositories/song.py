@@ -16,7 +16,7 @@ async def from_db(
 ) -> Song | None:
     song_db = await ctx.mysql.fetch_one(
         "SELECT id, name, author_id, author, author_youtube, size, "
-        "download_url, source, blocked FROM songs WHERE id = :song_id"
+        "download_url, source, blocked FROM songs WHERE id = :song_id "
         "AND blocked IN :blocked",
         {
             "song_id": song_id,
@@ -36,7 +36,7 @@ async def multiple_from_db(
 ) -> list[Song]:
     songs_db = await ctx.mysql.fetch_all(
         "SELECT id, name, author_id, author, author_youtube, size, "
-        "download_url, source, blocked FROM songs WHERE id IN :song_ids"
+        "download_url, source, blocked FROM songs WHERE id IN :song_ids "
         "AND blocked = :blocked",
         {
             "song_ids": song_ids,
