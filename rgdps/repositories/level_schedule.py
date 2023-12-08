@@ -37,7 +37,7 @@ async def create(
     )
 
     schedule.id = await ctx.mysql.execute(
-        "INSERT INTO level_schedules (id, type, level_id, start_time, end_time, scheduled_by_id) "
+        "INSERT INTO level_schedule (id, type, level_id, start_time, end_time, scheduled_by_id) "
         "VALUES (:id, :type, :level_id, :start_time, :end_time, :scheduled_by_id)",
         schedule.as_dict(include_id=True),
     )
@@ -51,7 +51,7 @@ async def from_id(
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
         "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
-        "FROM level_schedules WHERE id = :schedule_id",
+        "FROM level_schedule WHERE id = :schedule_id",
         {
             "schedule_id": schedule_id,
         },
@@ -69,7 +69,7 @@ async def get_current(
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
         "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
-        "FROM level_schedules WHERE type = :schedule_type AND start_time <= NOW() AND end_time >= NOW()",
+        "FROM level_schedule WHERE type = :schedule_type AND start_time <= NOW() AND end_time >= NOW()",
         {
             "schedule_type": schedule_type.value,
         },
@@ -87,7 +87,7 @@ async def get_next(
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
         "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
-        "FROM level_schedules WHERE type = :schedule_type AND start_time >= NOW() ORDER BY start_time ASC LIMIT 1",
+        "FROM level_schedule WHERE type = :schedule_type AND start_time >= NOW() ORDER BY start_time ASC LIMIT 1",
         {
             "schedule_type": schedule_type.value,
         },
@@ -105,7 +105,7 @@ async def get_last(
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
         "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
-        "FROM level_schedules WHERE type = :schedule_type AND end_time <= NOW() ORDER BY end_time DESC LIMIT 1",
+        "FROM level_schedule WHERE type = :schedule_type AND end_time <= NOW() ORDER BY end_time DESC LIMIT 1",
         {
             "schedule_type": schedule_type.value,
         },
