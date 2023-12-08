@@ -50,7 +50,7 @@ async def from_id(
     schedule_id: int,
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
-        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
+        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
         "FROM level_schedule WHERE id = :schedule_id",
         {
             "schedule_id": schedule_id,
@@ -68,7 +68,7 @@ async def get_current(
     schedule_type: LevelScheduleType,
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
-        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
+        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
         "FROM level_schedule WHERE type = :schedule_type AND start_time <= NOW() AND end_time >= NOW()",
         {
             "schedule_type": schedule_type.value,
@@ -86,7 +86,7 @@ async def get_next(
     schedule_type: LevelScheduleType,
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
-        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
+        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
         "FROM level_schedule WHERE type = :schedule_type AND start_time >= NOW() ORDER BY start_time ASC LIMIT 1",
         {
             "schedule_type": schedule_type.value,
@@ -104,7 +104,7 @@ async def get_last(
     schedule_type: LevelScheduleType,
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
-        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
+        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
         "FROM level_schedule WHERE type = :schedule_type AND end_time <= NOW() ORDER BY end_time DESC LIMIT 1",
         {
             "schedule_type": schedule_type.value,
