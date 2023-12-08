@@ -487,7 +487,7 @@ async def drop_cache(ctx: Context, user_id: int) -> None:
     await ctx.user_cache.delete(user_id)
 
 async def multiple_from_id(ctx: Context, user_ids: list[int]) -> list[User]:
-    users = []
+    users: list[User] = []
     uncached_ids = []
 
     for user_id in user_ids:
