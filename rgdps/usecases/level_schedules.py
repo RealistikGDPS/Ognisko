@@ -73,3 +73,11 @@ async def get_current(
         ctx,
         schedule.level_id,
     )
+
+    if level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    return ScheduledLevel(
+        schedule=schedule,
+        level=level,
+    )

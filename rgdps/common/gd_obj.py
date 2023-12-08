@@ -256,13 +256,14 @@ def create_level_minimal(level: Level) -> GDSerialisable:
     }
 
 
-def create_level(level: Level, level_data: str) -> GDSerialisable:
+def create_level(level: Level, level_data: str, schedule_id: int = 0) -> GDSerialisable:
     return create_level_minimal(level) | {
         4: level_data,
         27: hashes.hash_level_password(level.copy_password),
         28: into_str_ts(level.upload_ts),
         29: into_str_ts(level.update_ts),
         36: level.render_str,
+        41: schedule_id,
     }
 
 
@@ -308,7 +309,7 @@ def create_level_data_security_str(level_data: str) -> str:
     return hashes.hash_sha1(res + "xI25fpAapCQg")
 
 
-def create_level_metadata_security_str(level: Level) -> str:
+def create_level_metadata_security_str(level: Level, schedule_id) -> str:
     return ",".join(
         (
             str(level.user_id),
@@ -318,13 +319,15 @@ def create_level_metadata_security_str(level: Level) -> str:
             "1" if level.coins_verified else "0",
             str(level.feature_order),
             str(level.copy_password),
-            "0",
+            str(schedule_id),
         ),
     )
 
 
-def create_level_metadata_security_str_hashed(level: Level) -> str:
-    return hashes.hash_sha1(create_level_metadata_security_str(level) + "xI25fpAapCQg")
+def create_level_metadata_security_str_hashed(level: Level, schedule_id) -> str:
+    return hashes.hash_sha1(
+        create_level_metadata_security_str(level, schedule_id) + "xI25fpAapCQg",
+    )
 
 
 def create_pagination_info(total: int, page: int, page_size: int) -> str:
