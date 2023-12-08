@@ -9,3 +9,4 @@ from . import song
 from . import user
 from . import user_comment
 from . import user_relationship
+from . import rgb

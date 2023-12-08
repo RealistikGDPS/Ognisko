@@ -130,13 +130,13 @@ def create_user_str(user: User) -> str:
     return f"{user.id}:{user.username}:{user.id}"
 
 
-def create_user_comment(comment: UserComment) -> GDSerialisable:
+def create_user_comment(comment: UserComment, user: User) -> GDSerialisable:
     return {
         2: hashes.encode_base64(comment.content),
         4: comment.likes,
         6: comment.id,
         9: into_str_ts(comment.post_ts),
-        12: "0,0,0",  # TODO: Colour system (privilege bound)
+        12: user.comment_colour,
     }
 
 
@@ -182,7 +182,7 @@ def create_level_comment(
         9: into_str_ts(comment.post_ts),
         10: comment.percent or 0,
         11: badge_level,
-        12: "0,0,0",  # TODO: Colour system (privilege bound)
+        12: user.comment_colour,
     }
 
     if include_level_id:

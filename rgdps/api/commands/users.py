@@ -6,6 +6,7 @@ from rgdps.api.commands.framework import unwrap_service
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.usecases import users
+from rgdps.models.rgb import RGB
 
 router = CommandRouter("users_root")
 
@@ -76,3 +77,23 @@ async def privileges_set(
     unwrap_service(await users.update_privileges(ctx, user.id, privileges))
 
     return f"The user {user!r} has been set to have the following privileges: {privileges!r}"
+
+
+comments_group = CommandRouter("comments")
+user_group.register_command(comments_group)
+
+colour_group = CommandRouter("colour")
+comments_group.register_command(colour_group)
+
+@colour_group.register_function(
+    name="set",
+    required_privileges=UserPrivileges.USER_DISPLAY_MOD_BADGE,
+)
+async def comments_colour_set(
+    ctx: CommandContext,
+    comment_colour_rgb: RGB,
+    user: User,
+) -> str:
+    unwrap_service(await users.update_comment_colour(ctx, user.id, comment_colour_rgb))
+
+    return f"Your comment colour has been updated to the following RGB: {comment_colour_rgb!r}"

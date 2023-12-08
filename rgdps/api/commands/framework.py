@@ -23,6 +23,7 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
 from rgdps.models.user import User
+from rgdps.models.rgb import RGB
 
 if TYPE_CHECKING:
     import httpx
@@ -100,6 +101,8 @@ async def _resolve_from_type(ctx: CommandContext, value: str, cast: type[T]) -> 
         return cast(value)
     elif issubclass(cast, bool):
         return typing.cast(T, _bool_parse(value))
+    elif issubclass(cast, RGB):
+        return typing.cast(T, _rgb_parse(value))
     elif issubclass(cast, Level):
         return typing.cast(T, await _level_by_ref(ctx, value))
     elif issubclass(cast, User):
@@ -127,6 +130,13 @@ def _bool_parse(data: str) -> bool:
         return False
 
     raise ValueError(f"Could not parse {data!r} as a boolean (true/false) value!")
+
+def _rgb_parse(data: str) -> RGB:
+    rgb = RGB.from_str(data)
+    if rgb is not None:
+        return rgb
+    
+    raise ValueError(f"Could not parse {data!r} as a RGB value!")
 
 
 def _parse_params(param_str: str) -> list[str]:

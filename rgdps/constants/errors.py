@@ -18,6 +18,7 @@ class ServiceError(str, Enum):
     USER_COMMENTS_PRIVATE = "user.comments_private"
     USER_MESSAGES_PRIVATE = "user.messages_private"
     USER_FRIEND_REQUESTS_PRIVATE = "user.friend_requests_private"
+    USER_NO_COMMENT_COLOUR_UPDATE_PERMISSION = "users.no_comment_colour_update_permission"
 
     COMMENTS_INVALID_CONTENT = "comments.invalid_content"
     COMMENTS_NOT_FOUND = "comments.not_found"

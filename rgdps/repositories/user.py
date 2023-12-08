@@ -18,7 +18,7 @@ from rgdps.models.user import User
 
 async def from_db(ctx: Context, user_id: int) -> User | None:
     user_db = await ctx.mysql.fetch_one(
-        "SELECT id, username, email, password, privileges, message_privacy, friend_privacy, "
+        "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
@@ -33,7 +33,7 @@ async def from_db(ctx: Context, user_id: int) -> User | None:
 
 async def multiple_from_db(ctx: Context, user_ids: list[int]) -> list[User]:
     users_db = await ctx.mysql.fetch_all(
-        "SELECT id, username, email, password, privileges, message_privacy, friend_privacy, "
+        "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
@@ -76,6 +76,7 @@ async def create(
     user_coins: int = 0,
     diamonds: int = 0,
     user_id: int = 0,
+    comment_colour: str = "0,0,0",
 ) -> User:
     if register_ts is None:
         register_ts = datetime.now()
@@ -111,6 +112,7 @@ async def create(
         coins=coins,
         user_coins=user_coins,
         diamonds=diamonds,
+        comment_colour=comment_colour,
     )
 
     user.id = await create_sql(ctx, user)
@@ -152,12 +154,12 @@ def _from_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
 
 async def create_sql(ctx: Context, user: User) -> int:
     return await ctx.mysql.execute(
-        "INSERT INTO users (id, username, email, password, privileges, message_privacy, "
+        "INSERT INTO users (id, username, email, password, privileges, comment_colour, message_privacy, "
         "friend_privacy, comment_privacy, twitter_name, youtube_name, twitch_name, "
         "register_ts, stars, demons, primary_colour, secondary_colour, display_type, icon, "
         "ship, ball, ufo, wave, robot, spider, explosion, glow, creator_points, "
         "coins, user_coins, diamonds) VALUES (:id, :username, :email, :password, :privileges, "
-        ":message_privacy, :friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
+        ":comment_colour, :message_privacy, :friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
         ":twitch_name, :register_ts, :stars, :demons, :primary_colour, "
         ":secondary_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
         ":spider, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds)",
@@ -203,6 +205,7 @@ async def update_sql_partial(
     coins: int | Unset = UNSET,
     user_coins: int | Unset = UNSET,
     diamonds: int | Unset = UNSET,
+    comment_colour: str | Unset = UNSET,
 ) -> User | None:
     changed_data = {}
 
@@ -262,6 +265,8 @@ async def update_sql_partial(
         changed_data["user_coins"] = user_coins
     if is_set(diamonds):
         changed_data["diamonds"] = diamonds
+    if is_set(comment_colour):
+        changed_data["comment_colour"] = comment_colour
 
     if not changed_data:
         return await from_id(ctx, user_id)
@@ -309,6 +314,7 @@ async def update_meili_partial(
     coins: int | Unset = UNSET,
     user_coins: int | Unset = UNSET,
     diamonds: int | Unset = UNSET,
+    comment_colour: str | Unset = UNSET,
 ) -> None:
     changed_data: dict[str, Any] = {
         "id": user_id,
@@ -370,6 +376,8 @@ async def update_meili_partial(
         changed_data["user_coins"] = user_coins
     if is_set(diamonds):
         changed_data["diamonds"] = diamonds
+    if is_set(comment_colour):
+        changed_data["comment_colour"] = comment_colour
 
     changed_data = _make_meili_dict(changed_data)
 
@@ -408,6 +416,7 @@ async def update_partial(
     coins: int | Unset = UNSET,
     user_coins: int | Unset = UNSET,
     diamonds: int | Unset = UNSET,
+    comment_colour: str | Unset = UNSET,
 ) -> User | None:
     user = await update_sql_partial(
         ctx,
@@ -440,6 +449,7 @@ async def update_partial(
         coins=coins,
         user_coins=user_coins,
         diamonds=diamonds,
+        comment_colour=comment_colour,
     )
 
     if user is None:
@@ -476,6 +486,7 @@ async def update_partial(
         coins=coins,
         user_coins=user_coins,
         diamonds=diamonds,
+        comment_colour=comment_colour,
     )
 
     await drop_cache(ctx, user_id)
@@ -558,7 +569,7 @@ async def get_count(ctx: Context) -> int:
 
 async def all(ctx: Context) -> AsyncGenerator[User, None]:
     async for db_user in ctx.mysql.iterate(
-        "SELECT id, username, email, password, privileges, message_privacy, friend_privacy, "
+        "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
