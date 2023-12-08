@@ -16,12 +16,11 @@ async def from_db(
 ) -> Song | None:
     song_db = await ctx.mysql.fetch_one(
         "SELECT id, name, author_id, author, author_youtube, size, "
-        "download_url, source, blocked FROM songs WHERE id = :song_id"
-        + " AND blocked = 0"
-        if not allow_blocked
-        else "",
+        "download_url, source, blocked FROM songs WHERE id = :song_id "
+        "AND blocked IN :blocked",
         {
             "song_id": song_id,
+            "blocked": (0, 1) if allow_blocked else (0,),
         },
     )
 
@@ -29,6 +28,23 @@ async def from_db(
         return None
 
     return Song.from_mapping(song_db)
+
+async def multiple_from_db(
+    ctx: Context,
+    song_ids: list[int],
+    allow_blocked: bool = False,
+) -> list[Song]:
+    songs_db = await ctx.mysql.fetch_all(
+        "SELECT id, name, author_id, author, author_youtube, size, "
+        "download_url, source, blocked FROM songs WHERE id IN :song_ids "
+        "AND blocked IN :blocked",
+        {
+            "song_ids": tuple(song_ids),
+            "blocked": (0, 1) if allow_blocked else (0,),
+        },
+    )
+
+    return [Song.from_mapping(song_db) for song_db in songs_db]
 
 
 async def _create_sql(ctx: Context, song: Song) -> int:
@@ -140,6 +156,33 @@ async def from_id(
         return song_boomlings
 
     return None
+
+async def multiple_from_id(
+    ctx: Context,
+    song_ids: list[int],
+    allow_blocked: bool = False,
+) -> list[Song]:
+    if not song_ids:
+        return []
+
+    songs: list[Song] = []
+
+    db_songs = await multiple_from_db(ctx, song_ids, allow_blocked)
+    songs.extend(db_songs)
+
+    db_song_ids = [db_song.id for db_song in db_songs]
+    unsaved_song_ids = [song_id for song_id in song_ids if song_id not in db_song_ids]
+    for unsaved_song_id in unsaved_song_ids:
+        song_boomlings = await from_boomlings(ctx, unsaved_song_id)
+        if song_boomlings is not None:
+            await _create_sql(ctx, song_boomlings)
+            songs.append(song_boomlings)
+
+    # since we fetch from cache first and db for the rest
+    # songs may not be in the same order they were provided in
+    songs.sort(key=lambda song: song_ids.index(song.id))
+
+    return songs
 
 
 async def get_count(ctx: Context) -> int:

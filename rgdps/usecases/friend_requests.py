@@ -37,20 +37,12 @@ async def get_user(
         include_deleted=False,
     )
 
-    friend_request_responses = []
-    for request in requests:
+    users = await repositories.user.multiple_from_id(
+        ctx,
         # Swap the sender and recipient according to the from_sender_id flag
-        target_user_id = (
-            request.recipient_user_id if is_sender_user_id else request.sender_user_id
-        )
-        user = await repositories.user.from_id(ctx, target_user_id)
-
-        if user is None:
-            continue
-
-        friend_request_responses.append(
-            FriendRequestResponse(request, user),
-        )
+        [request.recipient_user_id if is_sender_user_id else request.sender_user_id for request in requests],
+    )
+    friend_request_responses = [FriendRequestResponse(request, user) for request, user in zip(requests, users)]
 
     friend_request_count = (
         await repositories.friend_requests.get_user_friend_request_count(

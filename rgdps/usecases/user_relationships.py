@@ -33,16 +33,8 @@ async def get_user(
         include_deleted=False,
     )
 
-    relationships_responses = []
-    for relationship in relationships:
-        user = await repositories.user.from_id(ctx, relationship.target_user_id)
-
-        if user is None:
-            continue
-
-        relationships_responses.append(
-            UserRelationshipResponse(relationship, user),
-        )
+    users = await repositories.user.multiple_from_id(ctx, [relationship.target_user_id for relationship in relationships])
+    relationships_responses = [UserRelationshipResponse(relationship, user) for relationship, user in zip(relationships, users)]
 
     relationship_count = (
         await repositories.user_relationship.get_user_relationship_count(

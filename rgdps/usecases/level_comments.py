@@ -37,16 +37,8 @@ async def get_level(
         sorting=sorting,
     )
 
-    level_comment_responses = []
-    for comment in comments:
-        user = await repositories.user.from_id(ctx, comment.user_id)
-
-        if user is None:
-            continue
-
-        level_comment_responses.append(
-            LevelCommentResponse(comment, user),
-        )
+    users = await repositories.user.multiple_from_id(ctx, [comment.user_id for comment in comments])
+    level_comment_responses = [LevelCommentResponse(comment, user) for comment, user in zip(comments, users)]
 
     comment_count = await repositories.level_comment.get_count_from_level(
         ctx,

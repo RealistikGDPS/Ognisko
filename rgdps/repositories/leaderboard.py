@@ -33,11 +33,12 @@ async def get_top_stars_paginated(
     page: int,
     page_size: int,
 ) -> list[int]:
-    return await ctx.redis.zrevrange(
+    top_stars = await ctx.redis.zrevrange(
         "rgdps:leaderboards:stars",
         page * page_size,
         (page + 1) * page_size,
     )
+    return [int(top_star) for top_star in top_stars]
 
 
 async def remove_star_count(ctx: Context, user_id: int) -> None:
@@ -78,11 +79,13 @@ async def get_top_creators_paginated(
     page: int,
     page_size: int,
 ) -> list[int]:
-    return await ctx.redis.zrevrange(
+    top_creators = await ctx.redis.zrevrange(
         "rgdps:leaderboards:creators",
         page * page_size,
         (page + 1) * page_size,
     )
+
+    return [int(top_creator) for top_creator in top_creators]
 
 
 async def remove_creator_count(ctx: Context, user_id: int) -> None:
