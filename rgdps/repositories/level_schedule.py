@@ -21,7 +21,7 @@ async def create(
     if start_time is None:
         start_time = datetime.now()
 
-    # Default end time, considering times.
+    # Not sure how I feel about having this sort of logic here.
     if schedule_type == LevelScheduleType.WEEKLY:
         end_time = start_time + timedelta(days=7)
     else:
@@ -88,6 +88,24 @@ async def get_next(
     schedule_db = await ctx.mysql.fetch_one(
         "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
         "FROM level_schedules WHERE type = :schedule_type AND start_time >= NOW() ORDER BY start_time ASC LIMIT 1",
+        {
+            "schedule_type": schedule_type.value,
+        },
+    )
+
+    if schedule_db is None:
+        return None
+
+    return LevelSchedule.from_mapping(schedule_db)
+
+
+async def get_last(
+    ctx: Context,
+    schedule_type: LevelScheduleType,
+) -> LevelSchedule | None:
+    schedule_db = await ctx.mysql.fetch_one(
+        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id, deleted "
+        "FROM level_schedules WHERE type = :schedule_type AND end_time <= NOW() ORDER BY end_time DESC LIMIT 1",
         {
             "schedule_type": schedule_type.value,
         },
