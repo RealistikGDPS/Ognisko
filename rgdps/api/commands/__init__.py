@@ -3,6 +3,7 @@ from __future__ import annotations
 from . import framework
 from . import levels
 from . import misc
+from . import schedule
 from . import sync
 from . import users
 from rgdps.config import config
@@ -12,6 +13,7 @@ router.merge(misc.router)
 router.merge(levels.router)
 router.merge(users.router)
 router.merge(sync.router)
+router.merge(schedule.router)
 
 
 def is_command(entry: str) -> bool:
