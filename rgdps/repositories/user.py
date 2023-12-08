@@ -37,7 +37,7 @@ async def multiple_from_db(ctx: Context, user_ids: list[int]) -> list[User]:
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
-        "user_coins, diamonds FROM users WHERE id IN :id",
+        "user_coins, diamonds FROM users WHERE id IN :ids",
         {"ids": tuple(user_ids)},
     )
 
