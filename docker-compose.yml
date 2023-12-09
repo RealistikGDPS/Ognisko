@@ -21,7 +21,7 @@ services:
     restart: always
     command: redis-server
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT}:${REDIS_PORT}"
     volumes:
       - ${REDIS_DIR}:/data
 
