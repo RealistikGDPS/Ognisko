@@ -368,8 +368,6 @@ async def daily_level_info_get(
     weekly: bool = Form(False),
 ):
     # This endpoint does not actually even give level info (not even a level id...)
-    print(weekly)
-    print(await ctx.request.form())
     query_type = LevelScheduleType.WEEKLY if weekly else LevelScheduleType.DAILY
 
     result = await level_schedules.get_current(
@@ -393,8 +391,6 @@ async def daily_level_info_get(
             "query_type": query_type.value,
         },
     )
-
-    print(result)
 
     time_remaining = (result.schedule.end_time - datetime.now()).seconds
 

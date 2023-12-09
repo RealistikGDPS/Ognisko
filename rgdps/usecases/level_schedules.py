@@ -6,8 +6,10 @@ from typing import NamedTuple
 
 from rgdps import repositories
 from rgdps.common.context import Context
+from rgdps.common.data_utils import linear_biased_random
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
+from rgdps.constants.levels import LevelLength
 from rgdps.models.level import Level
 from rgdps.models.level_schedule import LevelSchedule
 
@@ -61,7 +63,9 @@ async def schedule_next(
 # - At least medium length
 # - Hasn't been daily in the last 20 days.
 
-DAILY_LEVELS_TO_EXCLUDE = 20
+DAILY_LEVELS_TO_EXCLUDE = (
+    20  # TODO: look into scaling this with the number of levels on the server.
+)
 # Helper function to separate the algorithm.
 async def _auto_nominate_daily(ctx: Context) -> LevelSchedule | None:
     last_n = await repositories.level_schedule.get_last_n(
@@ -72,7 +76,35 @@ async def _auto_nominate_daily(ctx: Context) -> LevelSchedule | None:
 
     excluded_level_ids = [schedule.level_id for schedule in last_n]
 
-    return None
+    recommendations = await repositories.level.get_well_received(
+        ctx,
+        minimum_stars=2,
+        maximum_stars=7,
+        minimum_length=LevelLength.MEDIUM,
+        excluded_level_ids=excluded_level_ids,
+        limit=20,
+    )
+
+    if not recommendations:
+        return None
+
+    # Choose a random level with a bias towards lower indexes.
+    level_id = linear_biased_random(recommendations)
+
+    level = await repositories.level.from_id(
+        ctx,
+        level_id,
+    )
+
+    # Give up (rare branch), will likely be re-attempted soon.
+    if level is None:
+        return None
+
+    return await repositories.level_schedule.create(
+        ctx,
+        LevelScheduleType.DAILY,
+        level_id,
+    )
 
 
 # For weekly levels, we have a less strict algorithm.
@@ -84,7 +116,7 @@ async def _auto_nominate_daily(ctx: Context) -> LevelSchedule | None:
 
 WEEKLY_LEVELS_TO_EXCLUDE = 52 // 7
 
-
+# For now, this is rather similar to the daily algorithm, but may change in the future.
 async def _auto_nominate_weekly(ctx: Context) -> LevelSchedule | None:
     last_n = await repositories.level_schedule.get_last_n(
         ctx,
@@ -93,7 +125,36 @@ async def _auto_nominate_weekly(ctx: Context) -> LevelSchedule | None:
     )
 
     excluded_level_ids = [schedule.level_id for schedule in last_n]
-    return None
+
+    recommendations = await repositories.level.get_well_received(
+        ctx,
+        minimum_stars=10,
+        maximum_stars=10,
+        minimum_length=LevelLength.MEDIUM,
+        excluded_level_ids=excluded_level_ids,
+        limit=20,
+    )
+
+    if not recommendations:
+        return None
+
+    # Choose a random level with a bias towards lower indexes.
+    level_id = linear_biased_random(recommendations)
+
+    level = await repositories.level.from_id(
+        ctx,
+        level_id,
+    )
+
+    # Give up (rare branch), will likely be re-attempted soon.
+    if level is None:
+        return None
+
+    return await repositories.level_schedule.create(
+        ctx,
+        LevelScheduleType.WEEKLY,
+        level_id,
+    )
 
 
 class ScheduledLevel(NamedTuple):
