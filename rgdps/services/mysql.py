@@ -100,7 +100,7 @@ class MySQLService(AbstractMySQLService):
         query: str,
         values: MySQLValues | None = None,
     ) -> AsyncGenerator[MySQLRow, None]:
-        return await self._pool.iterate(query, values)  # type: ignore
+        return self._pool.iterate(query, values)  # type: ignore
 
     def transaction(self) -> MySQLTransaction:
         return MySQLTransaction(self._pool)
