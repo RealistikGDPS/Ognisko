@@ -50,7 +50,7 @@ class AbstractMySQLService(ABC):
         ...
 
     @abstractmethod
-    async def iterate(
+    def iterate(
         self,
         query: str,
         values: MySQLValues | None = None
@@ -154,10 +154,10 @@ class MySQLTransaction(AbstractMySQLService):
 
     async def execute(self, query: str, values: MySQLValues | None = None) -> Any:
         return await self._connection.execute(query, values)  # type: ignore
-    
-    async def iterate(
+
+    def iterate(
         self,
         query: str,
         values: MySQLValues | None = None,
     ) -> AsyncGenerator[MySQLRow, None]:
-        return await self._connection.iterate(query, values)  # type: ignore
+        return self._connection.iterate(query, values)  # type: ignore
