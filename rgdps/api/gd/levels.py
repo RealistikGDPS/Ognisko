@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import datetime
+
 from fastapi import Depends
 from fastapi import Form
 
@@ -11,10 +13,12 @@ from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
 from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelSearchType
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
+from rgdps.usecases import level_schedules
 from rgdps.usecases import levels
 from rgdps.usecases import songs
 
@@ -231,7 +235,12 @@ async def level_get(
     ctx: HTTPContext = Depends(),
     level_id: int = Form(..., alias="levelID"),
 ):
-    level_res = await levels.get(ctx, level_id)
+    level_res = await levels.get(
+        ctx,
+        level_id,
+        is_daily=level_id == -1,
+        is_weekly=level_id == -2,
+    )
 
     if isinstance(level_res, ServiceError):
         logger.info(
@@ -246,16 +255,28 @@ async def level_get(
     logger.info(
         "Successfully fetched level.",
         extra={
-            "level_id": level_id,
+            "level_id": level_res.level.id,
         },
     )
 
     return "#".join(
         (
-            gd_obj.dumps(gd_obj.create_level(level_res.level, level_res.data)),
+            gd_obj.dumps(
+                gd_obj.create_level(
+                    level_res.level,
+                    level_res.data,
+                    level_res.schedule_id or 0,
+                ),
+            ),
             gd_obj.create_level_data_security_str(level_res.data),
-            gd_obj.create_level_metadata_security_str_hashed(level_res.level),
-            gd_obj.create_level_metadata_security_str(level_res.level),
+            gd_obj.create_level_metadata_security_str_hashed(
+                level_res.level,
+                level_res.schedule_id or 0,
+            ),
+            gd_obj.create_level_metadata_security_str(
+                level_res.level,
+                level_res.schedule_id or 0,
+            ),
         ),
     )
 
@@ -339,3 +360,38 @@ async def level_desc_post(
     )
 
     return responses.success()
+
+
+# XXX: Should this be here?
+async def daily_level_info_get(
+    ctx: HTTPContext = Depends(),
+    weekly: bool = Form(False),
+):
+    # This endpoint does not actually even give level info (not even a level id...)
+    query_type = LevelScheduleType.WEEKLY if weekly else LevelScheduleType.DAILY
+
+    result = await level_schedules.get_current(
+        ctx,
+        schedule_type=query_type,
+    )
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            "Failed to fetch current level.",
+            extra={
+                "query_type": query_type.value,
+                "error": result.value,
+            },
+        )
+        return responses.fail()
+
+    logger.info(
+        "Successfully fetched current level.",
+        extra={
+            "query_type": query_type.value,
+        },
+    )
+
+    time_remaining = (result.schedule.end_time - datetime.now()).seconds
+
+    return f"{result.schedule.id}|{time_remaining}"

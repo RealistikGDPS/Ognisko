@@ -8,6 +8,7 @@ from rgdps import repositories
 from rgdps.common import gd_logic
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
+from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
@@ -225,9 +226,29 @@ async def search(
 class LevelResponse(NamedTuple):
     level: Level
     data: str
+    schedule_id: int | None = None
 
 
-async def get(ctx: Context, level_id: int) -> LevelResponse | ServiceError:
+async def get(
+    ctx: Context,
+    level_id: int,
+    is_daily: bool = False,
+    is_weekly: bool = False,
+) -> LevelResponse | ServiceError:
+    # Whenever requesting the daily level, the client sends -1/-2 as the level id
+    # instead of getting it from the handler. This is stupid but unfortunately
+    # has to be supported.
+    schedule_id = None
+    if is_daily or is_weekly:
+        schedule_type = (
+            LevelScheduleType.DAILY if is_daily else LevelScheduleType.WEEKLY
+        )
+        schedule = await repositories.level_schedule.get_current(ctx, schedule_type)
+        if schedule is None:
+            return ServiceError.LEVELS_NOT_FOUND
+        level_id = schedule.level_id
+        schedule_id = schedule.id
+
     level = await repositories.level.from_id(ctx, level_id)
     level_data = await repositories.level_data.from_level_id(ctx, level_id)
     if not (level and level_data):
@@ -243,6 +264,7 @@ async def get(ctx: Context, level_id: int) -> LevelResponse | ServiceError:
     return LevelResponse(
         level=level,
         data=level_data,
+        schedule_id=schedule_id,
     )
 
 

@@ -294,3 +294,9 @@ router.add_api_route(
     levels.level_desc_post,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/getGJDailyLevel.php",
+    levels.daily_level_info_get,
+    methods=["POST"],
+)

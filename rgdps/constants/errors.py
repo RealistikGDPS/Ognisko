@@ -57,5 +57,7 @@ class ServiceError(str, Enum):
 
     DAILY_CHESTS_ALREADY_CLAIMED = "daily_chests.already_claimed"
 
+    LEVEL_SCHEDULE_UNSET = "level_schedule.unsed"
+
     def __bool__(self) -> bool:
         return False

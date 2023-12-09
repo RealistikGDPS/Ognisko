@@ -746,3 +746,40 @@ async def from_name(
         return None
 
     return await from_id(ctx, result_id, include_deleted)
+
+
+# A function primarily used for some recommendation algorithms that returns a list of levels
+# ordered by how well received they are, assessed using a formula..
+async def get_well_received(
+    ctx: Context,
+    minimum_stars: int,
+    minimum_length: LevelLength,
+    maximum_stars: int = 0,
+    maximum_demon_rating: LevelDemonDifficulty = LevelDemonDifficulty.EXTREME,
+    excluded_level_ids: list[
+        int
+    ] = [],  # The list isnt mutable, so we can set it to an empty list.
+    limit: int = 100,
+) -> list[int]:
+    # BOTCH! Avoiding a sql syntax error.
+    if not excluded_level_ids:
+        excluded_level_ids = [0]
+
+    # The formula in the order clause is made to emphasis lower downloads, but still have a
+    # significant impact on likes.
+    values = await ctx.mysql.fetch_all(
+        "SELECT id FROM levels WHERE stars >= :minimum_stars AND stars <= :maximum_stars "
+        "AND demon_difficulty <= :maximum_demon_rating AND length >= :minimum_length "
+        "AND id NOT IN :excluded_level_ids AND deleted = 0 ORDER BY (SQRT(downloads) / likes) DESC "
+        "LIMIT :limit",
+        {
+            "minimum_stars": minimum_stars,
+            "maximum_stars": maximum_stars,
+            "maximum_demon_rating": maximum_demon_rating.value,
+            "minimum_length": minimum_length.value,
+            "excluded_level_ids": tuple(excluded_level_ids),
+            "limit": limit,
+        },
+    )
+
+    return [x["id"] for x in values]

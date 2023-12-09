@@ -4,6 +4,7 @@ from . import daily_chest
 from . import friend_request
 from . import level
 from . import level_comment
+from . import level_schedule
 from . import like
 from . import song
 from . import user
