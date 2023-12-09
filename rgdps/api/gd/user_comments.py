@@ -44,8 +44,8 @@ async def user_comments_get(
         return responses.fail()
 
     response = "|".join(
-        gd_obj.dumps(gd_obj.create_user_comment(comment), sep="~")
-        for comment in result.comment
+        gd_obj.dumps(gd_obj.create_user_comment(comment, result.user), sep="~")
+        for comment in (result.comment)
     )
     response += "#" + gd_obj.create_pagination_info(result.total, page, PAGE_SIZE)
 
