@@ -761,7 +761,7 @@ async def get_well_received(
     values = await ctx.mysql.fetch_all(
         "SELECT id FROM levels WHERE stars >= :minimum_stars AND stars <= :maximum_stars "
         "AND demon_difficulty <= :maximum_demon_rating AND length >= :minimum_length "
-        "AND id NOT IN :excluded_level_ids AND deleted = 0 ORDER BY (POWER(downloads, 2) / likes) DESC "
+        "AND id NOT IN :excluded_level_ids AND deleted = 0 ORDER BY (SQRT(downloads) / likes) DESC "
         "LIMIT :limit",
         {
             "minimum_stars": minimum_stars,
