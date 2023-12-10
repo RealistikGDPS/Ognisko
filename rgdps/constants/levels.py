@@ -31,9 +31,9 @@ class LevelDifficulty(IntEnum):
 _DIFFICULTY_STAR_MAP = {
     2: LevelDifficulty.EASY,
     3: LevelDifficulty.NORMAL,
-    4: LevelDifficulty.NORMAL,
+    4: LevelDifficulty.HARD,
     5: LevelDifficulty.HARD,
-    6: LevelDifficulty.HARD,
+    6: LevelDifficulty.HARDER,
     7: LevelDifficulty.HARDER,
     8: LevelDifficulty.INSANE,
     9: LevelDifficulty.INSANE,
