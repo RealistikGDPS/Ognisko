@@ -37,8 +37,13 @@ async def get_level(
         sorting=sorting,
     )
 
-    users = await repositories.user.multiple_from_id(ctx, [comment.user_id for comment in comments])
-    level_comment_responses = [LevelCommentResponse(comment, user) for comment, user in zip(comments, users)]
+    users = await repositories.user.multiple_from_id(
+        ctx,
+        [comment.user_id for comment in comments],
+    )
+    level_comment_responses = [
+        LevelCommentResponse(comment, user) for comment, user in zip(comments, users)
+    ]
 
     comment_count = await repositories.level_comment.get_count_from_level(
         ctx,
@@ -93,7 +98,7 @@ async def create(
     percent: int,
 ) -> LevelComment | ServiceError:
     # TODO: Spam protection
-    level = repositories.level.from_id(ctx, level_id=level_id)
+    level = await repositories.level.from_id(ctx, level_id=level_id)
     if level is None:
         return ServiceError.COMMENTS_TARGET_NOT_FOUND
 
