@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from typing import NamedTuple
 from typing import AsyncGenerator
+from typing import NamedTuple
 
 from rgdps.common import time as time_utils
 from rgdps.common.context import Context
@@ -31,7 +31,11 @@ async def from_db(ctx: Context, user_id: int) -> User | None:
 
     return User.from_mapping(user_db)
 
+
 async def multiple_from_db(ctx: Context, user_ids: list[int]) -> list[User]:
+    if not user_ids:
+        return []
+
     users_db = await ctx.mysql.fetch_all(
         "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
@@ -42,6 +46,7 @@ async def multiple_from_db(ctx: Context, user_ids: list[int]) -> list[User]:
     )
 
     return [User.from_mapping(user_db) for user_db in users_db]
+
 
 async def create(
     ctx: Context,
@@ -497,6 +502,7 @@ async def update_partial(
 async def drop_cache(ctx: Context, user_id: int) -> None:
     await ctx.user_cache.delete(user_id)
 
+
 async def multiple_from_id(ctx: Context, user_ids: list[int]) -> list[User]:
     if not user_ids:
         return []
@@ -519,6 +525,7 @@ async def multiple_from_id(ctx: Context, user_ids: list[int]) -> list[User]:
     users.sort(key=lambda user: user_ids.index(user.id))
 
     return users
+
 
 async def from_id(ctx: Context, user_id: int) -> User | None:
     cache_user = await ctx.user_cache.get(user_id)
@@ -567,15 +574,17 @@ async def from_name(ctx: Context, username: str) -> User | None:
 async def get_count(ctx: Context) -> int:
     return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM users")
 
+
 async def all(ctx: Context) -> AsyncGenerator[User, None]:
     async for db_user in ctx.mysql.iterate(
         "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
-        "user_coins, diamonds FROM users"
+        "user_coins, diamonds FROM users",
     ):
         yield User.from_mapping(db_user)
+
 
 class UserSearchResults(NamedTuple):
     results: list[User]

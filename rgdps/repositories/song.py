@@ -29,11 +29,15 @@ async def from_db(
 
     return Song.from_mapping(song_db)
 
+
 async def multiple_from_db(
     ctx: Context,
     song_ids: list[int],
     allow_blocked: bool = False,
 ) -> list[Song]:
+    if not song_ids:
+        return []
+
     songs_db = await ctx.mysql.fetch_all(
         "SELECT id, name, author_id, author, author_youtube, size, "
         "download_url, source, blocked FROM songs WHERE id IN :song_ids "
@@ -156,6 +160,7 @@ async def from_id(
         return song_boomlings
 
     return None
+
 
 async def multiple_from_id(
     ctx: Context,
