@@ -95,7 +95,7 @@ class MySQLService(AbstractMySQLService):
     async def execute(self, query: str, values: MySQLValues | None = None) -> Any:
         return await self._pool.execute(query, values)  # type: ignore
     
-    async def iterate(
+    def iterate(
         self,
         query: str,
         values: MySQLValues | None = None,
