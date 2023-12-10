@@ -184,3 +184,36 @@ async def unmagic(ctx: CommandContext, level: Level | None = None) -> str:
     unwrap_service(await levels.revoke_magic(ctx, level.id))
 
     return f"The level {level.name!r}'s magic status has been revoked."
+
+
+@level_group.register_function(
+    required_privileges=UserPrivileges.LEVEL_RATE_STARS,
+)  # XXX: Priv?
+async def epic(
+    ctx: CommandContext,
+    level: Level | None = None,
+) -> str:
+    if level is None:
+        level = ctx.level
+
+    if level is None:
+        return "You need to specify a level to nominate as epic."
+
+    unwrap_service(await levels.nominate_epic(ctx, level.id))
+
+    return f"The level {level.name!r} has been nominated as epic."
+
+
+@level_group.register_function(
+    required_privileges=UserPrivileges.LEVEL_RATE_STARS,
+)  # XXX: Priv?
+async def unepic(ctx: CommandContext, level: Level | None = None) -> str:
+    if level is None:
+        level = ctx.level
+
+    if level is None:
+        return "You need to specify a level to revoke epic status."
+
+    unwrap_service(await levels.revoke_epic(ctx, level.id))
+
+    return f"The level {level.name!r}'s epic status has been revoked."

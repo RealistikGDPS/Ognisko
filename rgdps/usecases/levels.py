@@ -199,10 +199,19 @@ async def search(
     songs = set(
         await repositories.song.multiple_from_id(
             ctx,
-            [level.custom_song_id for level in levels_db.results if level.custom_song_id is not None]
-        )
+            [
+                level.custom_song_id
+                for level in levels_db.results
+                if level.custom_song_id is not None
+            ],
+        ),
     )
-    users = set(await repositories.user.multiple_from_id(ctx, [level.user_id for level in levels_db.results]))
+    users = set(
+        await repositories.user.multiple_from_id(
+            ctx,
+            [level.user_id for level in levels_db.results],
+        ),
+    )
 
     if lookup_level:
         # Move to the top.
@@ -553,5 +562,77 @@ async def revoke_magic(
 
     if result is None:
         return ServiceError.LEVELS_NOT_FOUND
+
+    return result
+
+
+async def nominate_epic(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    creator = await repositories.user.from_id(ctx, level.user_id)
+    if creator is None:
+        return ServiceError.USER_NOT_FOUND  # NOTE: Should never happen
+
+    old_creator_points = gd_logic.calculate_creator_points(level)
+
+    search_flags = level.search_flags | LevelSearchFlag.EPIC
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    creator_delta = gd_logic.calculate_creator_points(level) - old_creator_points
+
+    await repositories.user.update_partial(
+        ctx,
+        creator.id,
+        creator_points=creator.creator_points + creator_delta,
+    )
+
+    return result
+
+
+async def revoke_epic(
+    ctx: Context,
+    level_id: int,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+    if not level:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    creator = await repositories.user.from_id(ctx, level.user_id)
+    if creator is None:
+        return ServiceError.USER_NOT_FOUND  # NOTE: Should never happen
+
+    old_creator_points = gd_logic.calculate_creator_points(level)
+
+    search_flags = level.search_flags & ~LevelSearchFlag.EPIC
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id=level_id,
+        search_flags=search_flags,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    creator_delta = gd_logic.calculate_creator_points(level) - old_creator_points
+
+    await repositories.user.update_partial(
+        ctx,
+        creator.id,
+        creator_points=creator.creator_points + creator_delta,
+    )
 
     return result
