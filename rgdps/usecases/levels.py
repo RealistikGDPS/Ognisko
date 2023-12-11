@@ -9,6 +9,7 @@ from rgdps.common import gd_logic
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
+from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
@@ -500,12 +501,18 @@ async def rate_level(
 
     old_creator_points = gd_logic.calculate_creator_points(level)
 
+    if stars == 10:
+        demon_diff = LevelDemonDifficulty.HARD
+    else:
+        demon_diff = None
+
     level = await repositories.level.update_partial(
         ctx,
         level_id,
         stars=stars,
         difficulty=difficulty,
         coins_verified=coins_verified,
+        demon_difficulty=demon_diff,
     )
 
     if level is None:
@@ -634,5 +641,30 @@ async def revoke_epic(
         creator.id,
         creator_points=creator.creator_points + creator_delta,
     )
+
+    return result
+
+
+async def set_demon_difficulty(
+    ctx: Context,
+    level_id: int,
+    demon_difficulty: LevelDemonDifficulty | None,
+) -> Level | ServiceError:
+    level = await repositories.level.from_id(ctx, level_id)
+
+    if level is None:
+        return ServiceError.LEVELS_NOT_FOUND
+
+    if level.stars != 10:
+        return ServiceError.LEVELS_NOT_DEMON
+
+    result = await repositories.level.update_partial(
+        ctx,
+        level_id,
+        demon_difficulty=demon_difficulty,
+    )
+
+    if result is None:
+        return ServiceError.LEVELS_NOT_FOUND
 
     return result

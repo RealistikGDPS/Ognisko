@@ -18,7 +18,9 @@ class ServiceError(str, Enum):
     USER_COMMENTS_PRIVATE = "user.comments_private"
     USER_MESSAGES_PRIVATE = "user.messages_private"
     USER_FRIEND_REQUESTS_PRIVATE = "user.friend_requests_private"
-    USER_NO_COMMENT_COLOUR_UPDATE_PERMISSION = "users.no_comment_colour_update_permission"
+    USER_NO_COMMENT_COLOUR_UPDATE_PERMISSION = (
+        "users.no_comment_colour_update_permission"
+    )
 
     COMMENTS_INVALID_CONTENT = "comments.invalid_content"
     COMMENTS_NOT_FOUND = "comments.not_found"
@@ -50,6 +52,7 @@ class ServiceError(str, Enum):
     LEVELS_UPDATE_LOCKED = "levels.update_locked"
     LEVELS_NO_DELETE_PERMISSION = "levels.no_delete_permission"
     LEVELS_NO_UPLOAD_PERMISSION = "levels.no_upload_permission"
+    LEVELS_NOT_DEMON = "levels.not_demon"
 
     MESSAGES_NOT_FOUND = "messages.not_found"
     MESSAGES_INVALID_OWNER = "messages.invalid_owner"
