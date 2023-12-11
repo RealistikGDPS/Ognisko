@@ -80,6 +80,29 @@ class LevelDemonDifficulty(IntEnum):
     EXTREME = 6
 
 
+class LevelDemonRating(IntEnum):
+    """Demon difficulty rating used by the client to send demon ratings
+    (but not receive)."""
+
+    EASY = 1
+    MEDIUM = 2
+    HARD = 3
+    INSANE = 4
+    EXTREME = 5
+
+    def as_difficulty(self) -> LevelDemonDifficulty:
+        return _RATING_DIFFICULTY_MAP[self]
+
+
+_RATING_DIFFICULTY_MAP = {
+    LevelDemonRating.EASY: LevelDemonDifficulty.EASY,
+    LevelDemonRating.MEDIUM: LevelDemonDifficulty.MEDIUM,
+    LevelDemonRating.HARD: LevelDemonDifficulty.HARD,
+    LevelDemonRating.INSANE: LevelDemonDifficulty.INSANE,
+    LevelDemonRating.EXTREME: LevelDemonDifficulty.INSANE,
+}
+
+
 # Ideas:
 # Listed only for friends
 class LevelPublicity(IntEnum):

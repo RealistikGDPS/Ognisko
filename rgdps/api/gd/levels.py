@@ -14,7 +14,7 @@ from rgdps.common.validators import Base64String
 from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
-from rgdps.constants.levels import LevelDemonDifficulty
+from rgdps.constants.levels import LevelDemonRating
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelSearchType
 from rgdps.constants.users import UserPrivileges
@@ -404,12 +404,12 @@ async def demon_difficulty_post(
         authenticate_dependency(required_privileges=UserPrivileges.LEVEL_RATE_STARS),
     ),
     level_id: int = Form(..., alias="levelID"),
-    demon_difficulty: LevelDemonDifficulty = Form(..., alias="rating"),
+    demon_difficulty: LevelDemonRating = Form(..., alias="rating"),
 ):
     result = await levels.set_demon_difficulty(
         ctx,
         level_id=level_id,
-        demon_difficulty=demon_difficulty,
+        demon_difficulty=demon_difficulty.as_difficulty(),
     )
 
     if isinstance(result, ServiceError):
