@@ -14,6 +14,7 @@ from rgdps.common.validators import Base64String
 from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
+from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelSearchType
 from rgdps.constants.users import UserPrivileges
@@ -395,3 +396,41 @@ async def daily_level_info_get(
     time_remaining = (result.schedule.end_time - datetime.now()).seconds
 
     return f"{result.schedule.id}|{time_remaining}"
+
+
+async def demon_difficulty_post(
+    ctx: HTTPContext = Depends(),
+    user: User = Depends(
+        authenticate_dependency(required_privileges=UserPrivileges.LEVEL_RATE_STARS),
+    ),
+    level_id: int = Form(..., alias="levelID"),
+    demon_difficulty: LevelDemonDifficulty = Form(..., alias="rating"),
+):
+    result = await levels.set_demon_difficulty(
+        ctx,
+        level_id=level_id,
+        demon_difficulty=demon_difficulty,
+    )
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            "Failed to set demon difficulty.",
+            extra={
+                "user_id": user.id,
+                "level_id": level_id,
+                "demon_difficulty": demon_difficulty,
+                "error": result.value,
+            },
+        )
+        return responses.fail()
+
+    logger.info(
+        "Successfully set demon difficulty.",
+        extra={
+            "user_id": user.id,
+            "level_id": level_id,
+            "demon_difficulty": demon_difficulty,
+        },
+    )
+
+    return responses.success()

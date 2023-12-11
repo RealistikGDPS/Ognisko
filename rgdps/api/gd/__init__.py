@@ -300,3 +300,9 @@ router.add_api_route(
     levels.daily_level_info_get,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/rateGJDemon21.php",
+    levels.demon_difficulty_post,
+    methods=["POST"],
+)
