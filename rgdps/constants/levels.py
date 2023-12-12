@@ -99,7 +99,7 @@ _RATING_DIFFICULTY_MAP = {
     LevelDemonRating.MEDIUM: LevelDemonDifficulty.MEDIUM,
     LevelDemonRating.HARD: LevelDemonDifficulty.HARD,
     LevelDemonRating.INSANE: LevelDemonDifficulty.INSANE,
-    LevelDemonRating.EXTREME: LevelDemonDifficulty.INSANE,
+    LevelDemonRating.EXTREME: LevelDemonDifficulty.EXTREME,
 }
 
 
