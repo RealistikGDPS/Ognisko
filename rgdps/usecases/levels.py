@@ -593,12 +593,13 @@ async def nominate_epic(
         ctx,
         level_id=level_id,
         search_flags=search_flags,
+        feature_order=int(time.time())
     )
 
     if result is None:
         return ServiceError.LEVELS_NOT_FOUND
 
-    creator_delta = gd_logic.calculate_creator_points(level) - old_creator_points
+    creator_delta = gd_logic.calculate_creator_points(result) - old_creator_points
 
     await repositories.user.update_partial(
         ctx,
@@ -634,7 +635,7 @@ async def revoke_epic(
     if result is None:
         return ServiceError.LEVELS_NOT_FOUND
 
-    creator_delta = gd_logic.calculate_creator_points(level) - old_creator_points
+    creator_delta = gd_logic.calculate_creator_points(result) - old_creator_points
 
     await repositories.user.update_partial(
         ctx,
