@@ -7,6 +7,7 @@ class ServiceError(str, Enum):
     AUTH_NOT_FOUND = "auth.not_found"
     AUTH_PASSWORD_MISMATCH = "auth.password_mismatch"
     AUTH_NO_PRIVILEGE = "auth.no_privilege"
+    AUTH_UNSUPPORTED_VERSION = "auth.unsupported_version"
 
     USER_EMAIL_EXISTS = "user.email_exists"
     USER_USERNAME_EXISTS = "user.username_exists"
