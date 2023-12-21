@@ -18,7 +18,7 @@ async def authenticate_plain(
     user = await repositories.user.from_id(ctx, user_id)
 
     if user is None:
-        return ServiceError.AUTH_NOT_FOUND
+        return ServiceError.USER_NOT_FOUND
 
     if not user.privileges & UserPrivileges.USER_AUTHENTICATE:
         return ServiceError.AUTH_NO_PRIVILEGE
@@ -54,7 +54,7 @@ async def authenticate_plain(
         )
 
         logger.info(
-            "Migrated user credential to latest version.",
+            "Migrated user credentials to latest version.",
             extra={
                 "user_id": user_id,
                 "old_version": creds.version,
@@ -92,11 +92,46 @@ async def authenticate_from_name_plain(
     )
 
 
-async def change_password(
+async def authenticate_from_gjp2(
+    ctx: Context,
+    user_id: int,
+    gjp2: str,
+) -> User | ServiceError:
+    user = await repositories.user.from_id(ctx, user_id)
+
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
+    if not user.privileges & UserPrivileges.USER_AUTHENTICATE:
+        return ServiceError.AUTH_NO_PRIVILEGE
+
+    creds = await repositories.user_credential.from_user_id(ctx, user_id)
+
+    if creds is None:
+        return ServiceError.AUTH_NOT_FOUND
+
+    if creds.version != CredentialVersion.GJP2_BCRYPT:
+        return ServiceError.AUTH_UNSUPPORTED_VERSION
+
+    if not await hashes.compare_bcrypt(
+        creds.value,
+        gjp2,
+    ):
+        return ServiceError.AUTH_PASSWORD_MISMATCH
+
+    return user
+
+
+async def update_password(
     ctx: Context,
     user_id: int,
     password: str,
-) -> None:
+) -> bool | ServiceError:
+    user = await repositories.user.from_id(ctx, user_id)
+
+    if user is None:
+        return ServiceError.USER_NOT_FOUND
+
     await repositories.user_credential.delete_from_user_id(ctx, user_id)
 
     gjp2_pw = hashes.hash_gjp2(password)
@@ -107,3 +142,5 @@ async def change_password(
         CredentialVersion.GJP2_BCRYPT,
         gjp2_pw,
     )
+
+    return True

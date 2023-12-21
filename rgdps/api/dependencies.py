@@ -19,7 +19,7 @@ from rgdps.models.user import User
 # TODO: add option to replicate https://github.com/RealistikDash/GDPyS/blob/9266cc57c3a4c5d1f51363aa3899ee3c09a23ee8/web/http.py#L338-L341
 def authenticate_dependency(
     user_id_alias: str = "accountID",
-    password_alias: str = "gjp",
+    password_alias: str = "gjp2",
     required_privileges: UserPrivileges | None = None,
 ) -> Callable[[HTTPContext, int, str], Awaitable[User]]:
     async def wrapper(
@@ -27,12 +27,10 @@ def authenticate_dependency(
         user_id: int = Form(..., alias=user_id_alias),
         gjp: str = Form(..., alias=password_alias),
     ) -> User:
-        raise HTTPException(200)  # TODO: Rewrite for 2.2
-        password_plain = hashes.decode_gjp(gjp)
-        user = await usecases.user_credentials.authenticate(
+        user = await usecases.user_credentials.authenticate_from_gjp2(
             ctx,
             user_id,
-            password_plain,
+            gjp,
         )
 
         if isinstance(user, ServiceError):
@@ -79,7 +77,7 @@ def password_authenticate_dependency(
         username: str = Form(..., alias=username_alias),
         password_plain: str = Form(..., alias=password_alias),
     ) -> User:
-        user = await usecases.user_credentials.authenticate_from_name(
+        user = await usecases.user_credentials.authenticate_from_name_plain(
             ctx,
             username,
             password_plain,
