@@ -27,6 +27,7 @@ def authenticate_dependency(
         user_id: int = Form(..., alias=user_id_alias),
         gjp: str = Form(..., alias=password_alias),
     ) -> User:
+        raise HTTPException(200)  # TODO: Rewrite for 2.2
         password_plain = hashes.decode_gjp(gjp)
         user = await usecases.auth.authenticate(
             ctx,

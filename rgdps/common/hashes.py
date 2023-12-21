@@ -38,22 +38,6 @@ async def hash_bcypt_async(plain: str) -> str:
     return await asyncio.to_thread(hash_bcypt, plain)
 
 
-def decode_gjp(gjp: str) -> str:
-    """Decodes the "Geometry Jump Password" format into plaintext.
-
-    Args:
-        gjp (str): The encoded GJP string.
-
-    Returns:
-        str: The plaintext password.
-    """
-
-    return xor_cipher.cyclic_xor_unsafe(
-        data=base64.urlsafe_b64decode(gjp.encode()),
-        key=XorKeys.GJP,
-    ).decode()
-
-
 def hash_md5(plain: str) -> str:
     return hashlib.md5(plain.encode()).hexdigest()
 
