@@ -1,6 +1,8 @@
 # RealistikGDPS
 The Python-based backend for RealistikGDPS, made as an expandable solution for a GDPS of any size.
 
+For support and a public running instance, please visit [our Discord!](https://discord.gg/uNTPGPn3D5)
+
 ## What is this?
 This is a modern Python implementation of the Geometry Dash server protocol meant to power my Geometry Dash Private server.
 It is written in asynchronous, modern Python and is meant as a replacement for our current [PHP based infrastructure](https://github.com/Cvolton/GMDprivateServer).
