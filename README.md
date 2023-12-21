@@ -11,6 +11,7 @@ It is written in asynchronous, modern Python and is meant as a replacement for o
 - S3 support, allowing for flexible storage solutions
 - Proper ratelimiting
 - Logz.io logging support
+- Flexible command framework
 
 ## How to set up?
 - Ensure Docker and Make are installed on your system.
