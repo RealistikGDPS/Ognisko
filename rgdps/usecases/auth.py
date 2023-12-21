@@ -21,6 +21,9 @@ async def authenticate(
     if not user.privileges & UserPrivileges.USER_AUTHENTICATE:
         return ServiceError.AUTH_NO_PRIVILEGE
 
+    # TODO: gjp2
+    return ServiceError.AUTH_NO_PRIVILEGE
+
     if not await auth.compare_bcrypt(
         ctx,
         user.password,

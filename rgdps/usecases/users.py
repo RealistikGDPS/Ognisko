@@ -13,8 +13,9 @@ from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.constants.users import UserRelationshipType
 from rgdps.models.friend_request import FriendRequest
-from rgdps.models.user import User
 from rgdps.models.rgb import RGB
+from rgdps.models.user import User
+
 
 async def register(
     ctx: Context,
@@ -48,6 +49,9 @@ async def authenticate(
 
     if user is None:
         return ServiceError.AUTH_NOT_FOUND
+
+    # TODO: gjp2
+    return ServiceError.AUTH_NOT_FOUND
 
     if not await hashes.compare_bcrypt(user.password, password):
         return ServiceError.AUTH_PASSWORD_MISMATCH
@@ -277,6 +281,7 @@ async def update_privileges(
 
     return updated_user
 
+
 async def update_comment_colour(
     ctx: Context,
     user_id: int,
@@ -285,10 +290,10 @@ async def update_comment_colour(
     user = await repositories.user.from_id(ctx, user_id)
     if user is None:
         return ServiceError.USER_NOT_FOUND
-    
+
     if not user.privileges & UserPrivileges.USER_DISPLAY_MOD_BADGE:
         return ServiceError.USER_NO_COMMENT_COLOUR_UPDATE_PERMISSION
-    
+
     updated_user = await repositories.user.update_partial(
         ctx,
         user_id,
@@ -297,8 +302,9 @@ async def update_comment_colour(
 
     if updated_user is None:
         return ServiceError.USER_NOT_FOUND
-    
+
     return updated_user
+
 
 async def request_status(
     ctx: Context,

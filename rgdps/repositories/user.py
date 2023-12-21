@@ -18,7 +18,7 @@ from rgdps.models.user import User
 
 async def from_db(ctx: Context, user_id: int) -> User | None:
     user_db = await ctx.mysql.fetch_one(
-        "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
+        "SELECT id, username, email, privileges, comment_colour, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
@@ -37,7 +37,7 @@ async def multiple_from_db(ctx: Context, user_ids: list[int]) -> list[User]:
         return []
 
     users_db = await ctx.mysql.fetch_all(
-        "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
+        "SELECT id, username, email, privileges, comment_colour, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
@@ -52,7 +52,6 @@ async def create(
     ctx: Context,
     username: str,
     email: str,
-    password: str,
     privileges: UserPrivileges = DEFAULT_PRIVILEGES,
     message_privacy: UserPrivacySetting = UserPrivacySetting.PUBLIC,
     friend_privacy: UserPrivacySetting = UserPrivacySetting.PUBLIC,
@@ -90,7 +89,6 @@ async def create(
         id=user_id,
         username=username,
         email=email,
-        password=password,
         privileges=privileges,
         message_privacy=message_privacy,
         friend_privacy=friend_privacy,
@@ -159,11 +157,11 @@ def _from_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
 
 async def create_sql(ctx: Context, user: User) -> int:
     return await ctx.mysql.execute(
-        "INSERT INTO users (id, username, email, password, privileges, comment_colour, message_privacy, "
+        "INSERT INTO users (id, username, email, privileges, comment_colour, message_privacy, "
         "friend_privacy, comment_privacy, twitter_name, youtube_name, twitch_name, "
         "register_ts, stars, demons, primary_colour, secondary_colour, display_type, icon, "
         "ship, ball, ufo, wave, robot, spider, explosion, glow, creator_points, "
-        "coins, user_coins, diamonds) VALUES (:id, :username, :email, :password, :privileges, "
+        "coins, user_coins, diamonds) VALUES (:id, :username, :email, :privileges, "
         ":comment_colour, :message_privacy, :friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
         ":twitch_name, :register_ts, :stars, :demons, :primary_colour, "
         ":secondary_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
@@ -184,7 +182,6 @@ async def update_sql_partial(
     user_id: int,
     username: str | Unset = UNSET,
     email: str | Unset = UNSET,
-    password: str | Unset = UNSET,
     privileges: UserPrivileges | Unset = UNSET,
     message_privacy: UserPrivacySetting | Unset = UNSET,
     friend_privacy: UserPrivacySetting | Unset = UNSET,
@@ -218,8 +215,6 @@ async def update_sql_partial(
         changed_data["username"] = username
     if is_set(email):
         changed_data["email"] = email
-    if is_set(password):
-        changed_data["password"] = password
     if is_set(privileges):
         changed_data["privileges"] = privileges
     if is_set(message_privacy):
@@ -293,7 +288,6 @@ async def update_meili_partial(
     user_id: int,
     username: str | Unset = UNSET,
     email: str | Unset = UNSET,
-    password: str | Unset = UNSET,
     privileges: UserPrivileges | Unset = UNSET,
     message_privacy: UserPrivacySetting | Unset = UNSET,
     friend_privacy: UserPrivacySetting | Unset = UNSET,
@@ -329,8 +323,6 @@ async def update_meili_partial(
         changed_data["username"] = username
     if is_set(email):
         changed_data["email"] = email
-    if is_set(password):
-        changed_data["password"] = password
     if is_set(privileges):
         changed_data["privileges"] = privileges
     if is_set(message_privacy):
@@ -395,7 +387,6 @@ async def update_partial(
     user_id: int,
     username: str | Unset = UNSET,
     email: str | Unset = UNSET,
-    password: str | Unset = UNSET,
     privileges: UserPrivileges | Unset = UNSET,
     message_privacy: UserPrivacySetting | Unset = UNSET,
     friend_privacy: UserPrivacySetting | Unset = UNSET,
@@ -428,7 +419,6 @@ async def update_partial(
         user_id,
         username=username,
         email=email,
-        password=password,
         privileges=privileges,
         message_privacy=message_privacy,
         friend_privacy=friend_privacy,
@@ -465,7 +455,6 @@ async def update_partial(
         user_id,
         username=username,
         email=email,
-        password=password,
         privileges=privileges,
         message_privacy=message_privacy,
         friend_privacy=friend_privacy,
@@ -577,7 +566,7 @@ async def get_count(ctx: Context) -> int:
 
 async def all(ctx: Context) -> AsyncGenerator[User, None]:
     async for db_user in ctx.mysql.iterate(
-        "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
+        "SELECT id, username, email, privileges, comment_colour, message_privacy, friend_privacy, "
         "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
         "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
         "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "

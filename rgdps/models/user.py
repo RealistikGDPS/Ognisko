@@ -14,7 +14,6 @@ class User:
     id: int
     username: str
     email: str
-    password: str
     privileges: UserPrivileges
 
     message_privacy: UserPrivacySetting
@@ -54,7 +53,6 @@ class User:
             id=user_dict["id"],
             username=user_dict["username"],
             email=user_dict["email"],
-            password=user_dict["password"],
             # TODO: look into avoiding using bytes in mappings
             privileges=UserPrivileges.from_bytes(user_dict["privileges"]),
             message_privacy=UserPrivacySetting(user_dict["message_privacy"]),
@@ -89,7 +87,6 @@ class User:
         res = {
             "username": self.username,
             "email": self.email,
-            "password": self.password,
             "privileges": self.privileges.as_bytes(),
             "message_privacy": self.message_privacy.value,
             "friend_privacy": self.friend_privacy.value,

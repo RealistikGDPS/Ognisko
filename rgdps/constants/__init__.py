@@ -10,5 +10,6 @@ from . import levels
 from . import likes
 from . import responses
 from . import songs
+from . import user_credentials
 from . import users
 from . import xor
