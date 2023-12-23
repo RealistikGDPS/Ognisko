@@ -17,6 +17,7 @@ from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
+from rgdps.usecases import user_credentials
 from rgdps.usecases import users
 
 
@@ -63,10 +64,10 @@ async def register_post(
 async def login_post(
     ctx: HTTPContext = Depends(),
     username: TextBoxString = Form(..., alias="userName", max_length=15),
-    password: str = Form(..., max_length=20),
+    gjp2: str = Form(..., max_length=20),
     # _: str = Form(..., alias="udid"),
 ):
-    result = await users.authenticate(ctx, username, password)
+    result = await user_credentials.authenticate_from_gjp2_name(ctx, username, gjp2)
     if isinstance(result, ServiceError):
         logger.info(
             "User login failed",

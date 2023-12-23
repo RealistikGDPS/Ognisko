@@ -40,28 +40,6 @@ async def register(
     return user
 
 
-async def authenticate(
-    ctx: Context,
-    username: str,
-    password: str,
-) -> User | ServiceError:
-    user = await repositories.user.from_name(ctx, username)
-
-    if user is None:
-        return ServiceError.AUTH_NOT_FOUND
-
-    # TODO: gjp2
-    return ServiceError.AUTH_NOT_FOUND
-
-    if not await hashes.compare_bcrypt(user.password, password):
-        return ServiceError.AUTH_PASSWORD_MISMATCH
-
-    if not user.privileges & UserPrivileges.USER_AUTHENTICATE:
-        return ServiceError.AUTH_NO_PRIVILEGE
-
-    return user
-
-
 class UserPerspective(NamedTuple):
     user: User
     rank: int

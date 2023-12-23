@@ -122,6 +122,23 @@ async def authenticate_from_gjp2(
     return user
 
 
+async def authenticate_from_gjp2_name(
+    ctx: Context,
+    username: str,
+    gjp2: str,
+) -> User | ServiceError:
+    user = await repositories.user.from_name(ctx, username)
+
+    if user is None:
+        return ServiceError.AUTH_NOT_FOUND
+
+    return await authenticate_from_gjp2(
+        ctx,
+        user.id,
+        gjp2,
+    )
+
+
 async def update_password(
     ctx: Context,
     user_id: int,
