@@ -15,6 +15,7 @@ from rgdps.constants.users import UserRelationshipType
 from rgdps.models.friend_request import FriendRequest
 from rgdps.models.rgb import RGB
 from rgdps.models.user import User
+from rgdps.models.user_credential import CredentialVersion
 
 
 async def register(
@@ -28,13 +29,21 @@ async def register(
     elif await repositories.user.check_username_exists(ctx, name):
         return ServiceError.USER_USERNAME_EXISTS
 
-    hashed_password = await hashes.hash_bcypt_async(password)
+    hashed_password = await hashes.hash_bcypt_async(
+        hashes.hash_gjp2(password),
+    )
 
     user = await repositories.user.create(
         ctx,
         username=name,
-        password=hashed_password,
         email=email,
+    )
+
+    await repositories.user_credential.create(
+        ctx,
+        user.id,
+        CredentialVersion.GJP2_BCRYPT,
+        hashed_password,
     )
 
     return user
