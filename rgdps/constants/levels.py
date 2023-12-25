@@ -70,6 +70,7 @@ class LevelLength(IntEnum):
     MEDIUM = 2
     LONG = 3
     XL = 4
+    PLATFORMER = 5
 
 
 class LevelDemonDifficulty(IntEnum):
