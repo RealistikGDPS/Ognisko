@@ -69,11 +69,21 @@ async def authenticate_plain(
 
     gjp2_pw = hashes.hash_gjp2(password)
 
+    pw_cache = await ctx.password_cache.get(user_id)
+
+    if pw_cache is not None:
+        if pw_cache != gjp2_pw:
+            return ServiceError.AUTH_PASSWORD_MISMATCH
+
+        return user
+
     if not await hashes.compare_bcrypt(
         creds.value,
         gjp2_pw,
     ):
         return ServiceError.AUTH_PASSWORD_MISMATCH
+
+    await ctx.password_cache.set(user_id, gjp2_pw)
 
     return user
 
@@ -116,11 +126,21 @@ async def authenticate_from_gjp2(
     if creds.version != CredentialVersion.GJP2_BCRYPT:
         return ServiceError.AUTH_UNSUPPORTED_VERSION
 
+    pw_cache = await ctx.password_cache.get(user_id)
+
+    if pw_cache is not None:
+        if pw_cache != gjp2:
+            return ServiceError.AUTH_PASSWORD_MISMATCH
+
+        return user
+
     if not await hashes.compare_bcrypt(
         creds.value,
         gjp2,
     ):
         return ServiceError.AUTH_PASSWORD_MISMATCH
+
+    await ctx.password_cache.set(user_id, gjp2)
 
     return user
 
