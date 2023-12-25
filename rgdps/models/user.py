@@ -32,6 +32,7 @@ class User:
     moons: int
     primary_colour: int
     secondary_colour: int
+    glow_colour: int
     display_type: int
     icon: int
     ship: int
@@ -44,7 +45,6 @@ class User:
     jetpack: int
     explosion: int
     glow: bool
-    glow_colour: int
     creator_points: int
     coins: int
     user_coins: int
