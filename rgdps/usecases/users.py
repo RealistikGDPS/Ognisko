@@ -262,8 +262,16 @@ async def update_privileges(
         await repositories.leaderboard.set_star_count(ctx, user_id, user.stars)
 
     if not privileges & UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC:
-        # TODO: Add CP leaderboard
-        ...
+        await repositories.leaderboard.remove_creator_count(ctx, user_id)
+
+    elif (
+        not user.privileges & UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC
+    ) and privileges & UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC:
+        await repositories.leaderboard.set_creator_count(
+            ctx,
+            user_id,
+            user.creator_points,
+        )
 
     updated_user = await repositories.user.update_partial(
         ctx,
