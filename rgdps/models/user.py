@@ -29,6 +29,7 @@ class User:
     # Stats
     stars: int
     demons: int
+    moons: int
     primary_colour: int
     secondary_colour: int
     display_type: int
@@ -39,8 +40,11 @@ class User:
     wave: int
     robot: int
     spider: int
+    swing_copter: int
+    jetpack: int
     explosion: int
     glow: bool
+    glow_colour: int
     creator_points: int
     coins: int
     user_coins: int
@@ -81,6 +85,11 @@ class User:
             user_coins=user_dict["user_coins"],
             diamonds=user_dict["diamonds"],
             comment_colour=user_dict["comment_colour"],
+            # 2.2 stats
+            moons=user_dict["moons"],
+            swing_copter=user_dict["swing_copter"],
+            jetpack=user_dict["jetpack"],
+            glow_colour=user_dict["glow_colour"],
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
@@ -114,6 +123,11 @@ class User:
             "user_coins": self.user_coins,
             "diamonds": self.diamonds,
             "comment_colour": self.comment_colour,
+            # 2.2 stats
+            "moons": self.moons,
+            "swing_copter": self.swing_copter,
+            "jetpack": self.jetpack,
+            "glow_colour": self.glow_colour,
         }
 
         if include_id:

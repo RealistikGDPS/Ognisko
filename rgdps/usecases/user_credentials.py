@@ -46,11 +46,14 @@ async def authenticate_plain(
         # Update the credential to the latest version.
         await repositories.user_credential.delete_from_id(ctx, creds.id)
 
+        gjp2_pw = hashes.hash_gjp2(password)
+        hashed_pw = await hashes.hash_bcypt_async(gjp2_pw)
+
         await repositories.user_credential.create(
             ctx,
             user_id,
             CredentialVersion.GJP2_BCRYPT,
-            password,
+            hashed_pw,
         )
 
         logger.info(
