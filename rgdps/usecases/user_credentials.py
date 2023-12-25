@@ -183,4 +183,6 @@ async def update_password(
         gjp2_pw,
     )
 
+    await ctx.password_cache.set(user_id, gjp2_pw)
+
     return True
