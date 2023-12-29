@@ -30,7 +30,7 @@ async def from_user_id(
     user_id: int,
 ) -> UserCredential | None:
     res = await ctx.mysql.fetch_one(
-        "SELECT id, version, value FROM user_credentials WHERE user_id = :user_id "
+        "SELECT id, user_id, version, value FROM user_credentials WHERE user_id = :user_id "
         "ORDER BY id DESC LIMIT 1",
         {"user_id": user_id},
     )
