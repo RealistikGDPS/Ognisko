@@ -25,7 +25,8 @@ def authenticate_dependency(
     async def wrapper(
         ctx: HTTPContext = Depends(),
         user_id: int = Form(..., alias=user_id_alias),
-        gjp: str = Form(..., alias=password_alias),
+        # A gjp2 is a hash thats always 40 characters long.
+        gjp: str = Form(..., alias=password_alias, min_length=40, max_length=40),
     ) -> User:
         user = await usecases.user_credentials.authenticate_from_gjp2(
             ctx,
