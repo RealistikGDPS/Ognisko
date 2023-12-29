@@ -64,7 +64,7 @@ async def register_post(
 async def login_post(
     ctx: HTTPContext = Depends(),
     username: TextBoxString = Form(..., alias="userName", max_length=15),
-    gjp2: str = Form(..., max_length=20),
+    gjp2: str = Form(..., max_length=40, min_length=40),
     # _: str = Form(..., alias="udid"),
 ):
     result = await user_credentials.authenticate_from_gjp2_name(ctx, username, gjp2)
