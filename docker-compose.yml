@@ -66,7 +66,7 @@ services:
       - ${RGDPS_DIR}:/data
 
   meilisearch:
-    image: getmeili/meilisearch:latest
+    image: getmeili/meilisearch:v1.3.1
     restart: always
     ports:
       - "${MEILI_PORT}:${MEILI_PORT}"
