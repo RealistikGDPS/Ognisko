@@ -61,6 +61,7 @@ services:
       - LOG_LEVEL=${LOG_LEVEL}
       - LOGZIO_ENABLED=${LOGZIO_ENABLED}
       - LOGZIO_TOKEN=${LOGZIO_TOKEN}
+      - LOGZIO_URL=${LOGZIO_URL}
     volumes:
       - .:/app
       - ${RGDPS_DIR}:/data

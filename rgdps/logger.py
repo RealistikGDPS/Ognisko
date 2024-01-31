@@ -27,7 +27,7 @@ _LOGGING_CONFIG = {
             "token": "",
             "logzio_type": "python",
             "logs_drain_timeout": 5,
-            "url": "https://listener.logz.io:8071",
+            "url": "",
         },
     },
     "loggers": {
@@ -48,9 +48,10 @@ def init_basic_logging(log_level: str | int) -> None:
     hook_exception_handlers()
 
 
-def init_logzio_logging(logzio_token: str, log_level: str) -> None:
+def init_logzio_logging(logzio_token: str, log_level: str, logzio_url: str) -> None:
     _LOGGING_CONFIG["handlers"]["logzio"]["token"] = logzio_token
     _LOGGING_CONFIG["loggers"]["rgdps"]["level"] = log_level
+    _LOGGING_CONFIG["handlers"]["logzio"]["url"] = logzio_url
 
     logging.config.dictConfig(_LOGGING_CONFIG)
     hook_exception_handlers()
