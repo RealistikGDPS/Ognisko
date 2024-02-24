@@ -16,13 +16,26 @@ from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 
 
+ALL_FIELDS = (
+    "id, username, email, privileges, comment_colour, message_privacy, friend_privacy, "
+    "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
+    "stars, demons, moons, primary_colour, secondary_colour, glow_colour, display_type, icon, ship, "
+    "ball, ufo, wave, robot, spider, swing_copter, jetpack, explosion, glow, creator_points, coins, "
+    "user_coins, diamonds"
+)
+
+ALL_FIELDS_FORMAT = (
+    ":id, :username, :email, :privileges, "
+    ":comment_colour, :message_privacy, :friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
+    ":twitch_name, :register_ts, :stars, :demons, :moons, :primary_colour, "
+    ":secondary_colour, :glow_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
+    ":spider, :swing_copter, :jetpack, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds"
+)
+
+
 async def from_db(ctx: Context, user_id: int) -> User | None:
     user_db = await ctx.mysql.fetch_one(
-        "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
-        "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
-        "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
-        "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
-        "user_coins, diamonds FROM users WHERE id = :id",
+        f"SELECT {ALL_FIELDS} FROM users WHERE id = :id",
         {"id": user_id},
     )
 
@@ -37,11 +50,7 @@ async def multiple_from_db(ctx: Context, user_ids: list[int]) -> list[User]:
         return []
 
     users_db = await ctx.mysql.fetch_all(
-        "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
-        "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
-        "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
-        "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
-        "user_coins, diamonds FROM users WHERE id IN :ids",
+        f"SELECT {ALL_FIELDS} FROM users WHERE id IN :ids",
         {"ids": tuple(user_ids)},
     )
 
@@ -52,7 +61,6 @@ async def create(
     ctx: Context,
     username: str,
     email: str,
-    password: str,
     privileges: UserPrivileges = DEFAULT_PRIVILEGES,
     message_privacy: UserPrivacySetting = UserPrivacySetting.PUBLIC,
     friend_privacy: UserPrivacySetting = UserPrivacySetting.PUBLIC,
@@ -63,9 +71,11 @@ async def create(
     register_ts: datetime | None = None,
     stars: int = 0,
     demons: int = 0,
+    moons: int = 0,
     primary_colour: int = 0,
     # NOTE: secondary_colour is 4 by default in the game
     secondary_colour: int = 4,
+    glow_colour: int = 0,
     display_type: int = 0,
     icon: int = 0,
     ship: int = 0,
@@ -74,6 +84,8 @@ async def create(
     wave: int = 0,
     robot: int = 0,
     spider: int = 0,
+    swing_copter: int = 0,
+    jetpack: int = 0,
     explosion: int = 0,
     glow: bool = False,
     creator_points: int = 0,
@@ -90,7 +102,6 @@ async def create(
         id=user_id,
         username=username,
         email=email,
-        password=password,
         privileges=privileges,
         message_privacy=message_privacy,
         friend_privacy=friend_privacy,
@@ -101,8 +112,10 @@ async def create(
         register_ts=register_ts,
         stars=stars,
         demons=demons,
+        moons=moons,
         primary_colour=primary_colour,
         secondary_colour=secondary_colour,
+        glow_colour=glow_colour,
         display_type=display_type,
         icon=icon,
         ship=ship,
@@ -111,6 +124,8 @@ async def create(
         wave=wave,
         robot=robot,
         spider=spider,
+        swing_copter=swing_copter,
+        jetpack=jetpack,
         explosion=explosion,
         glow=glow,
         creator_points=creator_points,
@@ -159,15 +174,7 @@ def _from_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
 
 async def create_sql(ctx: Context, user: User) -> int:
     return await ctx.mysql.execute(
-        "INSERT INTO users (id, username, email, password, privileges, comment_colour, message_privacy, "
-        "friend_privacy, comment_privacy, twitter_name, youtube_name, twitch_name, "
-        "register_ts, stars, demons, primary_colour, secondary_colour, display_type, icon, "
-        "ship, ball, ufo, wave, robot, spider, explosion, glow, creator_points, "
-        "coins, user_coins, diamonds) VALUES (:id, :username, :email, :password, :privileges, "
-        ":comment_colour, :message_privacy, :friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
-        ":twitch_name, :register_ts, :stars, :demons, :primary_colour, "
-        ":secondary_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
-        ":spider, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds)",
+        f"INSERT INTO users ({ALL_FIELDS}) VALUES ({ALL_FIELDS_FORMAT})",
         user.as_dict(include_id=True),
     )
 
@@ -184,7 +191,6 @@ async def update_sql_partial(
     user_id: int,
     username: str | Unset = UNSET,
     email: str | Unset = UNSET,
-    password: str | Unset = UNSET,
     privileges: UserPrivileges | Unset = UNSET,
     message_privacy: UserPrivacySetting | Unset = UNSET,
     friend_privacy: UserPrivacySetting | Unset = UNSET,
@@ -194,8 +200,10 @@ async def update_sql_partial(
     twitch_name: str | None | Unset = UNSET,
     stars: int | Unset = UNSET,
     demons: int | Unset = UNSET,
+    moons: int | Unset = UNSET,
     primary_colour: int | Unset = UNSET,
     secondary_colour: int | Unset = UNSET,
+    glow_colour: int | Unset = UNSET,
     display_type: int | Unset = UNSET,
     icon: int | Unset = UNSET,
     ship: int | Unset = UNSET,
@@ -204,6 +212,8 @@ async def update_sql_partial(
     wave: int | Unset = UNSET,
     robot: int | Unset = UNSET,
     spider: int | Unset = UNSET,
+    swing_copter: int | Unset = UNSET,
+    jetpack: int | Unset = UNSET,
     explosion: int | Unset = UNSET,
     glow: bool | Unset = UNSET,
     creator_points: int | Unset = UNSET,
@@ -218,8 +228,6 @@ async def update_sql_partial(
         changed_data["username"] = username
     if is_set(email):
         changed_data["email"] = email
-    if is_set(password):
-        changed_data["password"] = password
     if is_set(privileges):
         changed_data["privileges"] = privileges
     if is_set(message_privacy):
@@ -238,10 +246,14 @@ async def update_sql_partial(
         changed_data["stars"] = stars
     if is_set(demons):
         changed_data["demons"] = demons
+    if is_set(moons):
+        changed_data["moons"] = moons
     if is_set(primary_colour):
         changed_data["primary_colour"] = primary_colour
     if is_set(secondary_colour):
         changed_data["secondary_colour"] = secondary_colour
+    if is_set(glow_colour):
+        changed_data["glow_colour"] = glow_colour
     if is_set(display_type):
         changed_data["display_type"] = display_type
     if is_set(icon):
@@ -258,6 +270,10 @@ async def update_sql_partial(
         changed_data["robot"] = robot
     if is_set(spider):
         changed_data["spider"] = spider
+    if is_set(swing_copter):
+        changed_data["swing_copter"] = swing_copter
+    if is_set(jetpack):
+        changed_data["jetpack"] = jetpack
     if is_set(explosion):
         changed_data["explosion"] = explosion
     if is_set(glow):
@@ -293,7 +309,6 @@ async def update_meili_partial(
     user_id: int,
     username: str | Unset = UNSET,
     email: str | Unset = UNSET,
-    password: str | Unset = UNSET,
     privileges: UserPrivileges | Unset = UNSET,
     message_privacy: UserPrivacySetting | Unset = UNSET,
     friend_privacy: UserPrivacySetting | Unset = UNSET,
@@ -303,8 +318,10 @@ async def update_meili_partial(
     twitch_name: str | None | Unset = UNSET,
     stars: int | Unset = UNSET,
     demons: int | Unset = UNSET,
+    moons: int | Unset = UNSET,
     primary_colour: int | Unset = UNSET,
     secondary_colour: int | Unset = UNSET,
+    glow_colour: int | Unset = UNSET,
     display_type: int | Unset = UNSET,
     icon: int | Unset = UNSET,
     ship: int | Unset = UNSET,
@@ -313,6 +330,8 @@ async def update_meili_partial(
     wave: int | Unset = UNSET,
     robot: int | Unset = UNSET,
     spider: int | Unset = UNSET,
+    swing_copter: int | Unset = UNSET,
+    jetpack: int | Unset = UNSET,
     explosion: int | Unset = UNSET,
     glow: bool | Unset = UNSET,
     creator_points: int | Unset = UNSET,
@@ -329,8 +348,6 @@ async def update_meili_partial(
         changed_data["username"] = username
     if is_set(email):
         changed_data["email"] = email
-    if is_set(password):
-        changed_data["password"] = password
     if is_set(privileges):
         changed_data["privileges"] = privileges
     if is_set(message_privacy):
@@ -349,10 +366,14 @@ async def update_meili_partial(
         changed_data["stars"] = stars
     if is_set(demons):
         changed_data["demons"] = demons
+    if is_set(moons):
+        changed_data["moons"] = moons
     if is_set(primary_colour):
         changed_data["primary_colour"] = primary_colour
     if is_set(secondary_colour):
         changed_data["secondary_colour"] = secondary_colour
+    if is_set(glow_colour):
+        changed_data["glow_colour"] = glow_colour
     if is_set(display_type):
         changed_data["display_type"] = display_type
     if is_set(icon):
@@ -369,6 +390,10 @@ async def update_meili_partial(
         changed_data["robot"] = robot
     if is_set(spider):
         changed_data["spider"] = spider
+    if is_set(swing_copter):
+        changed_data["swing_copter"] = swing_copter
+    if is_set(jetpack):
+        changed_data["jetpack"] = jetpack
     if is_set(explosion):
         changed_data["explosion"] = explosion
     if is_set(glow):
@@ -395,7 +420,6 @@ async def update_partial(
     user_id: int,
     username: str | Unset = UNSET,
     email: str | Unset = UNSET,
-    password: str | Unset = UNSET,
     privileges: UserPrivileges | Unset = UNSET,
     message_privacy: UserPrivacySetting | Unset = UNSET,
     friend_privacy: UserPrivacySetting | Unset = UNSET,
@@ -405,8 +429,10 @@ async def update_partial(
     twitch_name: str | None | Unset = UNSET,
     stars: int | Unset = UNSET,
     demons: int | Unset = UNSET,
+    moons: int | Unset = UNSET,
     primary_colour: int | Unset = UNSET,
     secondary_colour: int | Unset = UNSET,
+    glow_colour: int | Unset = UNSET,
     display_type: int | Unset = UNSET,
     icon: int | Unset = UNSET,
     ship: int | Unset = UNSET,
@@ -415,6 +441,8 @@ async def update_partial(
     wave: int | Unset = UNSET,
     robot: int | Unset = UNSET,
     spider: int | Unset = UNSET,
+    swing_copter: int | Unset = UNSET,
+    jetpack: int | Unset = UNSET,
     explosion: int | Unset = UNSET,
     glow: bool | Unset = UNSET,
     creator_points: int | Unset = UNSET,
@@ -428,7 +456,6 @@ async def update_partial(
         user_id,
         username=username,
         email=email,
-        password=password,
         privileges=privileges,
         message_privacy=message_privacy,
         friend_privacy=friend_privacy,
@@ -438,8 +465,10 @@ async def update_partial(
         twitch_name=twitch_name,
         stars=stars,
         demons=demons,
+        moons=moons,
         primary_colour=primary_colour,
         secondary_colour=secondary_colour,
+        glow_colour=glow_colour,
         display_type=display_type,
         icon=icon,
         ship=ship,
@@ -448,6 +477,8 @@ async def update_partial(
         wave=wave,
         robot=robot,
         spider=spider,
+        swing_copter=swing_copter,
+        jetpack=jetpack,
         explosion=explosion,
         glow=glow,
         creator_points=creator_points,
@@ -465,7 +496,6 @@ async def update_partial(
         user_id,
         username=username,
         email=email,
-        password=password,
         privileges=privileges,
         message_privacy=message_privacy,
         friend_privacy=friend_privacy,
@@ -475,8 +505,10 @@ async def update_partial(
         twitch_name=twitch_name,
         stars=stars,
         demons=demons,
+        moons=moons,
         primary_colour=primary_colour,
         secondary_colour=secondary_colour,
+        glow_colour=glow_colour,
         display_type=display_type,
         icon=icon,
         ship=ship,
@@ -485,6 +517,8 @@ async def update_partial(
         wave=wave,
         robot=robot,
         spider=spider,
+        swing_copter=swing_copter,
+        jetpack=jetpack,
         explosion=explosion,
         glow=glow,
         creator_points=creator_points,
@@ -577,11 +611,7 @@ async def get_count(ctx: Context) -> int:
 
 async def all(ctx: Context) -> AsyncGenerator[User, None]:
     async for db_user in ctx.mysql.iterate(
-        "SELECT id, username, email, password, privileges, comment_colour, message_privacy, friend_privacy, "
-        "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
-        "stars, demons, primary_colour, secondary_colour, display_type, icon, ship, "
-        "ball, ufo, wave, robot, spider, explosion, glow, creator_points, coins, "
-        "user_coins, diamonds FROM users",
+        f"SELECT {ALL_FIELDS} FROM users",
     ):
         yield User.from_mapping(db_user)
 

@@ -14,7 +14,6 @@ class User:
     id: int
     username: str
     email: str
-    password: str
     privileges: UserPrivileges
 
     message_privacy: UserPrivacySetting
@@ -30,8 +29,10 @@ class User:
     # Stats
     stars: int
     demons: int
+    moons: int
     primary_colour: int
     secondary_colour: int
+    glow_colour: int
     display_type: int
     icon: int
     ship: int
@@ -40,6 +41,8 @@ class User:
     wave: int
     robot: int
     spider: int
+    swing_copter: int
+    jetpack: int
     explosion: int
     glow: bool
     creator_points: int
@@ -54,7 +57,6 @@ class User:
             id=user_dict["id"],
             username=user_dict["username"],
             email=user_dict["email"],
-            password=user_dict["password"],
             # TODO: look into avoiding using bytes in mappings
             privileges=UserPrivileges.from_bytes(user_dict["privileges"]),
             message_privacy=UserPrivacySetting(user_dict["message_privacy"]),
@@ -83,13 +85,17 @@ class User:
             user_coins=user_dict["user_coins"],
             diamonds=user_dict["diamonds"],
             comment_colour=user_dict["comment_colour"],
+            # 2.2 stats
+            moons=user_dict["moons"],
+            swing_copter=user_dict["swing_copter"],
+            jetpack=user_dict["jetpack"],
+            glow_colour=user_dict["glow_colour"],
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
         res = {
             "username": self.username,
             "email": self.email,
-            "password": self.password,
             "privileges": self.privileges.as_bytes(),
             "message_privacy": self.message_privacy.value,
             "friend_privacy": self.friend_privacy.value,
@@ -117,6 +123,11 @@ class User:
             "user_coins": self.user_coins,
             "diamonds": self.diamonds,
             "comment_colour": self.comment_colour,
+            # 2.2 stats
+            "moons": self.moons,
+            "swing_copter": self.swing_copter,
+            "jetpack": self.jetpack,
+            "glow_colour": self.glow_colour,
         }
 
         if include_id:

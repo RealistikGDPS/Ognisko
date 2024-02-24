@@ -13,8 +13,10 @@ from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.constants.users import UserRelationshipType
 from rgdps.models.friend_request import FriendRequest
-from rgdps.models.user import User
 from rgdps.models.rgb import RGB
+from rgdps.models.user import User
+from rgdps.models.user_credential import CredentialVersion
+
 
 async def register(
     ctx: Context,
@@ -27,33 +29,22 @@ async def register(
     elif await repositories.user.check_username_exists(ctx, name):
         return ServiceError.USER_USERNAME_EXISTS
 
-    hashed_password = await hashes.hash_bcypt_async(password)
+    hashed_password = await hashes.hash_bcypt_async(
+        hashes.hash_gjp2(password),
+    )
 
     user = await repositories.user.create(
         ctx,
         username=name,
-        password=hashed_password,
         email=email,
     )
 
-    return user
-
-
-async def authenticate(
-    ctx: Context,
-    username: str,
-    password: str,
-) -> User | ServiceError:
-    user = await repositories.user.from_name(ctx, username)
-
-    if user is None:
-        return ServiceError.AUTH_NOT_FOUND
-
-    if not await hashes.compare_bcrypt(user.password, password):
-        return ServiceError.AUTH_PASSWORD_MISMATCH
-
-    if not user.privileges & UserPrivileges.USER_AUTHENTICATE:
-        return ServiceError.AUTH_NO_PRIVILEGE
+    await repositories.user_credential.create(
+        ctx,
+        user.id,
+        CredentialVersion.GJP2_BCRYPT,
+        hashed_password,
+    )
 
     return user
 
@@ -156,10 +147,12 @@ async def update_stats(
     user_id: int,
     stars: int,
     demons: int,
+    moons: int,
     display_type: int,
     diamonds: int,
     primary_colour: int,
     secondary_colour: int,
+    glow_colour: int,
     icon: int,
     ship: int,
     ball: int,
@@ -167,6 +160,8 @@ async def update_stats(
     wave: int,
     robot: int,
     spider: int,
+    swing_copter: int,
+    jetpack: int,
     glow: bool,
     explosion: int,
     coins: int,
@@ -185,10 +180,12 @@ async def update_stats(
         user.id,
         stars=stars,
         demons=demons,
+        moons=moons,
         display_type=display_type,
         diamonds=diamonds,
         primary_colour=primary_colour,
         secondary_colour=secondary_colour,
+        glow_colour=glow_colour,
         icon=icon,
         ship=ship,
         ball=ball,
@@ -196,6 +193,8 @@ async def update_stats(
         wave=wave,
         robot=robot,
         spider=spider,
+        swing_copter=swing_copter,
+        jetpack=jetpack,
         glow=glow,
         explosion=explosion,
         coins=coins,
@@ -263,8 +262,16 @@ async def update_privileges(
         await repositories.leaderboard.set_star_count(ctx, user_id, user.stars)
 
     if not privileges & UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC:
-        # TODO: Add CP leaderboard
-        ...
+        await repositories.leaderboard.remove_creator_count(ctx, user_id)
+
+    elif (
+        not user.privileges & UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC
+    ) and privileges & UserPrivileges.USER_CREATOR_LEADERBOARD_PUBLIC:
+        await repositories.leaderboard.set_creator_count(
+            ctx,
+            user_id,
+            user.creator_points,
+        )
 
     updated_user = await repositories.user.update_partial(
         ctx,
@@ -277,6 +284,7 @@ async def update_privileges(
 
     return updated_user
 
+
 async def update_comment_colour(
     ctx: Context,
     user_id: int,
@@ -285,10 +293,10 @@ async def update_comment_colour(
     user = await repositories.user.from_id(ctx, user_id)
     if user is None:
         return ServiceError.USER_NOT_FOUND
-    
+
     if not user.privileges & UserPrivileges.USER_DISPLAY_MOD_BADGE:
         return ServiceError.USER_NO_COMMENT_COLOUR_UPDATE_PERMISSION
-    
+
     updated_user = await repositories.user.update_partial(
         ctx,
         user_id,
@@ -297,8 +305,9 @@ async def update_comment_colour(
 
     if updated_user is None:
         return ServiceError.USER_NOT_FOUND
-    
+
     return updated_user
+
 
 async def request_status(
     ctx: Context,

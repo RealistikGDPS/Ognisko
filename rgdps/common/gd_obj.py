@@ -117,6 +117,10 @@ def create_profile(
         48: user.explosion,
         49: badge_level,
         50: user.comment_privacy.value,
+        51: user.glow_colour,
+        52: user.moons,
+        53: user.swing_copter,
+        54: user.jetpack,
     }
 
 

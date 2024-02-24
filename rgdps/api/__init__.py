@@ -36,6 +36,7 @@ def init_logging() -> None:
         logger.init_logzio_logging(
             config.logzio_token,
             config.log_level,
+            config.logzio_url,
         )
     else:
         logger.init_basic_logging(config.log_level)

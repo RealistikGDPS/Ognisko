@@ -17,6 +17,7 @@ from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
+from rgdps.usecases import user_credentials
 from rgdps.usecases import users
 
 
@@ -63,10 +64,10 @@ async def register_post(
 async def login_post(
     ctx: HTTPContext = Depends(),
     username: TextBoxString = Form(..., alias="userName", max_length=15),
-    password: str = Form(..., max_length=20),
+    gjp2: str = Form(..., max_length=40, min_length=40),
     # _: str = Form(..., alias="udid"),
 ):
-    result = await users.authenticate(ctx, username, password)
+    result = await user_credentials.authenticate_from_gjp2_name(ctx, username, gjp2)
     if isinstance(result, ServiceError):
         logger.info(
             "User login failed",
@@ -155,10 +156,12 @@ async def user_info_update(
     user: User = Depends(authenticate_dependency()),
     stars: int = Form(...),
     demons: int = Form(...),
+    moons: int = Form(...),
     display_type: int = Form(..., alias="icon"),
     diamonds: int = Form(...),
     primary_colour: int = Form(..., alias="color1"),
     secondary_colour: int = Form(..., alias="color2"),
+    glow_colour: int = Form(..., alias="color3"),
     icon: int = Form(..., alias="accIcon"),
     ship: int = Form(..., alias="accShip"),
     ball: int = Form(..., alias="accBall"),
@@ -166,6 +169,8 @@ async def user_info_update(
     wave: int = Form(..., alias="accDart"),
     robot: int = Form(..., alias="accRobot"),
     spider: int = Form(..., alias="accSpider"),
+    swing_copter: int = Form(..., alias="accSwing"),
+    jetpack: int = Form(..., alias="accJetpack"),
     glow: bool = Form(..., alias="accGlow"),
     explosion: int = Form(..., alias="accExplosion"),
     coins: int = Form(...),
@@ -176,16 +181,20 @@ async def user_info_update(
         user.id,
         stars=stars,
         demons=demons,
+        moons=moons,
         display_type=display_type,
         diamonds=diamonds,
         primary_colour=primary_colour,
         secondary_colour=secondary_colour,
+        glow_colour=glow_colour,
         icon=icon,
         ship=ship,
         ball=ball,
         ufo=ufo,
         wave=wave,
         robot=robot,
+        swing_copter=swing_copter,
+        jetpack=jetpack,
         spider=spider,
         glow=glow,
         explosion=explosion,
