@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from datetime import datetime
 from typing import Any
-from typing import NamedTuple
 from typing import AsyncGenerator
+from typing import NamedTuple
 
 from rgdps.common import data_utils
 from rgdps.common import time as time_utils
@@ -34,7 +34,7 @@ async def from_id(
         "version, length, two_player, publicity, render_str, game_version, "
         "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
-        "search_flags, low_detail_mode, object_count, copy_password, building_time, "
+        "search_flags, low_detail_mode, object_count, building_time, "
         "update_locked, deleted FROM levels WHERE id = :id" + condition,
         {
             "id": level_id,
@@ -76,7 +76,6 @@ async def create(
     search_flags: LevelSearchFlag = LevelSearchFlag.NONE,
     low_detail_mode: bool = False,
     object_count: int = 0,
-    copy_password: int = 0,
     building_time: int = 0,
     update_locked: bool = False,
     deleted: bool = False,
@@ -116,7 +115,6 @@ async def create(
         search_flags=search_flags,
         low_detail_mode=low_detail_mode,
         object_count=object_count,
-        copy_password=copy_password,
         building_time=building_time,
         update_locked=update_locked,
         deleted=deleted,
@@ -133,13 +131,13 @@ async def create_sql(ctx: Context, level: Level) -> int:
         "official_song_id, version, length, two_player, publicity, render_str, "
         "game_version, binary_version, upload_ts, update_ts, original_id, downloads, likes, "
         "stars, difficulty, demon_difficulty, coins, coins_verified, requested_stars, "
-        "feature_order, search_flags, low_detail_mode, object_count, copy_password, "
+        "feature_order, search_flags, low_detail_mode, object_count, "
         "building_time, update_locked, deleted) VALUES (:id, :name, :user_id, "
         ":description, :custom_song_id, :official_song_id, :version, :length, "
         ":two_player, :publicity, :render_str, :game_version, :binary_version, "
         ":upload_ts, :update_ts, :original_id, :downloads, :likes, :stars, :difficulty, "
         ":demon_difficulty, :coins, :coins_verified, :requested_stars, :feature_order, "
-        ":search_flags, :low_detail_mode, :object_count, :copy_password, "
+        ":search_flags, :low_detail_mode, :object_count, "
         ":building_time, :update_locked, :deleted)",
         level.as_dict(include_id=True),
     )
@@ -196,11 +194,13 @@ async def create_meili(ctx: Context, level: Level) -> None:
     index = ctx.meili.index("levels")
     await index.add_documents([level_dict])
 
+
 async def multiple_create_meili(ctx: Context, levels: list[Level]) -> None:
     level_dicts = [_make_meili_dict(level.as_dict(include_id=True)) for level in levels]
 
     index = ctx.meili.index("levels")
     await index.add_documents(level_dicts)
+
 
 async def update_sql_full(ctx: Context, level: Level) -> None:
     await ctx.mysql.execute(
@@ -213,7 +213,7 @@ async def update_sql_full(ctx: Context, level: Level) -> None:
         "demon_difficulty = :demon_difficulty, coins = :coins, coins_verified = :coins_verified, "
         "requested_stars = :requested_stars, feature_order = :feature_order, "
         "search_flags = :search_flags, low_detail_mode = :low_detail_mode, "
-        "object_count = :object_count, copy_password = :copy_password, "
+        "object_count = :object_count, "
         "building_time = :building_time, update_locked = :update_locked, "
         "deleted = :deleted WHERE id = :id",
         level.as_dict(include_id=True),
@@ -250,7 +250,6 @@ async def update_sql_partial(
     search_flags: LevelSearchFlag | Unset = UNSET,
     low_detail_mode: bool | Unset = UNSET,
     object_count: int | Unset = UNSET,
-    copy_password: int | Unset = UNSET,
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
     deleted: bool | Unset = UNSET,
@@ -314,8 +313,6 @@ async def update_sql_partial(
         changed_data["low_detail_mode"] = low_detail_mode
     if is_set(object_count):
         changed_data["object_count"] = object_count
-    if is_set(copy_password):
-        changed_data["copy_password"] = copy_password
     if is_set(building_time):
         changed_data["building_time"] = building_time
     if is_set(update_locked):
@@ -366,7 +363,6 @@ async def update_meili_partial(
     search_flags: LevelSearchFlag | Unset = UNSET,
     low_detail_mode: bool | Unset = UNSET,
     object_count: int | Unset = UNSET,
-    copy_password: int | Unset = UNSET,
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
     deleted: bool | Unset = UNSET,
@@ -432,8 +428,6 @@ async def update_meili_partial(
         changed_data["low_detail_mode"] = low_detail_mode
     if is_set(object_count):
         changed_data["object_count"] = object_count
-    if is_set(copy_password):
-        changed_data["copy_password"] = copy_password
     if is_set(building_time):
         changed_data["building_time"] = building_time
     if is_set(update_locked):
@@ -477,7 +471,6 @@ async def update_partial(
     search_flags: LevelSearchFlag | Unset = UNSET,
     low_detail_mode: bool | Unset = UNSET,
     object_count: int | Unset = UNSET,
-    copy_password: int | Unset = UNSET,
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
     deleted: bool | Unset = UNSET,
@@ -512,7 +505,6 @@ async def update_partial(
         search_flags=search_flags,
         low_detail_mode=low_detail_mode,
         object_count=object_count,
-        copy_password=copy_password,
         building_time=building_time,
         update_locked=update_locked,
         deleted=deleted,
@@ -551,7 +543,6 @@ async def update_partial(
         search_flags=search_flags,
         low_detail_mode=low_detail_mode,
         object_count=object_count,
-        copy_password=copy_password,
         building_time=building_time,
         update_locked=update_locked,
         deleted=deleted,
@@ -683,19 +674,24 @@ async def search(
     ]
     return LevelSearchResults(results, results_db.estimated_total_hits)
 
-async def all(ctx: Context, include_deleted: bool = False) -> AsyncGenerator[Level, None]:
+
+async def all(
+    ctx: Context,
+    include_deleted: bool = False,
+) -> AsyncGenerator[Level, None]:
     async for level_db in ctx.mysql.iterate(
         "SELECT id, name, user_id, description, custom_song_id, official_song_id, "
         "version, length, two_player, publicity, render_str, game_version, "
         "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
-        "search_flags, low_detail_mode, object_count, copy_password, building_time, "
+        "search_flags, low_detail_mode, object_count, building_time, "
         "update_locked, deleted FROM levels WHERE deleted IN :deleted",
         {
             "deleted": (0, 1) if include_deleted else (0,),
         },
     ):
         yield Level.from_mapping(level_db)
+
 
 async def get_count(ctx: Context) -> int:
     return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM levels")
