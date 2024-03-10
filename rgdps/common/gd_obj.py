@@ -3,7 +3,6 @@ from __future__ import annotations
 import urllib.parse
 from typing import Callable
 from typing import NamedTuple
-from typing import TypeVar
 
 from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
@@ -42,11 +41,9 @@ def dumps(
         return _serialise_gd_object(obj, sep)
 
 
-VT = TypeVar("VT")
-KT = TypeVar("KT")
-
-
-def loads(
+def loads[
+    KT, VT
+](
     data: str,
     sep: str = ":",
     key_cast: Callable[[str], KT] = int,

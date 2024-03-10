@@ -15,7 +15,7 @@ make converter
 
 #### Standalone
 ```sh
-python3.10 gmdps_converter.py
+python3.12 gmdps_converter.py
 ```
 
 ### Note

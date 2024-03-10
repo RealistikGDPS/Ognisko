@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from copy import copy
-from typing import TypeVar
 
 from .base import AbstractAsyncCache
 from .base import AbstractCache
@@ -14,8 +13,6 @@ __all__ = (
     "LRUAsyncMemoryCache",
 )
 
-T = TypeVar("T")
-
 
 def _ensure_key_type(key: KeyType) -> str:
     """To ensure behaviour parity with the database based caches, we convert
@@ -24,7 +21,7 @@ def _ensure_key_type(key: KeyType) -> str:
     return str(key)
 
 
-class SimpleMemoryCache(AbstractCache[T]):
+class SimpleMemoryCache[T](AbstractCache[T]):
     __slots__ = ("_cache",)
 
     def __init__(self) -> None:
@@ -50,7 +47,7 @@ class SimpleMemoryCache(AbstractCache[T]):
             pass
 
 
-class LRUMemoryCache(AbstractCache[T]):
+class LRUMemoryCache[T](AbstractCache[T]):
     __slots__ = ("_cache", "_max_size")
 
     def __init__(self, capacity: int) -> None:
@@ -83,7 +80,7 @@ class LRUMemoryCache(AbstractCache[T]):
 
 
 # Async variants
-class SimpleAsyncMemoryCache(AbstractAsyncCache[T]):
+class SimpleAsyncMemoryCache[T](AbstractAsyncCache[T]):
     __slots__ = ("_cache",)
 
     def __init__(self) -> None:
@@ -102,7 +99,7 @@ class SimpleAsyncMemoryCache(AbstractAsyncCache[T]):
             pass
 
 
-class LRUAsyncMemoryCache(AbstractAsyncCache[T]):
+class LRUAsyncMemoryCache[T](AbstractAsyncCache[T]):
     __slots__ = ("_cache", "_max_size")
 
     def __init__(self, capacity: int) -> None:

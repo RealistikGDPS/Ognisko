@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from abc import ABC
 from abc import abstractmethod
-from typing import Generic
-from typing import TypeVar
 
 __all__ = (
     "AbstractAsyncCache",
@@ -11,33 +9,26 @@ __all__ = (
     "KeyType",
 )
 
-T = TypeVar("T")
-KeyType = str | int
+type KeyType = str | int
 
 
-class AbstractCache(ABC, Generic[T]):
+class AbstractCache[T](ABC):
     @abstractmethod
-    def get(self, key: KeyType) -> T | None:
-        ...
+    def get(self, key: KeyType) -> T | None: ...
 
     @abstractmethod
-    def set(self, key: KeyType, value: T) -> None:
-        ...
+    def set(self, key: KeyType, value: T) -> None: ...
 
     @abstractmethod
-    def delete(self, key: KeyType) -> None:
-        ...
+    def delete(self, key: KeyType) -> None: ...
 
 
-class AbstractAsyncCache(ABC, Generic[T]):
+class AbstractAsyncCache[T](ABC):
     @abstractmethod
-    async def get(self, key: KeyType) -> T | None:
-        ...
+    async def get(self, key: KeyType) -> T | None: ...
 
     @abstractmethod
-    async def set(self, key: KeyType, value: T) -> None:
-        ...
+    async def set(self, key: KeyType, value: T) -> None: ...
 
     @abstractmethod
-    async def delete(self, key: KeyType) -> None:
-        ...
+    async def delete(self, key: KeyType) -> None: ...

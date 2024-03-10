@@ -11,9 +11,7 @@ from typing import Callable
 from typing import get_args
 from typing import get_origin
 from typing import get_type_hints
-from typing import Protocol
 from typing import TYPE_CHECKING
-from typing import TypeVar
 from typing import Union
 
 from rgdps import logger
@@ -22,12 +20,12 @@ from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
-from rgdps.models.user import User
 from rgdps.models.rgb import RGB
+from rgdps.models.user import User
 
 if TYPE_CHECKING:
     import httpx
-    from meilisearch_python_async import Client as MeiliClient
+    from meilisearch_python_sdk import AsyncClient as MeiliClient
     from redis.asyncio import Redis
 
     from rgdps.models.user import User
@@ -43,7 +41,6 @@ _CASTABLE = [
     float,
 ]
 SupportedTypes = str | int | float | bool | Level | User | Enum
-T = TypeVar("T")
 
 
 async def _level_by_ref(ctx: CommandContext, ref_value: str) -> Level:
@@ -83,7 +80,7 @@ async def _user_by_ref(ctx: CommandContext, ref_value: str) -> User:
     return res
 
 
-def _unwrap_cast(cast: type[T]) -> type[T]:
+def _unwrap_cast[T](cast: type[T]) -> type[T]:
     origin_type = get_origin(cast)
     origin_args = get_args(cast)
 
@@ -94,7 +91,7 @@ def _unwrap_cast(cast: type[T]) -> type[T]:
     return cast
 
 
-async def _resolve_from_type(ctx: CommandContext, value: str, cast: type[T]) -> T:
+async def _resolve_from_type[T](ctx: CommandContext, value: str, cast: type[T]) -> T:
     cast = _unwrap_cast(cast)
 
     if cast in _CASTABLE:
@@ -131,11 +128,12 @@ def _bool_parse(data: str) -> bool:
 
     raise ValueError(f"Could not parse {data!r} as a boolean (true/false) value!")
 
+
 def _rgb_parse(data: str) -> RGB:
     rgb = RGB.from_str(data)
     if rgb is not None:
         return rgb
-    
+
     raise ValueError(f"Could not parse {data!r} as a RGB value!")
 
 
@@ -267,8 +265,7 @@ class CommandRoutable(ABC):
     name: str
 
     @abstractmethod
-    async def execute(self, ctx: CommandContext) -> str:
-        ...
+    async def execute(self, ctx: CommandContext) -> str: ...
 
 
 class CommandException(Exception):
@@ -635,7 +632,7 @@ class Command(CommandRoutable):
     async def _parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = _get_command_types(self.handle)
         default_params = self.handle.__defaults__ or ()
-        return await _resolve_params(ctx, annotations, default_params)
+        return await _resolve_params(ctx, annotations, default_params)  # type: ignore
 
     # Decorators
     def on_exception(
@@ -744,7 +741,7 @@ class CommandFunction(Command):
     async def _parse_params(self, ctx: CommandContext) -> list[Any]:
         annotations = _get_command_types(self._handler)
         default_params = self._handler.__defaults__ or ()
-        return await _resolve_params(ctx, annotations, default_params)
+        return await _resolve_params(ctx, annotations, default_params)  # type: ignore
 
 
 class UnparsedCommand(Command):
@@ -797,7 +794,7 @@ def make_command(
     return decorator
 
 
-def unwrap_service(value: T | ServiceError) -> T:
+def unwrap_service[T](value: T | ServiceError) -> T:
     """Raises a `CommandExcpetion` interrupt if a usecase returns a service error."""
 
     if isinstance(value, ServiceError):

@@ -1,4 +1,4 @@
-#!/usr/bin/env python3.10
+#!/usr/bin/env python3.12
 from __future__ import annotations
 
 import sys
@@ -35,6 +35,7 @@ from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivacySetting
+from rgdps.constants.user_credentials import CredentialVersion
 from rgdps.constants.users import UserRelationshipType
 from rgdps.constants.users import DEFAULT_PRIVILEGES
 from rgdps.constants.users import UserPrivileges
@@ -207,6 +208,11 @@ async def convert_songs(ctx: ConverterContext) -> None:
         else:
             source = SongSource.CUSTOM
 
+        author = song["authorName"]
+
+        if len(author) > 32:
+            author = author[:32]
+
         if len(download_url) > 256:
             logger.warning(
                 "Skipping song due to download URL being too long.",
@@ -222,7 +228,7 @@ async def convert_songs(ctx: ConverterContext) -> None:
             song_id=song["ID"],
             name=song_name,
             author_id=song["authorID"],
-            author=song["authorName"],
+            author=author,
             download_url=download_url,
             size=size,
             blocked=song["isDisabled"] > 0,
@@ -246,8 +252,21 @@ async def convert_user_comments(ctx: ConverterContext) -> None:
             )
             continue
 
-        post_ts = from_unix_ts(comment["timestamp"])
-        content = hashes.decode_base64(comment["comment"])[:256]
+        timestamp = comment["timestamp"]
+        if timestamp <= 0:
+            timestamp = 100
+
+        post_ts = from_unix_ts(timestamp)
+        try:
+            content = hashes.decode_base64(comment["comment"])[:256]
+        except Exception:
+            logger.warning(
+                "User comment had invalid base64 content. Skipped.",
+                extra={
+                    "comment_id": comment["commentID"],
+                },
+            )
+            continue
 
         await repositories.user_comment.create(
             ctx,
@@ -271,12 +290,26 @@ async def convert_level_comments(ctx: ConverterContext) -> None:
                 "Failed to find account ID for a userID when converting level comments.",
                 extra={
                     "user_id": comment["userID"],
+                    "comment_id": comment["commentID"],
                 },
             )
             continue
 
-        post_ts = from_unix_ts(comment["timestamp"])
-        content = hashes.decode_base64(comment["comment"])[:256]
+        timestamp = comment["timestamp"]
+        if timestamp <= 0:
+            timestamp = 100
+
+        post_ts = from_unix_ts(timestamp)
+        try:
+            content = hashes.decode_base64(comment["comment"])[:256]
+        except Exception:
+            logger.warning(
+                "User comment had invalid base64 content. Skipped.",
+                extra={
+                    "comment_id": comment["commentID"],
+                },
+            )
+            continue
 
         await repositories.level_comment.create(
             ctx,
@@ -332,7 +365,6 @@ async def convert_users(ctx: ConverterContext) -> None:
                 ctx,
                 user_id=user_id,
                 username=user["username"],
-                password=user["password"],
                 email=user["email"],
                 privileges=privileges,
                 message_privacy=UserPrivacySetting(user["mS"]),
@@ -361,6 +393,13 @@ async def convert_users(ctx: ConverterContext) -> None:
                 user_coins=user["userCoins"],
                 diamonds=user["diamonds"],
             )
+
+            await repositories.user_credential.create(
+                ctx,
+                user_id=user_id,
+                credential_version=CredentialVersion.PLAIN_BCRYPT,
+                value=user["password"],
+            )
         except Exception:
             logger.exception(
                 "Failed to convert user!",
@@ -381,7 +420,10 @@ async def convert_levels(ctx: ConverterContext) -> None:
         if account_id is None:
             continue
 
-        description = hashes.decode_base64(level["levelDesc"])[:256]
+        try:
+            description = hashes.decode_base64(level["levelDesc"])[:256]
+        except Exception:
+            description = ""
 
         publicity = LevelPublicity.PUBLIC
         if level["unlisted"] > 0:
@@ -409,6 +451,15 @@ async def convert_levels(ctx: ConverterContext) -> None:
         elif stars < 0:
             stars = 0
 
+        # NOTE: Only upload ts is varchar.
+        upload_ts = int(level["uploadDate"])
+        update_ts = level["updateDate"]
+
+        if upload_ts <= 0:
+            upload_ts = 100
+        if update_ts <= 0:
+            update_ts = 100
+
         await repositories.level.create(
             ctx,
             level_id=level["levelID"],
@@ -430,9 +481,8 @@ async def convert_levels(ctx: ConverterContext) -> None:
             downloads=level["downloads"],
             likes=level["likes"],
             stars=stars,
-            # NOTE: Only upload ts is varchar.
-            upload_ts=from_unix_ts(int(level["uploadDate"])),
-            update_ts=from_unix_ts(level["updateDate"]),
+            upload_ts=from_unix_ts(upload_ts),
+            update_ts=from_unix_ts(update_ts),
             coins_verified=level["starCoins"] > 0,
             feature_order=level["starFeatured"],
             deleted=level["isDeleted"] > 0,

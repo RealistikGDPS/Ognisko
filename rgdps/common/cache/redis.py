@@ -4,17 +4,12 @@ import pickle
 from datetime import timedelta
 from typing import Any
 from typing import Callable
-from typing import TypeVar
 
 from redis.asyncio import Redis
 
 from .base import AbstractAsyncCache
 from .base import KeyType
 
-
-T = TypeVar("T")
-DESERIALISE_FUNCTION = Callable[[bytes], T]
-SERIALISE_FUNCTION = Callable[[T], bytes]
 
 # Cast functions for common occurrences
 # TODO: Maybe move these into a separate file?
@@ -28,7 +23,11 @@ def deserialise_object(data: bytes) -> Any:
     return pickle.loads(data)
 
 
-class SimpleRedisCache(AbstractAsyncCache[T]):
+type DeserialisableFunction[T] = Callable[[bytes], T]
+type SerialisableFunction[T] = Callable[[T], bytes]
+
+
+class SimpleRedisCache[T](AbstractAsyncCache[T]):
     __slots__ = (
         "_key_prefix",
         "_deserialise",
@@ -41,8 +40,8 @@ class SimpleRedisCache(AbstractAsyncCache[T]):
         self,
         redis: Redis,
         key_prefix: str,
-        deserialise: DESERIALISE_FUNCTION = deserialise_object,
-        serialise: SERIALISE_FUNCTION = serialise_object,
+        deserialise: DeserialisableFunction = deserialise_object,
+        serialise: SerialisableFunction = serialise_object,
         expiry: timedelta = timedelta(days=1),
     ) -> None:
         self._key_prefix = key_prefix
