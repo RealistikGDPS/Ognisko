@@ -27,7 +27,6 @@ async def create_or_update(
     level_id: int,
     name: str,
     custom_song_id: int,
-    copy_password: int,
     two_player: bool,
     object_count: int,
     coins: int,
@@ -132,7 +131,6 @@ async def create_or_update(
             low_detail_mode=low_detail_mode,
             object_count=object_count,
             coins=coins,
-            copy_password=copy_password,
             building_time=building_time,
         )
 
@@ -593,7 +591,7 @@ async def nominate_epic(
         ctx,
         level_id=level_id,
         search_flags=search_flags,
-        feature_order=int(time.time())
+        feature_order=int(time.time()),
     )
 
     if result is None:
