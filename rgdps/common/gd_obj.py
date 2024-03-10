@@ -260,7 +260,8 @@ def create_level_minimal(level: Level) -> GDSerialisable:
 def create_level(level: Level, level_data: str, schedule_id: int = 0) -> GDSerialisable:
     return create_level_minimal(level) | {
         4: level_data,
-        27: hashes.hash_level_password(level.copy_password),
+        27: hashes.hash_level_password(1),
+        #27: 1,
         28: into_str_ts(level.upload_ts),
         29: into_str_ts(level.update_ts),
         36: level.render_str,
@@ -319,7 +320,7 @@ def create_level_metadata_security_str(level: Level, schedule_id) -> str:
             str(level.id),
             "1" if level.coins_verified else "0",
             str(level.feature_order),
-            str(level.copy_password),
+            "1",
             str(schedule_id),
         ),
     )

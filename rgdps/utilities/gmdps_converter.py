@@ -470,7 +470,6 @@ async def convert_levels(ctx: ConverterContext) -> None:
             length=LevelLength(level["levelLength"]),
             official_song_id=official_song_id,
             custom_song_id=custom_song_id,
-            copy_password=level["password"],
             original_id=level["original"],
             two_player=level["twoPlayer"] > 0,
             object_count=abs(level["objects"]),

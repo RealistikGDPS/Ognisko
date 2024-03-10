@@ -44,7 +44,6 @@ class Level:
     search_flags: LevelSearchFlag
     low_detail_mode: bool
     object_count: int
-    copy_password: int
     building_time: int
     update_locked: bool
     deleted: bool
@@ -94,7 +93,6 @@ class Level:
             search_flags=LevelSearchFlag(level_dict["search_flags"]),
             low_detail_mode=bool(level_dict["low_detail_mode"]),
             object_count=level_dict["object_count"],
-            copy_password=level_dict["copy_password"],
             building_time=level_dict["building_time"],
             update_locked=bool(level_dict["update_locked"]),
             deleted=bool(level_dict["deleted"]),
@@ -121,9 +119,11 @@ class Level:
             "likes": self.likes,
             "stars": self.stars,
             "difficulty": self.difficulty.value,
-            "demon_difficulty": self.demon_difficulty.value
-            if self.demon_difficulty is not None
-            else None,
+            "demon_difficulty": (
+                self.demon_difficulty.value
+                if self.demon_difficulty is not None
+                else None
+            ),
             "coins": self.coins,
             "coins_verified": self.coins_verified,
             "requested_stars": self.requested_stars,
@@ -131,7 +131,6 @@ class Level:
             "search_flags": self.search_flags.value,
             "low_detail_mode": self.low_detail_mode,
             "object_count": self.object_count,
-            "copy_password": self.copy_password,
             "building_time": self.building_time,
             "update_locked": self.update_locked,
             "deleted": self.deleted,
