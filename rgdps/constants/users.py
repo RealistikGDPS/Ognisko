@@ -60,6 +60,8 @@ class UserPrivileges(IntFlag):
 
     SERVER_RESYNC_LEADERBOARDS = 1 << 40
 
+    LEVEL_MOVE_USER = 1 << 41
+
     def as_bytes(self) -> bytes:
         return self.to_bytes(16, "little", signed=False)
 

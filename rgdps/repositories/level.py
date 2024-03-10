@@ -259,7 +259,7 @@ async def update_sql_partial(
     if is_set(name):
         changed_data["name"] = name
     if is_set(user_id):
-        changed_data["user_id"]
+        changed_data["user_id"] = user_id
     if is_set(description):
         changed_data["description"] = description
     if is_set(custom_song_id):
@@ -374,7 +374,7 @@ async def update_meili_partial(
     if is_set(name):
         changed_data["name"] = name
     if is_set(user_id):
-        changed_data["user_id"]
+        changed_data["user_id"] = user_id
     if is_set(description):
         changed_data["description"] = description
     if is_set(custom_song_id):

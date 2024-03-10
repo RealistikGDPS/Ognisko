@@ -6,6 +6,7 @@ from rgdps.api.commands.framework import unwrap_service
 from rgdps.constants.levels import LevelDifficultyName
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.level import Level
+from rgdps.models.user import User
 from rgdps.usecases import levels
 
 router = CommandRouter("levels_root")
@@ -217,3 +218,13 @@ async def unepic(ctx: CommandContext, level: Level | None = None) -> str:
     unwrap_service(await levels.revoke_epic(ctx, level.id))
 
     return f"The level {level.name!r}'s epic status has been revoked."
+
+
+@level_group.register_function(required_privileges=UserPrivileges.LEVEL_MOVE_USER)
+async def move(ctx: CommandContext, new_user: User) -> str:
+    if ctx.level is None:
+        return "This command may only be ran on a level."
+    
+    unwrap_service(await levels.move_user(ctx, ctx.level.id, new_user.id))
+
+    return f"The level {ctx.level.name!r} has been moved to {new_user.username!r}s account!"
