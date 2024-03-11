@@ -77,6 +77,8 @@ async def level_post(
     low_detail_mode: bool = Form(..., alias="ldm"),
     building_time: int = Form(..., alias="wt2"),
 ):
+    print(await ctx.request.form())
+    return "-1"
     level = await levels.create_or_update(
         ctx,
         user_id=user.id,

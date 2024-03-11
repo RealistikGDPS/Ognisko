@@ -123,3 +123,28 @@ class MessageContentString(str):
             return MessageContentString(hashes.decrypt_message_content(value))
         except Exception as e:
             raise ValueError("Input is not valid base64 and xor cipher") from e
+        
+
+class IntegerList(list[int]):
+    @classmethod
+    def _validate(
+        cls,
+        value: Any,
+        _: core_schema.ValidationInfo,
+    ) -> IntegerList:
+        if not isinstance(value, str):
+            raise TypeError("Value must be a str or its subtype.")
+        
+        return IntegerList(
+            map(int, value.strip().split(","))
+        )
+    
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls,
+        _: type[Any],
+    ) -> core_schema.CoreSchema:
+        return core_schema.general_after_validator_function(
+            cls._validate,
+            core_schema.list_schema(),
+        )
