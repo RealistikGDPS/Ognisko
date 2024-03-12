@@ -78,6 +78,8 @@ async def create(
     object_count: int = 0,
     building_time: int = 0,
     update_locked: bool = False,
+    song_ids: list[int] | None = None,
+    sfx_ids: list[int] | None = None,
     deleted: bool = False,
     level_id: int = 0,
 ) -> Level:
@@ -85,6 +87,11 @@ async def create(
         upload_ts = datetime.now()
     if update_ts is None:
         update_ts = datetime.now()
+
+    if sfx_ids is None:
+        sfx_ids = []
+    if song_ids is None:
+        song_ids = []
 
     level = Level(
         id=level_id,
@@ -118,6 +125,8 @@ async def create(
         building_time=building_time,
         update_locked=update_locked,
         deleted=deleted,
+        song_ids=song_ids,
+        sfx_ids=sfx_ids,
     )
 
     level.id = await create_sql(ctx, level)
@@ -132,13 +141,13 @@ async def create_sql(ctx: Context, level: Level) -> int:
         "game_version, binary_version, upload_ts, update_ts, original_id, downloads, likes, "
         "stars, difficulty, demon_difficulty, coins, coins_verified, requested_stars, "
         "feature_order, search_flags, low_detail_mode, object_count, "
-        "building_time, update_locked, deleted) VALUES (:id, :name, :user_id, "
+        "building_time, update_locked, deleted, song_ids, sfx_ids) VALUES (:id, :name, :user_id, "
         ":description, :custom_song_id, :official_song_id, :version, :length, "
         ":two_player, :publicity, :render_str, :game_version, :binary_version, "
         ":upload_ts, :update_ts, :original_id, :downloads, :likes, :stars, :difficulty, "
         ":demon_difficulty, :coins, :coins_verified, :requested_stars, :feature_order, "
         ":search_flags, :low_detail_mode, :object_count, "
-        ":building_time, :update_locked, :deleted)",
+        ":building_time, :update_locked, :deleted, :song_ids, :sfx_ids)",
         level.as_dict(include_id=True),
     )
 
@@ -185,6 +194,11 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     del level_dict["magic"]
     del level_dict["awarded"]
 
+    # FIXME: Temporary migration measure.
+    if "song_ids" not in level_dict:
+        level_dict["song_ids"] = [level_dict["song_id"]]
+        level_dict["sfx_ids"] = []
+
     return level_dict
 
 
@@ -213,7 +227,7 @@ async def update_sql_full(ctx: Context, level: Level) -> None:
         "demon_difficulty = :demon_difficulty, coins = :coins, coins_verified = :coins_verified, "
         "requested_stars = :requested_stars, feature_order = :feature_order, "
         "search_flags = :search_flags, low_detail_mode = :low_detail_mode, "
-        "object_count = :object_count, "
+        "object_count = :object_count, song_ids = :song_ids, sfx_ids = :sfx_ids,"
         "building_time = :building_time, update_locked = :update_locked, "
         "deleted = :deleted WHERE id = :id",
         level.as_dict(include_id=True),
@@ -252,6 +266,8 @@ async def update_sql_partial(
     object_count: int | Unset = UNSET,
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
+    song_ids: list[int] | Unset = UNSET,
+    sfx_ids: list[int] | Unset = UNSET,
     deleted: bool | Unset = UNSET,
 ) -> Level | None:
     changed_data = {}
@@ -319,6 +335,10 @@ async def update_sql_partial(
         changed_data["update_locked"] = update_locked
     if is_set(deleted):
         changed_data["deleted"] = deleted
+    if is_set(song_ids):
+        changed_data["song_ids"] = song_ids
+    if is_set(sfx_ids):
+        changed_data["sfx_ids"] = sfx_ids
 
     if not changed_data:
         return await from_id(ctx, level_id)
@@ -366,6 +386,8 @@ async def update_meili_partial(
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
     deleted: bool | Unset = UNSET,
+    song_ids: list[int] | Unset = UNSET,
+    sfx_ids: list[int] | Unset = UNSET,
 ) -> None:
     changed_data: dict[str, Any] = {
         "id": level_id,
@@ -434,6 +456,10 @@ async def update_meili_partial(
         changed_data["update_locked"] = update_locked
     if is_set(deleted):
         changed_data["deleted"] = deleted
+    if is_set(song_ids):
+        changed_data["song_ids"] = song_ids
+    if is_set(sfx_ids):
+        changed_data["sfx_ids"] = sfx_ids
 
     changed_data = _make_meili_dict(changed_data)
 
@@ -473,6 +499,8 @@ async def update_partial(
     object_count: int | Unset = UNSET,
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
+    song_ids: list[int] | Unset = UNSET,
+    sfx_ids: list[int] | Unset = UNSET,
     deleted: bool | Unset = UNSET,
 ) -> Level | None:
     level = await update_sql_partial(
@@ -507,6 +535,8 @@ async def update_partial(
         object_count=object_count,
         building_time=building_time,
         update_locked=update_locked,
+        song_ids=song_ids,
+        sfx_ids=sfx_ids,
         deleted=deleted,
     )
 
@@ -546,6 +576,8 @@ async def update_partial(
         building_time=building_time,
         update_locked=update_locked,
         deleted=deleted,
+        song_ids=song_ids,
+        sfx_ids=sfx_ids,
     )
 
     return level

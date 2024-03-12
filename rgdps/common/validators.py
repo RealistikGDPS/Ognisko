@@ -132,8 +132,11 @@ class IntegerList(list[int]):
         value: Any,
         _: core_schema.ValidationInfo,
     ) -> IntegerList:
-        if not isinstance(value, str):
-            raise TypeError("Value must be a str or its subtype.")
+        if not isinstance(value, (str, bytes)):
+            raise TypeError("Value must be str or bytes")
+
+        if isinstance(value, bytes):
+            value = value.decode()
         
         return IntegerList(
             map(int, value.strip().split(","))

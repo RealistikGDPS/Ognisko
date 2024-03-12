@@ -46,6 +46,8 @@ class Level:
     object_count: int
     building_time: int
     update_locked: bool
+    song_ids: list[int]
+    sfx_ids: list[int]
     deleted: bool
 
     # verification_replay: str
@@ -96,6 +98,8 @@ class Level:
             building_time=level_dict["building_time"],
             update_locked=bool(level_dict["update_locked"]),
             deleted=bool(level_dict["deleted"]),
+            song_ids=level_dict["song_ids"],
+            sfx_ids=level_dict["sfx_ids"],
         )
 
     def as_dict(self, *, include_id: bool) -> dict[str, Any]:
@@ -134,6 +138,8 @@ class Level:
             "building_time": self.building_time,
             "update_locked": self.update_locked,
             "deleted": self.deleted,
+            "song_ids": self.song_ids,
+            "sfx_ids": self.sfx_ids,
         }
 
         if include_id:
