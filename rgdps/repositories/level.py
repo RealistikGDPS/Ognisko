@@ -19,6 +19,8 @@ from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
 from rgdps.models.level import Level
 
+import orjson
+
 
 async def from_id(
     ctx: Context,
@@ -35,7 +37,7 @@ async def from_id(
         "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
         "search_flags, low_detail_mode, object_count, building_time, "
-        "update_locked, deleted FROM levels WHERE id = :id" + condition,
+        "update_locked, deleted, song_ids, sfx_ids FROM levels WHERE id = :id" + condition,
         {
             "id": level_id,
         },
@@ -44,7 +46,9 @@ async def from_id(
     if level_db is None:
         return None
 
-    return Level.from_mapping(level_db)
+    return Level.from_mapping(
+        _from_mysql_dict(dict(level_db)) # type: ignore
+    )
 
 
 async def create(
@@ -78,6 +82,8 @@ async def create(
     object_count: int = 0,
     building_time: int = 0,
     update_locked: bool = False,
+    song_ids: list[int] | None = None,
+    sfx_ids: list[int] | None = None,
     deleted: bool = False,
     level_id: int = 0,
 ) -> Level:
@@ -85,6 +91,11 @@ async def create(
         upload_ts = datetime.now()
     if update_ts is None:
         update_ts = datetime.now()
+
+    if sfx_ids is None:
+        sfx_ids = []
+    if song_ids is None:
+        song_ids = []
 
     level = Level(
         id=level_id,
@@ -118,6 +129,8 @@ async def create(
         building_time=building_time,
         update_locked=update_locked,
         deleted=deleted,
+        song_ids=song_ids,
+        sfx_ids=sfx_ids,
     )
 
     level.id = await create_sql(ctx, level)
@@ -132,14 +145,14 @@ async def create_sql(ctx: Context, level: Level) -> int:
         "game_version, binary_version, upload_ts, update_ts, original_id, downloads, likes, "
         "stars, difficulty, demon_difficulty, coins, coins_verified, requested_stars, "
         "feature_order, search_flags, low_detail_mode, object_count, "
-        "building_time, update_locked, deleted) VALUES (:id, :name, :user_id, "
+        "building_time, update_locked, deleted, song_ids, sfx_ids) VALUES (:id, :name, :user_id, "
         ":description, :custom_song_id, :official_song_id, :version, :length, "
         ":two_player, :publicity, :render_str, :game_version, :binary_version, "
         ":upload_ts, :update_ts, :original_id, :downloads, :likes, :stars, :difficulty, "
         ":demon_difficulty, :coins, :coins_verified, :requested_stars, :feature_order, "
         ":search_flags, :low_detail_mode, :object_count, "
-        ":building_time, :update_locked, :deleted)",
-        level.as_dict(include_id=True),
+        ":building_time, :update_locked, :deleted, :song_ids, :sfx_ids)",
+        _make_mysql_dict(level.as_dict(include_id=True)),
     )
 
 
@@ -185,6 +198,30 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     del level_dict["magic"]
     del level_dict["awarded"]
 
+    # FIXME: Temporary migration measure.
+    if "song_ids" not in level_dict:
+        level_dict["song_ids"] = [level_dict["custom_song_id"]]
+        level_dict["sfx_ids"] = []
+
+    return level_dict
+
+
+# These are required due to Databases not working well with `JSON` field types.
+def _make_mysql_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
+    level_dict = level_dict.copy()
+
+    level_dict["song_ids"] = orjson.dumps(level_dict["song_ids"])
+    level_dict["sfx_ids"] = orjson.dumps(level_dict["sfx_ids"])
+
+    return level_dict
+
+
+def _from_mysql_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
+    level_dict = level_dict.copy()
+
+    level_dict["song_ids"] = orjson.loads(level_dict["song_ids"])
+    level_dict["sfx_ids"] = orjson.loads(level_dict["sfx_ids"])
+
     return level_dict
 
 
@@ -213,10 +250,10 @@ async def update_sql_full(ctx: Context, level: Level) -> None:
         "demon_difficulty = :demon_difficulty, coins = :coins, coins_verified = :coins_verified, "
         "requested_stars = :requested_stars, feature_order = :feature_order, "
         "search_flags = :search_flags, low_detail_mode = :low_detail_mode, "
-        "object_count = :object_count, "
+        "object_count = :object_count, song_ids = :song_ids, sfx_ids = :sfx_ids,"
         "building_time = :building_time, update_locked = :update_locked, "
         "deleted = :deleted WHERE id = :id",
-        level.as_dict(include_id=True),
+        _make_mysql_dict(level.as_dict(include_id=True)),
     )
 
 
@@ -252,6 +289,8 @@ async def update_sql_partial(
     object_count: int | Unset = UNSET,
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
+    song_ids: list[int] | Unset = UNSET,
+    sfx_ids: list[int] | Unset = UNSET,
     deleted: bool | Unset = UNSET,
 ) -> Level | None:
     changed_data = {}
@@ -319,6 +358,10 @@ async def update_sql_partial(
         changed_data["update_locked"] = update_locked
     if is_set(deleted):
         changed_data["deleted"] = deleted
+    if is_set(song_ids):
+        changed_data["song_ids"] = song_ids
+    if is_set(sfx_ids):
+        changed_data["sfx_ids"] = sfx_ids
 
     if not changed_data:
         return await from_id(ctx, level_id)
@@ -366,6 +409,8 @@ async def update_meili_partial(
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
     deleted: bool | Unset = UNSET,
+    song_ids: list[int] | Unset = UNSET,
+    sfx_ids: list[int] | Unset = UNSET,
 ) -> None:
     changed_data: dict[str, Any] = {
         "id": level_id,
@@ -434,6 +479,10 @@ async def update_meili_partial(
         changed_data["update_locked"] = update_locked
     if is_set(deleted):
         changed_data["deleted"] = deleted
+    if is_set(song_ids):
+        changed_data["song_ids"] = song_ids
+    if is_set(sfx_ids):
+        changed_data["sfx_ids"] = sfx_ids
 
     changed_data = _make_meili_dict(changed_data)
 
@@ -473,6 +522,8 @@ async def update_partial(
     object_count: int | Unset = UNSET,
     building_time: int | Unset = UNSET,
     update_locked: bool | Unset = UNSET,
+    song_ids: list[int] | Unset = UNSET,
+    sfx_ids: list[int] | Unset = UNSET,
     deleted: bool | Unset = UNSET,
 ) -> Level | None:
     level = await update_sql_partial(
@@ -507,6 +558,8 @@ async def update_partial(
         object_count=object_count,
         building_time=building_time,
         update_locked=update_locked,
+        song_ids=song_ids,
+        sfx_ids=sfx_ids,
         deleted=deleted,
     )
 
@@ -546,6 +599,8 @@ async def update_partial(
         building_time=building_time,
         update_locked=update_locked,
         deleted=deleted,
+        song_ids=song_ids,
+        sfx_ids=sfx_ids,
     )
 
     return level
@@ -685,12 +740,14 @@ async def all(
         "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
         "search_flags, low_detail_mode, object_count, building_time, "
-        "update_locked, deleted FROM levels WHERE deleted IN :deleted",
+        "update_locked, deleted, sfx_ids, song_ids FROM levels WHERE deleted IN :deleted",
         {
             "deleted": (0, 1) if include_deleted else (0,),
         },
     ):
-        yield Level.from_mapping(level_db)
+        yield Level.from_mapping(
+            _from_mysql_dict(dict(level_db))
+        )
 
 
 async def get_count(ctx: Context) -> int:

@@ -12,6 +12,7 @@ from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
 from rgdps.common.validators import TextBoxString
+from rgdps.common.validators import IntegerList
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.constants.levels import LevelDemonRating
@@ -76,7 +77,11 @@ async def level_post(
     binary_version: int = Form(..., alias="binaryVersion"),
     low_detail_mode: bool = Form(..., alias="ldm"),
     building_time: int = Form(..., alias="wt2"),
+    # TODO: There is some weird Pydantic behaviour here with the IntegerList validator.
+    song_ids: IntegerList = Form(IntegerList(), alias="songIDs"),
+    sfx_ids: IntegerList = Form(IntegerList(), alias="sfxIDs")
 ):
+
     level = await levels.create_or_update(
         ctx,
         user_id=user.id,
@@ -99,6 +104,8 @@ async def level_post(
         binary_version=binary_version,
         low_detail_mode=low_detail_mode,
         building_time=building_time,
+        song_ids=song_ids,
+        sfx_ids=sfx_ids,
     )
 
     if isinstance(level, ServiceError):

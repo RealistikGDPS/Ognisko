@@ -6,6 +6,7 @@ from typing import NamedTuple
 
 from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
+from rgdps.common.time import into_unix_ts
 from rgdps.common.typing import SupportsStr
 from rgdps.constants.daily_chests import DailyChestType
 from rgdps.constants.friends import FriendStatus
@@ -225,7 +226,7 @@ def create_level_minimal(level: Level) -> GDSerialisable:
     else:
         description_b64 = ""
 
-    return {
+    struct = {
         1: level.id,
         2: level.name,
         3: description_b64,
@@ -254,14 +255,26 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         45: level.object_count,
         46: level.building_time,
         47: level.building_time,
+        # TODO: Is this correct lolll
+        57: into_unix_ts(level.upload_ts),
     }
 
+    # Only include actual extra song ids.
+    if len(level.song_ids) > 1:
+        struct[52] = joined_string(level.song_ids)
+
+    if level.sfx_ids:
+        struct[53] = joined_string(level.sfx_ids)
+
+    return struct # type: ignore
+
+
+FREE_COPY_HASH = hashes.hash_level_password(1)
 
 def create_level(level: Level, level_data: str, schedule_id: int = 0) -> GDSerialisable:
     return create_level_minimal(level) | {
         4: level_data,
-        27: hashes.hash_level_password(1),
-        #27: 1,
+        27: FREE_COPY_HASH,
         28: into_str_ts(level.upload_ts),
         29: into_str_ts(level.update_ts),
         36: level.render_str,
