@@ -48,4 +48,8 @@ Equally, you may select to use environment variables for configuration if the `U
 Both methods accept the same values (identical names).
 
 ## Upgrading an existing server
-Assuming your server is based off [Cvolton's server implementation](https://github.com/Cvolton/GMDprivateServer), there will be a migration utility created in the near future.
+Assuming your server is based off [Cvolton's server implementation](https://github.com/Cvolton/GMDprivateServer), there exists a migration
+utility for this built right into the codebase.
+
+This is done by importing your old database into a database named `old_gdps` and running `make converter` (assuming you are using Docker).
+This will fill **all empty** tables with data from the old table.
