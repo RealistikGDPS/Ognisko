@@ -15,6 +15,7 @@ router.merge(users.router)
 router.merge(sync.router)
 router.merge(schedule.router)
 
+
 def is_command(entry: str) -> bool:
     return entry.startswith(config.srv_command_prefix)
 

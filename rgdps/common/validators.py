@@ -123,7 +123,7 @@ class MessageContentString(str):
             return MessageContentString(hashes.decrypt_message_content(value))
         except Exception as e:
             raise ValueError("Input is not valid base64 and xor cipher") from e
-        
+
 
 class IntegerList(list[int]):
     @classmethod
@@ -141,11 +141,9 @@ class IntegerList(list[int]):
 
         if not isinstance(value, str):
             value = value.decode()
-        
-        return IntegerList(
-            map(int, value.strip().split(","))
-        )
-    
+
+        return IntegerList(map(int, value.strip().split(",")))
+
     @classmethod
     def __get_pydantic_core_schema__(
         cls,

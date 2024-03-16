@@ -79,7 +79,7 @@ async def level_post(
     building_time: int = Form(..., alias="wt2"),
     # TODO: There is some weird Pydantic behaviour here with the IntegerList validator.
     song_ids: IntegerList = Form(IntegerList(), alias="songIDs"),
-    sfx_ids: IntegerList = Form(IntegerList(), alias="sfxIDs")
+    sfx_ids: IntegerList = Form(IntegerList(), alias="sfxIDs"),
 ):
 
     level = await levels.create_or_update(
@@ -455,8 +455,6 @@ async def custom_content_cdn_get(
         )
         return responses.fail()
 
-    logger.info(
-        "Successfully served custom content CDN url."
-    )
+    logger.info("Successfully served custom content CDN url.")
 
     return result

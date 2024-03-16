@@ -37,7 +37,8 @@ async def from_id(
         "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
         "search_flags, low_detail_mode, object_count, building_time, "
-        "update_locked, deleted, song_ids, sfx_ids FROM levels WHERE id = :id" + condition,
+        "update_locked, deleted, song_ids, sfx_ids FROM levels WHERE id = :id"
+        + condition,
         {
             "id": level_id,
         },
@@ -46,9 +47,7 @@ async def from_id(
     if level_db is None:
         return None
 
-    return Level.from_mapping(
-        _from_mysql_dict(dict(level_db)) # type: ignore
-    )
+    return Level.from_mapping(_from_mysql_dict(dict(level_db)))  # type: ignore
 
 
 async def create(
@@ -745,9 +744,7 @@ async def all(
             "deleted": (0, 1) if include_deleted else (0,),
         },
     ):
-        yield Level.from_mapping(
-            _from_mysql_dict(dict(level_db))
-        )
+        yield Level.from_mapping(_from_mysql_dict(dict(level_db)))
 
 
 async def get_count(ctx: Context) -> int:

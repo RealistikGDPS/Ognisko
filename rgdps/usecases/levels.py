@@ -676,25 +676,25 @@ async def set_demon_difficulty(
 
 
 async def move_user(
-        ctx: Context,
-        level_id: int,
-        new_user_id: int,
+    ctx: Context,
+    level_id: int,
+    new_user_id: int,
 ) -> Level | ServiceError:
     level = await repositories.level.from_id(ctx, level_id, include_deleted=True)
 
     if level is None:
         return ServiceError.LEVELS_NOT_FOUND
-    
+
     if level.user_id == new_user_id:
         return level
-    
+
     new_user = await repositories.user.from_id(ctx, new_user_id)
 
     if new_user is None:
         return ServiceError.USER_NOT_FOUND
-    
+
     creator_points = gd_logic.calculate_creator_points(level)
-    
+
     # The old user might have not have been deleted correctly.
     old_creator = await repositories.user.from_id(ctx, level.user_id)
     if old_creator is not None:
@@ -710,8 +710,11 @@ async def move_user(
         creator_points=new_user.creator_points + creator_points,
     )
 
-    return await repositories.level.update_partial(
-        ctx,
-        level_id,
-        user_id=new_user_id,
-    ) or ServiceError.LEVELS_NOT_FOUND
+    return (
+        await repositories.level.update_partial(
+            ctx,
+            level_id,
+            user_id=new_user_id,
+        )
+        or ServiceError.LEVELS_NOT_FOUND
+    )

@@ -266,10 +266,11 @@ def create_level_minimal(level: Level) -> GDSerialisable:
     if level.sfx_ids:
         struct[53] = joined_string(level.sfx_ids)
 
-    return struct # type: ignore
+    return struct  # type: ignore
 
 
 FREE_COPY_HASH = hashes.hash_level_password(1)
+
 
 def create_level(level: Level, level_data: str, schedule_id: int = 0) -> GDSerialisable:
     return create_level_minimal(level) | {

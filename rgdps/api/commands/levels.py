@@ -224,7 +224,7 @@ async def unepic(ctx: CommandContext, level: Level | None = None) -> str:
 async def move(ctx: CommandContext, new_user: User) -> str:
     if ctx.level is None:
         return "This command may only be ran on a level."
-    
+
     unwrap_service(await levels.move_user(ctx, ctx.level.id, new_user.id))
 
     return f"The level {ctx.level.name!r} has been moved to {new_user.username!r}s account!"

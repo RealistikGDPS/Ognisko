@@ -18,7 +18,7 @@ def into_str_ts(ts: datetime) -> str:
     unix_ts = int(time.mktime(ts.timetuple()))
     value = int(time.time()) - unix_ts
 
-    for (name, count) in INTERVALS:
+    for name, count in INTERVALS:
         if value < count:
             if value == 0:
                 value = 1

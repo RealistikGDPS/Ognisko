@@ -66,6 +66,8 @@ async def schedule_next(
 DAILY_LEVELS_TO_EXCLUDE = (
     20  # TODO: look into scaling this with the number of levels on the server.
 )
+
+
 # Helper function to separate the algorithm.
 async def _auto_nominate_daily(ctx: Context) -> LevelSchedule | None:
     last_n = await repositories.level_schedule.get_last_n(
@@ -115,6 +117,7 @@ async def _auto_nominate_daily(ctx: Context) -> LevelSchedule | None:
 # - Hasn't been daily in the last 52 days.
 
 WEEKLY_LEVELS_TO_EXCLUDE = 52 // 7
+
 
 # For now, this is rather similar to the daily algorithm, but may change in the future.
 async def _auto_nominate_weekly(ctx: Context) -> LevelSchedule | None:

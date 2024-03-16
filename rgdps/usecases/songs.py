@@ -20,5 +20,5 @@ async def get_custom_content_url(ctx: Context) -> str | ServiceError:
 
     if url is None:
         return ServiceError.SONGS_CDN_UNAVAILABLE
-    
+
     return url

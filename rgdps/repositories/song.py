@@ -198,6 +198,7 @@ async def get_count(ctx: Context) -> int:
 CDN_QUERY_URL = "https://www.boomlings.com/database/getCustomContentURL.php"
 FALLBACK_CDN_URL = "https://geometrydashfiles.b-cdn.net'"
 
+
 async def _query_current_cdn_url(ctx: Context) -> str | None:
     logger.debug("Querying Boomlings for the custom content CDN url.")
 
@@ -211,7 +212,7 @@ async def _query_current_cdn_url(ctx: Context) -> str | None:
 
     if "http" not in sfx_url.text:
         return FALLBACK_CDN_URL
-    
+
     return sfx_url.text
 
 
@@ -223,7 +224,7 @@ async def get_cdn_url(ctx: Context) -> str | None:
 
     if res is not None:
         return res.decode()
-    
+
     res = await _query_current_cdn_url(ctx)
 
     if res is not None:

@@ -79,9 +79,12 @@ async def get_user_comment_count(
     include_deleted: bool = False,
 ) -> int:
     return await ctx.mysql.fetch_val(
-        "SELECT COUNT(*) FROM user_comments WHERE user_id = :user_id " "AND deleted = 0"
-        if not include_deleted
-        else "",
+        (
+            "SELECT COUNT(*) FROM user_comments WHERE user_id = :user_id "
+            "AND deleted = 0"
+            if not include_deleted
+            else ""
+        ),
         {"user_id": user_id},
     )
 

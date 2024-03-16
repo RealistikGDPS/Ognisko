@@ -16,6 +16,7 @@ from rgdps.constants.responses import GenericResponse
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 
+
 # TODO: add option to replicate https://github.com/RealistikDash/GDPyS/blob/9266cc57c3a4c5d1f51363aa3899ee3c09a23ee8/web/http.py#L338-L341
 def authenticate_dependency(
     user_id_alias: str = "accountID",

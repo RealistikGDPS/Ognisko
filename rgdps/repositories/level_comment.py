@@ -173,10 +173,12 @@ async def get_count_from_level(
     include_deleted: bool = False,
 ) -> int:
     return await ctx.mysql.fetch_val(
-        "SELECT COUNT(*) FROM level_comments WHERE level_id = :level_id "
-        "AND deleted = 0"
-        if not include_deleted
-        else "",
+        (
+            "SELECT COUNT(*) FROM level_comments WHERE level_id = :level_id "
+            "AND deleted = 0"
+            if not include_deleted
+            else ""
+        ),
         {"level_id": level_id},
     )
 
@@ -187,10 +189,12 @@ async def get_count_from_user(
     include_deleted: bool = False,
 ) -> int:
     return await ctx.mysql.fetch_val(
-        "SELECT COUNT(*) FROM level_comments WHERE user_id = :user_id "
-        "AND deleted = 0"
-        if not include_deleted
-        else "",
+        (
+            "SELECT COUNT(*) FROM level_comments WHERE user_id = :user_id "
+            "AND deleted = 0"
+            if not include_deleted
+            else ""
+        ),
         {"user_id": user_id},
     )
 

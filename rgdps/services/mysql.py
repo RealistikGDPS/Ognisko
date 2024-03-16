@@ -26,36 +26,29 @@ class AbstractMySQLService(ABC):
         self,
         query: str,
         values: MySQLValues | None = None,
-    ) -> MySQLRow | None:
-        ...
+    ) -> MySQLRow | None: ...
 
     @abstractmethod
     async def fetch_all(
         self,
         query: str,
         values: MySQLValues | None = None,
-    ) -> list[MySQLRow]:
-        ...
+    ) -> list[MySQLRow]: ...
 
     @abstractmethod
     async def fetch_val(
         self,
         query: str,
         values: MySQLValues | None = None,
-    ) -> Any:
-        ...
+    ) -> Any: ...
 
     @abstractmethod
-    async def execute(self, query: str, values: MySQLValues | None = None) -> Any:
-        ...
+    async def execute(self, query: str, values: MySQLValues | None = None) -> Any: ...
 
     @abstractmethod
     def iterate(
-        self,
-        query: str,
-        values: MySQLValues | None = None
-    ) -> AsyncGenerator[MySQLRow, None]:
-        ...
+        self, query: str, values: MySQLValues | None = None
+    ) -> AsyncGenerator[MySQLRow, None]: ...
 
 
 class MySQLService(AbstractMySQLService):
@@ -94,7 +87,7 @@ class MySQLService(AbstractMySQLService):
 
     async def execute(self, query: str, values: MySQLValues | None = None) -> Any:
         return await self._pool.execute(query, values)  # type: ignore
-    
+
     def iterate(
         self,
         query: str,

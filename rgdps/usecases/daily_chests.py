@@ -27,6 +27,7 @@ class DailyChestInformation(NamedTuple):
 SMALL_CHEST_TIME = timedelta(hours=2)
 LARGE_CHEST_TIME = timedelta(hours=24)
 
+
 # NOTE: This handles both just viewing and claiming a chest as GD handles
 # both in a single endpoint.
 async def view(

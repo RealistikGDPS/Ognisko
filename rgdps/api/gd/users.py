@@ -144,9 +144,11 @@ async def user_info_get(
                 target.friend_request_count,
                 target.friend_count,
             ),
-            gd_obj.create_friend_request(target.friend_request)
-            if target.friend_request is not None
-            else {},
+            (
+                gd_obj.create_friend_request(target.friend_request)
+                if target.friend_request is not None
+                else {}
+            ),
         ],
     )
 
