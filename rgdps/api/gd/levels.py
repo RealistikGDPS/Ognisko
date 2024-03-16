@@ -77,9 +77,10 @@ async def level_post(
     binary_version: int = Form(..., alias="binaryVersion"),
     low_detail_mode: bool = Form(..., alias="ldm"),
     building_time: int = Form(..., alias="wt2"),
-    song_ids: IntegerList = Form(..., alias="songIDs"),
+    # TODO: There is some weird Pydantic behaviour here with the IntegerList validator.
+    song_ids: IntegerList = Form(IntegerList(), alias="songIDs"),
+    sfx_ids: IntegerList = Form(IntegerList(), alias="sfxIDs")
 ):
-    print(await ctx.request.form())
 
     level = await levels.create_or_update(
         ctx,
@@ -104,6 +105,7 @@ async def level_post(
         low_detail_mode=low_detail_mode,
         building_time=building_time,
         song_ids=song_ids,
+        sfx_ids=sfx_ids,
     )
 
     if isinstance(level, ServiceError):

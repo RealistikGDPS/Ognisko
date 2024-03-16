@@ -132,10 +132,14 @@ class IntegerList(list[int]):
         value: Any,
         _: core_schema.ValidationInfo,
     ) -> IntegerList:
-        if not isinstance(value, (str, bytes)):
-            raise TypeError("Value must be str or bytes")
+        # FIXME: What.
+        if isinstance(value, list):
+            value = value[0]
 
-        if isinstance(value, bytes):
+        if not isinstance(value, (str, bytes)):
+            raise TypeError("Value must be str or bytes. Received ", repr(value))
+
+        if not isinstance(value, str):
             value = value.decode()
         
         return IntegerList(
@@ -147,7 +151,7 @@ class IntegerList(list[int]):
         cls,
         _: type[Any],
     ) -> core_schema.CoreSchema:
-        return core_schema.general_after_validator_function(
+        return core_schema.with_info_after_validator_function(
             cls._validate,
             core_schema.list_schema(),
         )

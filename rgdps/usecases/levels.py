@@ -44,6 +44,7 @@ async def create_or_update(
     low_detail_mode: bool,
     building_time: int,
     song_ids: list[int],
+    sfx_ids: list[int],
 ) -> Level | ServiceError:
     if custom_song_id:
         track_id = None
@@ -106,6 +107,7 @@ async def create_or_update(
             building_time=building_time,
             update_ts=datetime.now(),
             song_ids=song_ids,
+            sfx_ids=sfx_ids,
         )
 
         # Should never happen.
@@ -135,6 +137,7 @@ async def create_or_update(
             coins=coins,
             building_time=building_time,
             song_ids=song_ids,
+            sfx_ids=sfx_ids,
         )
 
         await repositories.level_data.create(ctx, level.id, level_data)

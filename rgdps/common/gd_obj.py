@@ -226,7 +226,7 @@ def create_level_minimal(level: Level) -> GDSerialisable:
     else:
         description_b64 = ""
 
-    return {
+    struct = {
         1: level.id,
         2: level.name,
         3: description_b64,
@@ -255,11 +255,18 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         45: level.object_count,
         46: level.building_time,
         47: level.building_time,
-        52: joined_string(level.song_ids),
-        53: joined_string(level.sfx_ids),
         # TODO: Is this correct lolll
         57: into_unix_ts(level.upload_ts),
     }
+
+    # Only include actual extra song ids.
+    if len(level.song_ids) > 1:
+        struct[52] = joined_string(level.song_ids)
+
+    if level.sfx_ids:
+        struct[53] = joined_string(level.sfx_ids)
+
+    return struct # type: ignore
 
 
 FREE_COPY_HASH = hashes.hash_level_password(1)

@@ -19,6 +19,8 @@ from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
 from rgdps.models.level import Level
 
+import orjson
+
 
 async def from_id(
     ctx: Context,
@@ -35,7 +37,7 @@ async def from_id(
         "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
         "search_flags, low_detail_mode, object_count, building_time, "
-        "update_locked, deleted FROM levels WHERE id = :id" + condition,
+        "update_locked, deleted, song_ids, sfx_ids FROM levels WHERE id = :id" + condition,
         {
             "id": level_id,
         },
@@ -44,7 +46,9 @@ async def from_id(
     if level_db is None:
         return None
 
-    return Level.from_mapping(level_db)
+    return Level.from_mapping(
+        _from_mysql_dict(dict(level_db)) # type: ignore
+    )
 
 
 async def create(
@@ -148,7 +152,7 @@ async def create_sql(ctx: Context, level: Level) -> int:
         ":demon_difficulty, :coins, :coins_verified, :requested_stars, :feature_order, "
         ":search_flags, :low_detail_mode, :object_count, "
         ":building_time, :update_locked, :deleted, :song_ids, :sfx_ids)",
-        level.as_dict(include_id=True),
+        _make_mysql_dict(level.as_dict(include_id=True)),
     )
 
 
@@ -196,8 +200,27 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
 
     # FIXME: Temporary migration measure.
     if "song_ids" not in level_dict:
-        level_dict["song_ids"] = [level_dict["song_id"]]
+        level_dict["song_ids"] = [level_dict["custom_song_id"]]
         level_dict["sfx_ids"] = []
+
+    return level_dict
+
+
+# These are required due to Databases not working well with `JSON` field types.
+def _make_mysql_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
+    level_dict = level_dict.copy()
+
+    level_dict["song_ids"] = orjson.dumps(level_dict["song_ids"])
+    level_dict["sfx_ids"] = orjson.dumps(level_dict["sfx_ids"])
+
+    return level_dict
+
+
+def _from_mysql_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
+    level_dict = level_dict.copy()
+
+    level_dict["song_ids"] = orjson.loads(level_dict["song_ids"])
+    level_dict["sfx_ids"] = orjson.loads(level_dict["sfx_ids"])
 
     return level_dict
 
@@ -230,7 +253,7 @@ async def update_sql_full(ctx: Context, level: Level) -> None:
         "object_count = :object_count, song_ids = :song_ids, sfx_ids = :sfx_ids,"
         "building_time = :building_time, update_locked = :update_locked, "
         "deleted = :deleted WHERE id = :id",
-        level.as_dict(include_id=True),
+        _make_mysql_dict(level.as_dict(include_id=True)),
     )
 
 
@@ -717,12 +740,14 @@ async def all(
         "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
         "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
         "search_flags, low_detail_mode, object_count, building_time, "
-        "update_locked, deleted FROM levels WHERE deleted IN :deleted",
+        "update_locked, deleted, sfx_ids, song_ids FROM levels WHERE deleted IN :deleted",
         {
             "deleted": (0, 1) if include_deleted else (0,),
         },
     ):
-        yield Level.from_mapping(level_db)
+        yield Level.from_mapping(
+            _from_mysql_dict(dict(level_db))
+        )
 
 
 async def get_count(ctx: Context) -> int:
