@@ -306,3 +306,9 @@ router.add_api_route(
     levels.demon_difficulty_post,
     methods=["POST"],
 )
+
+router.add_api_route(
+    "/getCustomContentURL.php",
+    levels.custom_content_cdn_get,
+    methods=["POST"],
+)

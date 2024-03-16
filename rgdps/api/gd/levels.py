@@ -439,3 +439,24 @@ async def demon_difficulty_post(
     )
 
     return responses.success()
+
+
+async def custom_content_cdn_get(
+    ctx: HTTPContext = Depends(),
+):
+    result = await songs.get_custom_content_url(ctx)
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            "Failed to serve custom content CDN url.",
+            extra={
+                "error": result.value,
+            },
+        )
+        return responses.fail()
+
+    logger.info(
+        "Successfully served custom content CDN url."
+    )
+
+    return result

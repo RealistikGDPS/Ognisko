@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import urllib.parse
+from datetime import timedelta
 
 from rgdps import logger
 from rgdps.common import gd_obj
@@ -192,3 +193,45 @@ async def multiple_from_id(
 
 async def get_count(ctx: Context) -> int:
     return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM songs")
+
+
+CDN_QUERY_URL = "https://www.boomlings.com/database/getCustomContentURL.php"
+FALLBACK_CDN_URL = "https://geometrydashfiles.b-cdn.net'"
+
+async def _query_current_cdn_url(ctx: Context) -> str | None:
+    logger.debug("Querying Boomlings for the custom content CDN url.")
+
+    sfx_url = await ctx.http.post(
+        CDN_QUERY_URL,
+        timeout=2,
+        headers={
+            "User-Agent": "",
+        },
+    )
+
+    if "http" not in sfx_url.text:
+        return FALLBACK_CDN_URL
+    
+    return sfx_url.text
+
+
+CDN_URL_CACHE_KEY = "rgdps:cache:cdn_url"
+
+
+async def get_cdn_url(ctx: Context) -> str | None:
+    res = await ctx.redis.get(CDN_URL_CACHE_KEY)
+
+    if res is not None:
+        return res.decode()
+    
+    res = await _query_current_cdn_url(ctx)
+
+    if res is not None:
+        logger.debug("Using cached custom content CDN url.")
+        await ctx.redis.set(
+            CDN_URL_CACHE_KEY,
+            res,
+            timedelta(minutes=30),
+        )
+
+    return res

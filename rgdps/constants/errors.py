@@ -44,6 +44,7 @@ class ServiceError(str, Enum):
     LIKES_INVALID_TARGET = "likes.invalid_target"
 
     SONGS_NOT_FOUND = "songs.not_found"
+    SONGS_CDN_UNAVAILABLE = "songs.cdn_unavailable"
 
     SAVE_DATA_NOT_FOUND = "save_data.not_found"
 
