@@ -209,8 +209,8 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
 def _make_mysql_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     level_dict = level_dict.copy()
 
-    level_dict["song_ids"] = orjson.dumps(level_dict["song_ids"])
-    level_dict["sfx_ids"] = orjson.dumps(level_dict["sfx_ids"])
+    level_dict["song_ids"] = orjson.dumps(level_dict["song_ids"]).decode()
+    level_dict["sfx_ids"] = orjson.dumps(level_dict["sfx_ids"]).decode()
 
     return level_dict
 
