@@ -255,8 +255,6 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         45: level.object_count,
         46: level.building_time,
         47: level.building_time,
-        # TODO: Is this correct lolll
-        57: into_unix_ts(level.upload_ts),
     }
 
     # Only include actual extra song ids.
