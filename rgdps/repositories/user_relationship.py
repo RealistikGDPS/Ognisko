@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TypedDict
 from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common.context import Context
 from rgdps.constants.users import UserRelationshipType
@@ -212,8 +213,8 @@ async def create(
 
 
 class _UserRelationshipUpdatePartial(TypedDict):
-    seen_ts: datetime
-    deleted: bool
+    seen_ts: NotRequired[datetime]
+    deleted: NotRequired[bool]
 
 async def update_partial(
     ctx: Context,

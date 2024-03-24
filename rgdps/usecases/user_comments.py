@@ -68,7 +68,13 @@ async def delete(
     if comment.user_id != user_id:
         return ServiceError.COMMENTS_INVALID_OWNER
 
-    comment.deleted = True
-    await repositories.user_comment.update(ctx, comment)
+    comment = await repositories.user_comment.update_partial(
+        ctx,
+        comment_id=comment_id,
+        deleted=True,
+    )
 
+    if comment is None:
+        return ServiceError.COMMENTS_NOT_FOUND
+    
     return comment

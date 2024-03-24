@@ -6,6 +6,7 @@ from typing import AsyncGenerator
 from typing import NamedTuple
 from typing import TypedDict
 from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common import time as time_utils
 from rgdps.common.context import Context
@@ -180,38 +181,38 @@ async def create_meili(ctx: Context, user: User) -> None:
 
 
 class _UserUpdatePartial(TypedDict):
-    username: str
-    email: str
-    privileges: UserPrivileges
-    message_privacy: UserPrivacySetting
-    friend_privacy: UserPrivacySetting
-    comment_privacy: UserPrivacySetting
-    youtube_name: str | None
-    twitter_name: str | None
-    twitch_name: str | None
-    stars: int
-    demons: int
-    moons: int
-    primary_colour: int
-    secondary_colour: int
-    glow_colour: int
-    display_type: int
-    icon: int
-    ship: int
-    ball: int
-    ufo: int
-    wave: int
-    robot: int
-    spider: int
-    swing_copter: int
-    jetpack: int
-    explosion: int
-    glow: bool
-    creator_points: int
-    coins: int
-    user_coins: int
-    diamonds: int
-    comment_colour: str
+    username: NotRequired[str]
+    email: NotRequired[str]
+    privileges: NotRequired[UserPrivileges]
+    message_privacy: NotRequired[UserPrivacySetting]
+    friend_privacy: NotRequired[UserPrivacySetting]
+    comment_privacy: NotRequired[UserPrivacySetting]
+    youtube_name: NotRequired[str | None]
+    twitter_name: NotRequired[str | None]
+    twitch_name: NotRequired[str | None]
+    stars: NotRequired[int]
+    demons: NotRequired[int]
+    moons: NotRequired[int]
+    primary_colour: NotRequired[int]
+    secondary_colour: NotRequired[int]
+    glow_colour: NotRequired[int]
+    display_type: NotRequired[int]
+    icon: NotRequired[int]
+    ship: NotRequired[int]
+    ball: NotRequired[int]
+    ufo: NotRequired[int]
+    wave: NotRequired[int]
+    robot: NotRequired[int]
+    spider: NotRequired[int]
+    swing_copter: NotRequired[int]
+    jetpack: NotRequired[int]
+    explosion: NotRequired[int]
+    glow: NotRequired[bool]
+    creator_points: NotRequired[int]
+    coins: NotRequired[int]
+    user_coins: NotRequired[int]
+    diamonds: NotRequired[int]
+    comment_colour: NotRequired[str]
 
 
 async def update_sql_partial(

@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TypedDict
 from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common.context import Context
 from rgdps.models.user_comment import UserComment
@@ -124,11 +125,11 @@ async def create(
 
 
 class _UserCommentUpdatePartial(TypedDict):
-    user_id: int
-    content: str
-    likes: int
-    post_ts: datetime
-    deleted: bool
+    user_id: NotRequired[int]
+    content: NotRequired[str]
+    likes: NotRequired[int]
+    post_ts: NotRequired[datetime]
+    deleted: NotRequired[bool]
 
 
 async def update_partial(

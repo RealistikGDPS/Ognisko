@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TypedDict
 from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common.context import Context
 from rgdps.constants.level_comments import LevelCommentSorting
@@ -72,13 +73,13 @@ async def create(
 
 
 class _LevelCommentUpdatePartial(TypedDict):
-    user_id: int
-    level_id: int
-    content: str
-    percent: int
-    likes: int
-    post_ts: datetime
-    deleted: bool
+    user_id: NotRequired[int]
+    level_id: NotRequired[int]
+    content: NotRequired[str]
+    percent: NotRequired[int]
+    likes: NotRequired[int]
+    post_ts: NotRequired[datetime]
+    deleted: NotRequired[bool]
 
 async def update_partial(
     ctx: Context,
