@@ -9,9 +9,6 @@ from typing import Unpack
 
 from rgdps.common import time as time_utils
 from rgdps.common.context import Context
-from rgdps.common.typing import is_set
-from rgdps.common.typing import UNSET
-from rgdps.common.typing import Unset
 from rgdps.constants.users import DEFAULT_PRIVILEGES
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
@@ -19,7 +16,7 @@ from rgdps.models.user import User
 from rgdps.common import modelling
 
 
-ALL_FIELDS = modelling.get_model_fields(FriendRequest)
+ALL_FIELDS = modelling.get_model_fields(User)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 
