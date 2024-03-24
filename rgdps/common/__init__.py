@@ -7,6 +7,7 @@ from . import gd_logic
 from . import gd_obj
 from . import hashes
 from . import mixins
+from . import modelling
 from . import time
 from . import typing
 from . import validators
