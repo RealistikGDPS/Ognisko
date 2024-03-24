@@ -8,16 +8,24 @@ from datetime import datetime
 from rgdps.common.context import Context
 from rgdps.constants.daily_chests import DailyChestType
 from rgdps.models.daily_chest import DailyChest
+from rgdps.common import modelling
 
+
+ALL_FIELDS = modelling.get_model_fields(DailyChest)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
 
 async def from_id(
     ctx: Context,
     chest_id: int,
 ) -> DailyChest | None:
     chest_db = await ctx.mysql.fetch_one(
-        "SELECT id, user_id, type, mana, diamonds, fire_shards, ice_shards, "
-        "poison_shards, shadow_shards, lava_shards, demon_keys, claimed_ts "
-        "FROM daily_chests WHERE id = :chest_id",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM daily_chests WHERE id = :chest_id",
         {"chest_id": chest_id},
     )
 
@@ -33,9 +41,7 @@ async def from_user_id_and_type_latest(
     chest_type: DailyChestType,
 ) -> DailyChest | None:
     chest_db = await ctx.mysql.fetch_one(
-        "SELECT id, user_id, type, mana, diamonds, fire_shards, ice_shards, "
-        "poison_shards, shadow_shards, lava_shards, demon_keys, claimed_ts "
-        "FROM daily_chests WHERE user_id = :user_id AND type = :chest_type "
+        f"SELECT {_ALL_FIELDS_COMMA} WHERE user_id = :user_id AND type = :chest_type "
         "ORDER BY claimed_ts DESC LIMIT 1",
         {"user_id": user_id, "chest_type": chest_type.value},
     )
@@ -79,10 +85,8 @@ async def create(
     )
 
     chest.id = await ctx.mysql.execute(
-        "INSERT INTO daily_chests (user_id, type, mana, diamonds, fire_shards, "
-        "ice_shards, poison_shards, shadow_shards, lava_shards, demon_keys, claimed_ts) "
-        "VALUES (:user_id, :type, :mana, :diamonds, :fire_shards, :ice_shards, "
-        ":poison_shards, :shadow_shards, :lava_shards, :demon_keys, :claimed_ts)",
+        f"INSERT INTO daily_chests ({_CUSTOMISABLE_FIELDS_COMMA}) "
+        f"VALUES ({_CUSTOMISABLE_FIELDS_COLON})",
         chest.as_dict(include_id=False),
     )
 
