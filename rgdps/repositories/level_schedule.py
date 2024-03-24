@@ -6,6 +6,17 @@ from datetime import timedelta
 from rgdps.common.context import Context
 from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.models.level_schedule import LevelSchedule
+from rgdps.common import modelling
+
+
+ALL_FIELDS = modelling.get_model_fields(LevelSchedule)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
 
 
 async def create(
@@ -37,8 +48,7 @@ async def create(
     )
 
     schedule.id = await ctx.mysql.execute(
-        "INSERT INTO level_schedule (id, type, level_id, start_time, end_time, scheduled_by_id) "
-        "VALUES (:id, :type, :level_id, :start_time, :end_time, :scheduled_by_id)",
+        f"INSERT INTO level_schedule ({_ALL_FIELDS_COMMA}) VALUES ({_ALL_FIELDS_COLON})",
         schedule.as_dict(include_id=True),
     )
 
@@ -50,8 +60,7 @@ async def from_id(
     schedule_id: int,
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
-        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
-        "FROM level_schedule WHERE id = :schedule_id",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM level_schedule WHERE id = :schedule_id",
         {
             "schedule_id": schedule_id,
         },
@@ -68,8 +77,8 @@ async def get_current(
     schedule_type: LevelScheduleType,
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
-        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
-        "FROM level_schedule WHERE type = :schedule_type AND start_time <= NOW() AND end_time >= NOW()",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM level_schedule "
+        "WHERE type = :schedule_type AND start_time <= NOW() AND end_time >= NOW()",
         {
             "schedule_type": schedule_type.value,
         },
@@ -86,8 +95,8 @@ async def get_next(
     schedule_type: LevelScheduleType,
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
-        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
-        "FROM level_schedule WHERE type = :schedule_type AND start_time >= NOW() ORDER BY start_time ASC LIMIT 1",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM level_schedule "
+        "WHERE type = :schedule_type AND start_time >= NOW() ORDER BY start_time ASC LIMIT 1",
         {
             "schedule_type": schedule_type.value,
         },
@@ -104,8 +113,8 @@ async def get_last(
     schedule_type: LevelScheduleType,
 ) -> LevelSchedule | None:
     schedule_db = await ctx.mysql.fetch_one(
-        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
-        "FROM level_schedule WHERE type = :schedule_type AND end_time <= NOW() ORDER BY end_time DESC LIMIT 1",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM level_schedule "
+        "WHERE type = :schedule_type AND end_time <= NOW() ORDER BY end_time DESC LIMIT 1",
         {
             "schedule_type": schedule_type.value,
         },
@@ -123,8 +132,8 @@ async def get_last_n(
     n: int,
 ) -> list[LevelSchedule]:
     schedule_dbs = await ctx.mysql.fetch_all(
-        "SELECT id, type, level_id, start_time, end_time, scheduled_by_id "
-        "FROM level_schedule WHERE type = :schedule_type AND end_time <= NOW() ORDER BY end_time DESC LIMIT :n",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM level_schedule "
+        "WHERE type = :schedule_type AND end_time <= NOW() ORDER BY end_time DESC LIMIT :n",
         {
             "schedule_type": schedule_type.value,
             "n": n,

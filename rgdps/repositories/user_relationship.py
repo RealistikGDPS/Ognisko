@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TypedDict
+from typing import Unpack
 
 from rgdps.common.context import Context
 from rgdps.common.typing import is_set
@@ -8,6 +10,17 @@ from rgdps.common.typing import UNSET
 from rgdps.common.typing import Unset
 from rgdps.constants.users import UserRelationshipType
 from rgdps.models.user_relationship import UserRelationship
+from rgdps.common import modelling
+
+
+ALL_FIELDS = modelling.get_model_fields(UserRelationship)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
 
 
 async def from_id(
@@ -20,8 +33,7 @@ async def from_id(
         condition = "AND deleted = 0"
 
     relationship_db = await ctx.mysql.fetch_one(
-        "SELECT id, relationship_type, user_id, target_user_id, post_ts, seen_ts "
-        f"FROM user_relationships WHERE id = :relationship_id {condition}",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM user_relationships WHERE id = :relationship_id {condition}",
         {"relationship_id": relationship_id},
     )
 
@@ -42,8 +54,7 @@ async def from_user_id(
         condition = "AND deleted = 0"
 
     relationships_db = await ctx.mysql.fetch_all(
-        "SELECT id, relationship_type, user_id, target_user_id, post_ts, seen_ts "
-        "FROM user_relationships WHERE user_id = :user_id AND "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM user_relationships WHERE user_id = :user_id AND "
         f"relationship_type = :relationship_type {condition} "
         "ORDER BY post_ts DESC",
         {"user_id": user_id, "relationship_type": relationship_type.value},
@@ -68,8 +79,7 @@ async def from_user_id_paginated(
         condition = "AND deleted = 0"
 
     relationships_db = await ctx.mysql.fetch_all(
-        "SELECT id, relationship_type, user_id, target_user_id, post_ts, seen_ts "
-        "FROM user_relationships WHERE user_id = :user_id AND "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM user_relationships WHERE user_id = :user_id AND "
         f"relationship_type = :relationship_type {condition} "
         "ORDER BY post_ts DESC LIMIT :limit OFFSET :offset",
         {
@@ -98,8 +108,7 @@ async def from_user_and_target_user(
         condition = "AND deleted = 0"
 
     relationship_db = await ctx.mysql.fetch_one(
-        "SELECT id, relationship_type, user_id, target_user_id, post_ts, seen_ts "
-        "FROM user_relationships WHERE user_id = :user_id AND target_user_id = :target_user_id "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM user_relationships WHERE user_id = :user_id AND target_user_id = :target_user_id "
         f"AND relationship_type = :relationship_type {condition}",
         {
             "user_id": user_id,
@@ -197,37 +206,29 @@ async def create(
     )
 
     relationship.id = await ctx.mysql.execute(
-        "INSERT INTO user_relationships (relationship_type, user_id, target_user_id, post_ts, seen_ts) "
-        "VALUES (:relationship_type, :user_id, :target_user_id, :post_ts, :seen_ts)",
+        f"INSERT INTO user_relationships ({_CUSTOMISABLE_FIELDS_COMMA}) "
+        f"VALUES ({_CUSTOMISABLE_FIELDS_COLON})",
         relationship.as_dict(include_id=False),
     )
 
     return relationship
 
 
+class _UserRelationshipUpdatePartial(TypedDict):
+    seen_ts: datetime
+    deleted: bool
+
 async def update_partial(
     ctx: Context,
     relationship_id: int,
-    seen_ts: Unset | datetime = UNSET,
-    deleted: Unset | bool = UNSET,
+    **kwargs: Unpack[_UserRelationshipUpdatePartial],
 ) -> UserRelationship | None:
-    changed_data = {}
-
-    if is_set(seen_ts):
-        changed_data["seen_ts"] = seen_ts
-    if is_set(deleted):
-        changed_data["deleted"] = deleted
-
-    if not changed_data:
-        return None
-
-    query = "UPDATE user_relationships SET "
-    query += ", ".join(f"{key} = :{key}" for key in changed_data.keys())
-    query += " WHERE id = :id"
-
-    changed_data["id"] = relationship_id
-
-    await ctx.mysql.execute(query, changed_data)
+    changed_fields = modelling.unpack_enum_types(kwargs)
+    
+    await ctx.mysql.execute(
+        modelling.update_from_partial_dict("user_relationships", relationship_id, changed_fields),
+        changed_fields,
+    )
 
     return await from_id(ctx, relationship_id, include_deleted=True)
 

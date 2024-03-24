@@ -8,6 +8,17 @@ from rgdps.common import gd_obj
 from rgdps.common.context import Context
 from rgdps.constants.songs import SongSource
 from rgdps.models.song import Song
+from rgdps.common import modelling
+
+
+ALL_FIELDS = modelling.get_model_fields(Song)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
 
 
 async def from_db(
@@ -16,8 +27,7 @@ async def from_db(
     allow_blocked: bool = False,
 ) -> Song | None:
     song_db = await ctx.mysql.fetch_one(
-        "SELECT id, name, author_id, author, author_youtube, size, "
-        "download_url, source, blocked FROM songs WHERE id = :song_id "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM songs WHERE id = :song_id "
         "AND blocked IN :blocked",
         {
             "song_id": song_id,
@@ -40,8 +50,7 @@ async def multiple_from_db(
         return []
 
     songs_db = await ctx.mysql.fetch_all(
-        "SELECT id, name, author_id, author, author_youtube, size, "
-        "download_url, source, blocked FROM songs WHERE id IN :song_ids "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM songs WHERE id IN :song_ids "
         "AND blocked IN :blocked",
         {
             "song_ids": tuple(song_ids),
@@ -54,10 +63,7 @@ async def multiple_from_db(
 
 async def _create_sql(ctx: Context, song: Song) -> int:
     return await ctx.mysql.execute(
-        "INSERT INTO songs (name, author_id, author, author_youtube, size, "
-        "download_url, source, blocked, id) VALUES "
-        "(:name, :author_id, :author, :author_youtube, :size, "
-        ":download_url, :source, :blocked, :id)",
+        f"INSERT INTO songs ({_ALL_FIELDS_COMMA}) VALUES ({_ALL_FIELDS_COLON})",
         song.as_dict(include_id=True),
     )
 
@@ -87,13 +93,7 @@ async def create(
         blocked=blocked,
     )
 
-    song.id = await ctx.mysql.execute(
-        "INSERT INTO songs (id, name, author_id, author, author_youtube, size, "
-        "download_url, source, blocked) VALUES "
-        "(:id, :name, :author_id, :author, :author_youtube, :size, "
-        ":download_url, :source, :blocked)",
-        song.as_dict(include_id=True),
-    )
+    song.id = await _create_sql(ctx, song)
 
     return song
 
