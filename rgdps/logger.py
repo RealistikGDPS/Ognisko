@@ -8,6 +8,8 @@ from typing import Any
 from typing import Callable
 from typing import Optional
 
+from discord_webhook_logging import DiscordWebhookHandler
+
 
 # TODO: Look into more customisability.
 _LOGGING_CONFIG = {
@@ -55,6 +57,14 @@ def init_logzio_logging(logzio_token: str, log_level: str, logzio_url: str) -> N
 
     logging.config.dictConfig(_LOGGING_CONFIG)
     hook_exception_handlers()
+
+
+def init_discord_logging(webhook_url: str) -> None:
+    handler = DiscordWebhookHandler(
+        webhook_url,
+    )
+
+    LOGGER.addHandler(handler)
 
 
 def debug(*args, **kwargs) -> None:

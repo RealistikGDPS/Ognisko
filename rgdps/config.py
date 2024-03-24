@@ -40,6 +40,8 @@ class Config:
     logzio_enabled: bool = False
     logzio_token: str = ""
     logzio_url: str = "https://listener.logz.io:8071"
+    log_discord_enabled: bool = False
+    log_discord_webhook: str = ""
 
 
 def read_config_json() -> dict[str, Any]:

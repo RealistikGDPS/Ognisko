@@ -41,6 +41,9 @@ def init_logging() -> None:
     else:
         logger.init_basic_logging(config.log_level)
 
+    if config.log_discord_enabled:
+        logger.init_discord_logging(config.log_discord_webhook)
+
 
 def init_events(app: FastAPI) -> None:
     @app.exception_handler(RequestValidationError)
