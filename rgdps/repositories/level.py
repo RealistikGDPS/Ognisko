@@ -6,6 +6,7 @@ from typing import AsyncGenerator
 from typing import NamedTuple
 from typing import TypedDict
 from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common import data_utils
 from rgdps.common import time as time_utils
@@ -230,45 +231,45 @@ async def multiple_create_meili(ctx: Context, levels: list[Level]) -> None:
     await index.add_documents(level_dicts)
 
 
-class _LevelPartialUpdate(TypedDict):
-    name: str
-    user_id: int
-    description: str
-    custom_song_id: int | None
-    official_song_id: int | None
-    version: int
-    length: LevelLength
-    two_player: bool
-    publicity: LevelPublicity
-    render_str: str
-    game_version: int
-    binary_version: int
-    upload_ts: datetime
-    update_ts: datetime
-    original_id: int | None
-    downloads: int
-    likes: int
-    stars: int
-    difficulty: LevelDifficulty
-    demon_difficulty: LevelDemonDifficulty | None
-    coins: int
-    coins_verified: bool
-    requested_stars: int
-    feature_order: int
-    search_flags: LevelSearchFlag
-    low_detail_mode: bool
-    object_count: int
-    building_time: int
-    update_locked: bool
-    song_ids: list[int]
-    sfx_ids: list[int]
-    deleted: bool
+class _LevelUpdatePartial(TypedDict):
+    name: NotRequired[str]
+    user_id: NotRequired[int]
+    description: NotRequired[str]
+    custom_song_id: NotRequired[int | None]
+    official_song_id: NotRequired[int | None]
+    version: NotRequired[int]
+    length: NotRequired[LevelLength]
+    two_player: NotRequired[bool]
+    publicity: NotRequired[LevelPublicity]
+    render_str: NotRequired[str]
+    game_version: NotRequired[int]
+    binary_version: NotRequired[int]
+    upload_ts: NotRequired[datetime]
+    update_ts: NotRequired[datetime]
+    original_id: NotRequired[int | None]
+    downloads: NotRequired[int]
+    likes: NotRequired[int]
+    stars: NotRequired[int]
+    difficulty: NotRequired[LevelDifficulty]
+    demon_difficulty: NotRequired[LevelDemonDifficulty | None]
+    coins: NotRequired[int]
+    coins_verified: NotRequired[bool]
+    requested_stars: NotRequired[int]
+    feature_order: NotRequired[int]
+    search_flags: NotRequired[LevelSearchFlag]
+    low_detail_mode: NotRequired[bool]
+    object_count: NotRequired[int]
+    building_time: NotRequired[int]
+    update_locked: NotRequired[bool]
+    song_ids: NotRequired[list[int]]
+    sfx_ids: NotRequired[list[int]]
+    deleted: NotRequired[bool]
 
 
 async def update_sql_partial(
     ctx: Context,
     level_id: int,
-    **kwargs: Unpack[_LevelPartialUpdate],
+    **kwargs: Unpack[_LevelUpdatePartial],
 ) -> Level | None:
     changed_fields = modelling.unpack_enum_types(kwargs)
 
@@ -284,7 +285,7 @@ async def update_sql_partial(
 async def update_meili_partial(
     ctx: Context,
     level_id: int,
-    **kwargs: Unpack[_LevelPartialUpdate],
+    **kwargs: Unpack[_LevelUpdatePartial],
 ) -> None:
     changed_fields = modelling.unpack_enum_types(kwargs)
     # Meili primary key
@@ -298,7 +299,7 @@ async def update_meili_partial(
 async def update_partial(
     ctx: Context,
     level_id: int,
-    **kwargs: Unpack[_LevelPartialUpdate],
+    **kwargs: Unpack[_LevelUpdatePartial],
 ) -> Level | None:
     level = await update_sql_partial(
         ctx,

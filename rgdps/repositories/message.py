@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import TypedDict
 from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common.context import Context
 from rgdps.models.message import Message
@@ -160,16 +161,16 @@ async def create(
 
     return message
 
-class _MessagePartialUpdate(TypedDict):
-    seen_ts: datetime
-    sender_deleted: bool
-    recipient_deleted: bool
-    deleted: bool
+class _MessageUpdatePartial(TypedDict):
+    seen_ts: NotRequired[datetime]
+    sender_deleted: NotRequired[bool]
+    recipient_deleted: NotRequired[bool]
+    deleted: NotRequired[bool]
 
 async def update_partial(
     ctx: Context,
     message_id: int,
-    **kwargs: Unpack[_MessagePartialUpdate],
+    **kwargs: Unpack[_MessageUpdatePartial],
 ) -> Message | None:
     changed_fields = modelling.unpack_enum_types(kwargs)
     
