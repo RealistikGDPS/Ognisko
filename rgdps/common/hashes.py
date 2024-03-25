@@ -16,7 +16,7 @@ def _compare_bcrypt(hashed: str, plain: str) -> bool:
     return bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
-def hash_bcypt(plain: str) -> str:
+def hash_bcrypt(plain: str) -> str:
     return bcrypt.hashpw(plain.encode(), bcrypt.gensalt()).decode()
 
 
@@ -24,7 +24,7 @@ async def compare_bcrypt(hashed: str, plain: str) -> bool:
     return await asyncio.to_thread(_compare_bcrypt, hashed, plain)
 
 
-async def hash_bcypt_async(plain: str) -> str:
+async def hash_bcrypt_async(plain: str) -> str:
     """Hashes a plaintext password using bcrypt, running the hashing in an
     asynchronous thread.
 
@@ -35,7 +35,7 @@ async def hash_bcypt_async(plain: str) -> str:
         str: The bcrypt hash of the password.
     """
 
-    return await asyncio.to_thread(hash_bcypt, plain)
+    return await asyncio.to_thread(hash_bcrypt, plain)
 
 
 def hash_md5(plain: str) -> str:

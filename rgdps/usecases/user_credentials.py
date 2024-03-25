@@ -47,7 +47,7 @@ async def authenticate_plain(
         await repositories.user_credential.delete_from_id(ctx, creds.id)
 
         gjp2_pw = hashes.hash_gjp2(password)
-        hashed_pw = await hashes.hash_bcypt_async(gjp2_pw)
+        hashed_pw = await hashes.hash_bcrypt_async(gjp2_pw)
 
         await repositories.user_credential.create(
             ctx,
@@ -175,7 +175,7 @@ async def update_password(
     await repositories.user_credential.delete_from_user_id(ctx, user_id)
 
     gjp2_pw = hashes.hash_gjp2(password)
-    bcrypt_hashed = await hashes.hash_bcypt_async(gjp2_pw)
+    bcrypt_hashed = await hashes.hash_bcrypt_async(gjp2_pw)
 
     await repositories.user_credential.create(
         ctx,

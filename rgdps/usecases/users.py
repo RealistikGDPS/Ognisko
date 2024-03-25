@@ -29,7 +29,7 @@ async def register(
     elif await repositories.user.check_username_exists(ctx, name):
         return ServiceError.USER_USERNAME_EXISTS
 
-    hashed_password = await hashes.hash_bcypt_async(
+    hashed_password = await hashes.hash_bcrypt_async(
         hashes.hash_gjp2(password),
     )
 
