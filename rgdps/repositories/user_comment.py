@@ -1,12 +1,23 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TypedDict
+from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common.context import Context
-from rgdps.common.typing import is_set
-from rgdps.common.typing import UNSET
-from rgdps.common.typing import Unset
 from rgdps.models.user_comment import UserComment
+from rgdps.common import modelling
+
+
+ALL_FIELDS = modelling.get_model_fields(UserComment)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
 
 
 async def from_id(
@@ -18,8 +29,7 @@ async def from_id(
     if not include_deleted:
         condition = " AND NOT deleted"
     comment_db = await ctx.mysql.fetch_one(
-        "SELECT id, user_id, content, likes, post_ts, deleted "
-        "FROM user_comments WHERE id = :id" + condition,
+        f"SELECT {_ALL_FIELDS_COMMA} FROM user_comments WHERE id = :id" + condition,
         {
             "id": comment_id,
         },
@@ -40,8 +50,7 @@ async def from_user_id(
     if not include_deleted:
         condition = " AND NOT deleted"
     comments_db = await ctx.mysql.fetch_all(
-        "SELECT id, user_id, content, likes, post_ts, deleted FROM "
-        "user_comments WHERE user_id = :user_id" + condition,
+        f"SELECT {_ALL_FIELDS_COMMA} FROM user_comments WHERE user_id = :user_id" + condition,
         {"user_id": user_id},
     )
 
@@ -60,8 +69,7 @@ async def from_user_id_paginated(
         condition = "AND NOT deleted"
 
     comments_db = await ctx.mysql.fetch_all(
-        "SELECT id, user_id, content, likes, post_ts, deleted FROM "
-        f"user_comments WHERE user_id = :user_id {condition} "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM user_comments WHERE user_id = :user_id {condition} "
         "ORDER BY id DESC LIMIT :limit OFFSET :offset",
         {
             "user_id": user_id,
@@ -108,55 +116,34 @@ async def create(
     )
 
     comment.id = await ctx.mysql.execute(
-        "INSERT INTO user_comments (id, user_id, content, likes, post_ts, deleted) "
-        "VALUES (:id, :user_id, :content, :likes, :post_ts, :deleted)",
+        f"INSERT INTO user_comments ({_ALL_FIELDS_COMMA}) "
+        f"VALUES ({_ALL_FIELDS_COLON})",
         comment.as_dict(include_id=True),
     )
 
     return comment
 
 
-async def update(ctx: Context, comment: UserComment) -> None:
-    await ctx.mysql.execute(
-        "UPDATE user_comments SET user_id = :user_id, content = :content, "
-        "likes = :likes, post_ts = :post_ts, deleted = :deleted WHERE id = :id",
-        comment.as_dict(include_id=True),
-    )
+class _UserCommentUpdatePartial(TypedDict):
+    user_id: NotRequired[int]
+    content: NotRequired[str]
+    likes: NotRequired[int]
+    post_ts: NotRequired[datetime]
+    deleted: NotRequired[bool]
 
 
 async def update_partial(
     ctx: Context,
     comment_id: int,
-    user_id: Unset | int = UNSET,
-    content: Unset | str = UNSET,
-    likes: Unset | int = UNSET,
-    post_ts: Unset | datetime = UNSET,
-    deleted: Unset | bool = UNSET,
+    **kwargs: Unpack[_UserCommentUpdatePartial],
+    
 ) -> UserComment | None:
-
-    changed_data = {}
-
-    if is_set(user_id):
-        changed_data["user_id"] = user_id
-    if is_set(content):
-        changed_data["content"] = content
-    if is_set(likes):
-        changed_data["likes"] = likes
-    if is_set(post_ts):
-        changed_data["post_ts"] = post_ts
-    if is_set(deleted):
-        changed_data["deleted"] = deleted
-
-    if not changed_data:
-        return None
-
-    query = "UPDATE user_comments SET "
-    query += ", ".join(f"{key} = :{key}" for key in changed_data.keys())
-    query += " WHERE id = :id"
-
-    changed_data["id"] = comment_id
-
-    await ctx.mysql.execute(query, changed_data)
+    changed_fields = modelling.unpack_enum_types(kwargs)
+    
+    await ctx.mysql.execute(
+        modelling.update_from_partial_dict("user_comments", comment_id, changed_fields),
+        changed_fields,
+    )
 
     return await from_id(ctx, comment_id, include_deleted=True)
 

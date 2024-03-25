@@ -4,38 +4,32 @@ from datetime import datetime
 from typing import Any
 from typing import AsyncGenerator
 from typing import NamedTuple
+from typing import TypedDict
+from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common import time as time_utils
 from rgdps.common.context import Context
-from rgdps.common.typing import is_set
-from rgdps.common.typing import UNSET
-from rgdps.common.typing import Unset
 from rgdps.constants.users import DEFAULT_PRIVILEGES
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
+from rgdps.common import modelling
 
 
-ALL_FIELDS = (
-    "id, username, email, privileges, comment_colour, message_privacy, friend_privacy, "
-    "comment_privacy, twitter_name, youtube_name, twitch_name, register_ts, "
-    "stars, demons, moons, primary_colour, secondary_colour, glow_colour, display_type, icon, ship, "
-    "ball, ufo, wave, robot, spider, swing_copter, jetpack, explosion, glow, creator_points, coins, "
-    "user_coins, diamonds"
-)
+ALL_FIELDS = modelling.get_model_fields(User)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
-ALL_FIELDS_FORMAT = (
-    ":id, :username, :email, :privileges, "
-    ":comment_colour, :message_privacy, :friend_privacy, :comment_privacy, :twitter_name, :youtube_name, "
-    ":twitch_name, :register_ts, :stars, :demons, :moons, :primary_colour, "
-    ":secondary_colour, :glow_colour, :display_type, :icon, :ship, :ball, :ufo, :wave, :robot, "
-    ":spider, :swing_copter, :jetpack, :explosion, :glow, :creator_points, :coins, :user_coins, :diamonds"
-)
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
 
 
 async def from_db(ctx: Context, user_id: int) -> User | None:
     user_db = await ctx.mysql.fetch_one(
-        f"SELECT {ALL_FIELDS} FROM users WHERE id = :id",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM users WHERE id = :id",
         {"id": user_id},
     )
 
@@ -50,7 +44,7 @@ async def multiple_from_db(ctx: Context, user_ids: list[int]) -> list[User]:
         return []
 
     users_db = await ctx.mysql.fetch_all(
-        f"SELECT {ALL_FIELDS} FROM users WHERE id IN :ids",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM users WHERE id IN :ids",
         {"ids": tuple(user_ids)},
     )
 
@@ -174,7 +168,7 @@ def _from_meili_dict(user_dict: dict[str, Any]) -> dict[str, Any]:
 
 async def create_sql(ctx: Context, user: User) -> int:
     return await ctx.mysql.execute(
-        f"INSERT INTO users ({ALL_FIELDS}) VALUES ({ALL_FIELDS_FORMAT})",
+        f"INSERT INTO users ({_ALL_FIELDS_COMMA}) VALUES ({_ALL_FIELDS_COLON})",
         user.as_dict(include_id=True),
     )
 
@@ -186,120 +180,52 @@ async def create_meili(ctx: Context, user: User) -> None:
     await index.add_documents([user_dict])
 
 
+class _UserUpdatePartial(TypedDict):
+    username: NotRequired[str]
+    email: NotRequired[str]
+    privileges: NotRequired[UserPrivileges]
+    message_privacy: NotRequired[UserPrivacySetting]
+    friend_privacy: NotRequired[UserPrivacySetting]
+    comment_privacy: NotRequired[UserPrivacySetting]
+    youtube_name: NotRequired[str | None]
+    twitter_name: NotRequired[str | None]
+    twitch_name: NotRequired[str | None]
+    stars: NotRequired[int]
+    demons: NotRequired[int]
+    moons: NotRequired[int]
+    primary_colour: NotRequired[int]
+    secondary_colour: NotRequired[int]
+    glow_colour: NotRequired[int]
+    display_type: NotRequired[int]
+    icon: NotRequired[int]
+    ship: NotRequired[int]
+    ball: NotRequired[int]
+    ufo: NotRequired[int]
+    wave: NotRequired[int]
+    robot: NotRequired[int]
+    spider: NotRequired[int]
+    swing_copter: NotRequired[int]
+    jetpack: NotRequired[int]
+    explosion: NotRequired[int]
+    glow: NotRequired[bool]
+    creator_points: NotRequired[int]
+    coins: NotRequired[int]
+    user_coins: NotRequired[int]
+    diamonds: NotRequired[int]
+    comment_colour: NotRequired[str]
+
+
 async def update_sql_partial(
     ctx: Context,
     user_id: int,
-    username: str | Unset = UNSET,
-    email: str | Unset = UNSET,
-    privileges: UserPrivileges | Unset = UNSET,
-    message_privacy: UserPrivacySetting | Unset = UNSET,
-    friend_privacy: UserPrivacySetting | Unset = UNSET,
-    comment_privacy: UserPrivacySetting | Unset = UNSET,
-    youtube_name: str | None | Unset = UNSET,
-    twitter_name: str | None | Unset = UNSET,
-    twitch_name: str | None | Unset = UNSET,
-    stars: int | Unset = UNSET,
-    demons: int | Unset = UNSET,
-    moons: int | Unset = UNSET,
-    primary_colour: int | Unset = UNSET,
-    secondary_colour: int | Unset = UNSET,
-    glow_colour: int | Unset = UNSET,
-    display_type: int | Unset = UNSET,
-    icon: int | Unset = UNSET,
-    ship: int | Unset = UNSET,
-    ball: int | Unset = UNSET,
-    ufo: int | Unset = UNSET,
-    wave: int | Unset = UNSET,
-    robot: int | Unset = UNSET,
-    spider: int | Unset = UNSET,
-    swing_copter: int | Unset = UNSET,
-    jetpack: int | Unset = UNSET,
-    explosion: int | Unset = UNSET,
-    glow: bool | Unset = UNSET,
-    creator_points: int | Unset = UNSET,
-    coins: int | Unset = UNSET,
-    user_coins: int | Unset = UNSET,
-    diamonds: int | Unset = UNSET,
-    comment_colour: str | Unset = UNSET,
+    **kwargs: Unpack[_UserUpdatePartial],
 ) -> User | None:
-    changed_data = {}
-
-    if is_set(username):
-        changed_data["username"] = username
-    if is_set(email):
-        changed_data["email"] = email
-    if is_set(privileges):
-        changed_data["privileges"] = privileges
-    if is_set(message_privacy):
-        changed_data["message_privacy"] = message_privacy.value
-    if is_set(friend_privacy):
-        changed_data["friend_privacy"] = friend_privacy.value
-    if is_set(comment_privacy):
-        changed_data["comment_privacy"] = comment_privacy.value
-    if is_set(youtube_name):
-        changed_data["youtube_name"] = youtube_name
-    if is_set(twitter_name):
-        changed_data["twitter_name"] = twitter_name
-    if is_set(twitch_name):
-        changed_data["twitch_name"] = twitch_name
-    if is_set(stars):
-        changed_data["stars"] = stars
-    if is_set(demons):
-        changed_data["demons"] = demons
-    if is_set(moons):
-        changed_data["moons"] = moons
-    if is_set(primary_colour):
-        changed_data["primary_colour"] = primary_colour
-    if is_set(secondary_colour):
-        changed_data["secondary_colour"] = secondary_colour
-    if is_set(glow_colour):
-        changed_data["glow_colour"] = glow_colour
-    if is_set(display_type):
-        changed_data["display_type"] = display_type
-    if is_set(icon):
-        changed_data["icon"] = icon
-    if is_set(ship):
-        changed_data["ship"] = ship
-    if is_set(ball):
-        changed_data["ball"] = ball
-    if is_set(ufo):
-        changed_data["ufo"] = ufo
-    if is_set(wave):
-        changed_data["wave"] = wave
-    if is_set(robot):
-        changed_data["robot"] = robot
-    if is_set(spider):
-        changed_data["spider"] = spider
-    if is_set(swing_copter):
-        changed_data["swing_copter"] = swing_copter
-    if is_set(jetpack):
-        changed_data["jetpack"] = jetpack
-    if is_set(explosion):
-        changed_data["explosion"] = explosion
-    if is_set(glow):
-        changed_data["glow"] = glow
-    if is_set(creator_points):
-        changed_data["creator_points"] = creator_points
-    if is_set(coins):
-        changed_data["coins"] = coins
-    if is_set(user_coins):
-        changed_data["user_coins"] = user_coins
-    if is_set(diamonds):
-        changed_data["diamonds"] = diamonds
-    if is_set(comment_colour):
-        changed_data["comment_colour"] = comment_colour
-
-    if not changed_data:
-        return await from_id(ctx, user_id)
-
-    query = "UPDATE users SET "
-    query += ", ".join(f"{name} = :{name}" for name in changed_data.keys())
-    query += " WHERE id = :id"
-
-    changed_data["id"] = user_id
-
-    await ctx.mysql.execute(query, changed_data)
-    await drop_cache(ctx, user_id)
+    changed_fields = modelling.unpack_enum_types(kwargs)
+    
+    await ctx.mysql.execute(
+        modelling.update_from_partial_dict("users", user_id, changed_fields),
+        changed_fields,
+    )
 
     return await from_id(ctx, user_id)
 
@@ -307,109 +233,12 @@ async def update_sql_partial(
 async def update_meili_partial(
     ctx: Context,
     user_id: int,
-    username: str | Unset = UNSET,
-    email: str | Unset = UNSET,
-    privileges: UserPrivileges | Unset = UNSET,
-    message_privacy: UserPrivacySetting | Unset = UNSET,
-    friend_privacy: UserPrivacySetting | Unset = UNSET,
-    comment_privacy: UserPrivacySetting | Unset = UNSET,
-    youtube_name: str | None | Unset = UNSET,
-    twitter_name: str | None | Unset = UNSET,
-    twitch_name: str | None | Unset = UNSET,
-    stars: int | Unset = UNSET,
-    demons: int | Unset = UNSET,
-    moons: int | Unset = UNSET,
-    primary_colour: int | Unset = UNSET,
-    secondary_colour: int | Unset = UNSET,
-    glow_colour: int | Unset = UNSET,
-    display_type: int | Unset = UNSET,
-    icon: int | Unset = UNSET,
-    ship: int | Unset = UNSET,
-    ball: int | Unset = UNSET,
-    ufo: int | Unset = UNSET,
-    wave: int | Unset = UNSET,
-    robot: int | Unset = UNSET,
-    spider: int | Unset = UNSET,
-    swing_copter: int | Unset = UNSET,
-    jetpack: int | Unset = UNSET,
-    explosion: int | Unset = UNSET,
-    glow: bool | Unset = UNSET,
-    creator_points: int | Unset = UNSET,
-    coins: int | Unset = UNSET,
-    user_coins: int | Unset = UNSET,
-    diamonds: int | Unset = UNSET,
-    comment_colour: str | Unset = UNSET,
+    **kwargs: Unpack[_UserUpdatePartial],
 ) -> None:
-    changed_data: dict[str, Any] = {
-        "id": user_id,
-    }
-
-    if is_set(username):
-        changed_data["username"] = username
-    if is_set(email):
-        changed_data["email"] = email
-    if is_set(privileges):
-        changed_data["privileges"] = privileges
-    if is_set(message_privacy):
-        changed_data["message_privacy"] = message_privacy.value
-    if is_set(friend_privacy):
-        changed_data["friend_privacy"] = friend_privacy.value
-    if is_set(comment_privacy):
-        changed_data["comment_privacy"] = comment_privacy.value
-    if is_set(youtube_name):
-        changed_data["youtube_name"] = youtube_name
-    if is_set(twitter_name):
-        changed_data["twitter_name"] = twitter_name
-    if is_set(twitch_name):
-        changed_data["twitch_name"] = twitch_name
-    if is_set(stars):
-        changed_data["stars"] = stars
-    if is_set(demons):
-        changed_data["demons"] = demons
-    if is_set(moons):
-        changed_data["moons"] = moons
-    if is_set(primary_colour):
-        changed_data["primary_colour"] = primary_colour
-    if is_set(secondary_colour):
-        changed_data["secondary_colour"] = secondary_colour
-    if is_set(glow_colour):
-        changed_data["glow_colour"] = glow_colour
-    if is_set(display_type):
-        changed_data["display_type"] = display_type
-    if is_set(icon):
-        changed_data["icon"] = icon
-    if is_set(ship):
-        changed_data["ship"] = ship
-    if is_set(ball):
-        changed_data["ball"] = ball
-    if is_set(ufo):
-        changed_data["ufo"] = ufo
-    if is_set(wave):
-        changed_data["wave"] = wave
-    if is_set(robot):
-        changed_data["robot"] = robot
-    if is_set(spider):
-        changed_data["spider"] = spider
-    if is_set(swing_copter):
-        changed_data["swing_copter"] = swing_copter
-    if is_set(jetpack):
-        changed_data["jetpack"] = jetpack
-    if is_set(explosion):
-        changed_data["explosion"] = explosion
-    if is_set(glow):
-        changed_data["glow"] = glow
-    if is_set(creator_points):
-        changed_data["creator_points"] = creator_points
-    if is_set(coins):
-        changed_data["coins"] = coins
-    if is_set(user_coins):
-        changed_data["user_coins"] = user_coins
-    if is_set(diamonds):
-        changed_data["diamonds"] = diamonds
-    if is_set(comment_colour):
-        changed_data["comment_colour"] = comment_colour
-
+    changed_data = modelling.unpack_enum_types(kwargs)
+    changed_data["id"] = user_id
     changed_data = _make_meili_dict(changed_data)
+    
 
     index = ctx.meili.index("users")
     await index.update_documents([changed_data])
@@ -418,115 +247,14 @@ async def update_meili_partial(
 async def update_partial(
     ctx: Context,
     user_id: int,
-    username: str | Unset = UNSET,
-    email: str | Unset = UNSET,
-    privileges: UserPrivileges | Unset = UNSET,
-    message_privacy: UserPrivacySetting | Unset = UNSET,
-    friend_privacy: UserPrivacySetting | Unset = UNSET,
-    comment_privacy: UserPrivacySetting | Unset = UNSET,
-    youtube_name: str | None | Unset = UNSET,
-    twitter_name: str | None | Unset = UNSET,
-    twitch_name: str | None | Unset = UNSET,
-    stars: int | Unset = UNSET,
-    demons: int | Unset = UNSET,
-    moons: int | Unset = UNSET,
-    primary_colour: int | Unset = UNSET,
-    secondary_colour: int | Unset = UNSET,
-    glow_colour: int | Unset = UNSET,
-    display_type: int | Unset = UNSET,
-    icon: int | Unset = UNSET,
-    ship: int | Unset = UNSET,
-    ball: int | Unset = UNSET,
-    ufo: int | Unset = UNSET,
-    wave: int | Unset = UNSET,
-    robot: int | Unset = UNSET,
-    spider: int | Unset = UNSET,
-    swing_copter: int | Unset = UNSET,
-    jetpack: int | Unset = UNSET,
-    explosion: int | Unset = UNSET,
-    glow: bool | Unset = UNSET,
-    creator_points: int | Unset = UNSET,
-    coins: int | Unset = UNSET,
-    user_coins: int | Unset = UNSET,
-    diamonds: int | Unset = UNSET,
-    comment_colour: str | Unset = UNSET,
+    **kwargs: Unpack[_UserUpdatePartial],
 ) -> User | None:
-    user = await update_sql_partial(
-        ctx,
-        user_id,
-        username=username,
-        email=email,
-        privileges=privileges,
-        message_privacy=message_privacy,
-        friend_privacy=friend_privacy,
-        comment_privacy=comment_privacy,
-        youtube_name=youtube_name,
-        twitter_name=twitter_name,
-        twitch_name=twitch_name,
-        stars=stars,
-        demons=demons,
-        moons=moons,
-        primary_colour=primary_colour,
-        secondary_colour=secondary_colour,
-        glow_colour=glow_colour,
-        display_type=display_type,
-        icon=icon,
-        ship=ship,
-        ball=ball,
-        ufo=ufo,
-        wave=wave,
-        robot=robot,
-        spider=spider,
-        swing_copter=swing_copter,
-        jetpack=jetpack,
-        explosion=explosion,
-        glow=glow,
-        creator_points=creator_points,
-        coins=coins,
-        user_coins=user_coins,
-        diamonds=diamonds,
-        comment_colour=comment_colour,
-    )
+    user = await update_sql_partial(ctx, user_id, **kwargs)
 
     if user is None:
         return None
 
-    await update_meili_partial(
-        ctx,
-        user_id,
-        username=username,
-        email=email,
-        privileges=privileges,
-        message_privacy=message_privacy,
-        friend_privacy=friend_privacy,
-        comment_privacy=comment_privacy,
-        youtube_name=youtube_name,
-        twitter_name=twitter_name,
-        twitch_name=twitch_name,
-        stars=stars,
-        demons=demons,
-        moons=moons,
-        primary_colour=primary_colour,
-        secondary_colour=secondary_colour,
-        glow_colour=glow_colour,
-        display_type=display_type,
-        icon=icon,
-        ship=ship,
-        ball=ball,
-        ufo=ufo,
-        wave=wave,
-        robot=robot,
-        spider=spider,
-        swing_copter=swing_copter,
-        jetpack=jetpack,
-        explosion=explosion,
-        glow=glow,
-        creator_points=creator_points,
-        coins=coins,
-        user_coins=user_coins,
-        diamonds=diamonds,
-        comment_colour=comment_colour,
-    )
+    await update_meili_partial(ctx, user_id, **kwargs)
 
     await drop_cache(ctx, user_id)
 
@@ -611,7 +339,7 @@ async def get_count(ctx: Context) -> int:
 
 async def all(ctx: Context) -> AsyncGenerator[User, None]:
     async for db_user in ctx.mysql.iterate(
-        f"SELECT {ALL_FIELDS} FROM users",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM users",
     ):
         yield User.from_mapping(db_user)
 

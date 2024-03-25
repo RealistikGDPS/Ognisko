@@ -3,6 +3,17 @@ from __future__ import annotations
 from rgdps.common.context import Context
 from rgdps.constants.user_credentials import CredentialVersion
 from rgdps.models.user_credential import UserCredential
+from rgdps.common import modelling
+
+
+ALL_FIELDS = modelling.get_model_fields(UserCredential)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
 
 
 async def create(
@@ -11,18 +22,19 @@ async def create(
     credential_version: CredentialVersion,
     value: str,
 ) -> UserCredential:
-    credential_id = await ctx.mysql.execute(
-        "INSERT INTO user_credentials (user_id, version, value) "
-        "VALUES (:user_id, :version, :value)",
-        {"user_id": user_id, "version": credential_version.value, "value": value},
-    )
-
-    return UserCredential(
-        id=credential_id,
+    credential = UserCredential(
+        id=0,
         user_id=user_id,
         version=credential_version,
         value=value,
     )
+    credential.id = await ctx.mysql.execute(
+        f"INSERT INTO user_credentials ({_CUSTOMISABLE_FIELDS_COMMA}) "
+        f"VALUES ({_CUSTOMISABLE_FIELDS_COLON})",
+        credential.as_dict(include_id=False),
+    )
+
+    return credential
 
 
 async def from_user_id(
@@ -30,7 +42,7 @@ async def from_user_id(
     user_id: int,
 ) -> UserCredential | None:
     res = await ctx.mysql.fetch_one(
-        "SELECT id, user_id, version, value FROM user_credentials WHERE user_id = :user_id "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM user_credentials WHERE user_id = :user_id "
         "ORDER BY id DESC LIMIT 1",
         {"user_id": user_id},
     )

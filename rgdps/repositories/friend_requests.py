@@ -1,12 +1,23 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TypedDict
+from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common.context import Context
-from rgdps.common.typing import is_set
-from rgdps.common.typing import UNSET
-from rgdps.common.typing import Unset
 from rgdps.models.friend_request import FriendRequest
+from rgdps.common import modelling
+
+
+ALL_FIELDS = modelling.get_model_fields(FriendRequest)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
 
 
 async def from_id(
@@ -19,8 +30,7 @@ async def from_id(
         condition = "AND deleted = 0"
 
     friend_request_db = await ctx.mysql.fetch_one(
-        "SELECT id, sender_user_id, recipient_user_id, message, post_ts, seen_ts "
-        f"FROM friend_requests WHERE id = :request_id {condition}",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM friend_requests WHERE id = :request_id {condition}",
         {"request_id": request_id},
     )
 
@@ -41,8 +51,7 @@ async def from_target_and_recipient(
         condition = "AND deleted = 0"
 
     friend_request_db = await ctx.mysql.fetch_one(
-        "SELECT id, sender_user_id, recipient_user_id, message, post_ts, seen_ts "
-        "FROM friend_requests WHERE sender_user_id = :sender_user_id AND "
+        f"SELECT {_ALL_FIELDS_COMMA} WHERE sender_user_id = :sender_user_id AND "
         f"recipient_user_id = :recipient_user_id {condition}",
         {"sender_user_id": sender_user_id, "recipient_user_id": recipient_user_id},
     )
@@ -68,8 +77,7 @@ async def from_user_id(
         id_row = "sender_user_id"
 
     friend_requests_db = await ctx.mysql.fetch_all(
-        "SELECT id, sender_user_id, recipient_user_id, message, post_ts, seen_ts "
-        f"FROM friend_requests WHERE {id_row} = :user_id {condition} "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM friend_requests WHERE {id_row} = :user_id {condition} "
         "ORDER BY post_ts DESC",
         {"user_id": user_id},
     )
@@ -97,8 +105,7 @@ async def from_user_id_paginated(
         id_row = "sender_user_id"
 
     friend_requests_db = await ctx.mysql.fetch_all(
-        "SELECT id, sender_user_id, recipient_user_id, message, post_ts, seen_ts "
-        f"FROM friend_requests WHERE {id_row} = :user_id {condition} "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM friend_requests WHERE {id_row} = :user_id {condition} "
         "ORDER BY post_ts DESC LIMIT :limit OFFSET :offset",
         {
             "user_id": user_id,
@@ -172,37 +179,31 @@ async def create(
     )
 
     friend_request.id = await ctx.mysql.execute(
-        "INSERT INTO friend_requests (sender_user_id, recipient_user_id, message, post_ts, seen_ts) "
-        "VALUES (:sender_user_id, :recipient_user_id, :message, :post_ts, :seen_ts)",
+        f"INSERT INTO friend_requests ({_CUSTOMISABLE_FIELDS_COMMA}) "
+        f"VALUES ({_CUSTOMISABLE_FIELDS_COLON})",
         friend_request.as_dict(include_id=False),
     )
 
     return friend_request
 
 
+class _FriendRequestUpdatePartial(TypedDict):
+    sender_user_id: NotRequired[int]
+    recipient_user_id: NotRequired[int]
+    seen_ts: NotRequired[datetime]
+    deleted: NotRequired[bool]
+
 async def update_partial(
     ctx: Context,
     request_id: int,
-    seen_ts: Unset | datetime = UNSET,
-    deleted: Unset | bool = UNSET,
+    **kwargs: Unpack[_FriendRequestUpdatePartial]
 ) -> FriendRequest | None:
-    changed_data = {}
-
-    if is_set(seen_ts):
-        changed_data["seen_ts"] = seen_ts
-    if is_set(deleted):
-        changed_data["deleted"] = deleted
-
-    if not changed_data:
-        return None
-
-    query = "UPDATE friend_requests SET "
-    query += ", ".join(f"{key} = :{key}" for key in changed_data.keys())
-    query += " WHERE id = :id"
-
-    changed_data["id"] = request_id
-
-    await ctx.mysql.execute(query, changed_data)
+    changed_fields = modelling.unpack_enum_types(kwargs)
+    
+    await ctx.mysql.execute(
+        modelling.update_from_partial_dict("friend_requests", request_id, changed_fields),
+        changed_fields,
+    )
 
     return await from_id(ctx, request_id, include_deleted=True)
 

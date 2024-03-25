@@ -1,13 +1,24 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import TypedDict
+from typing import Unpack
+from typing import NotRequired
 
 from rgdps.common.context import Context
-from rgdps.common.typing import is_set
-from rgdps.common.typing import UNSET
-from rgdps.common.typing import Unset
 from rgdps.constants.level_comments import LevelCommentSorting
 from rgdps.models.level_comment import LevelComment
+from rgdps.common import modelling
+
+
+ALL_FIELDS = modelling.get_model_fields(LevelComment)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
 
 
 async def from_id(
@@ -20,8 +31,7 @@ async def from_id(
         condition = " AND NOT deleted"
 
     level_db = await ctx.mysql.fetch_one(
-        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted "
-        "FROM level_comments WHERE id = :comment_id" + condition,
+        f"SELECT {ALL_FIELDS} FROM level_comments WHERE id = :comment_id" + condition,
         {
             "comment_id": comment_id,
         },
@@ -54,55 +64,34 @@ async def create(
         post_ts=post_ts or datetime.now(),
         deleted=deleted,
     )
+    # Uses all fields due to supporting comment_id
     comment.id = await ctx.mysql.execute(
-        "INSERT INTO level_comments (id, user_id, level_id, content, percent, likes, post_ts, deleted) "
-        "VALUES (:id, :user_id, :level_id, :content, :percent, :likes, :post_ts, :deleted)",
+        f"INSERT INTO level_comments ({_ALL_FIELDS_COMMA}) VALUES ({_ALL_FIELDS_COLON})",
         comment.as_dict(include_id=True),
     )
     return comment
 
 
+class _LevelCommentUpdatePartial(TypedDict):
+    user_id: NotRequired[int]
+    level_id: NotRequired[int]
+    content: NotRequired[str]
+    percent: NotRequired[int]
+    likes: NotRequired[int]
+    post_ts: NotRequired[datetime]
+    deleted: NotRequired[bool]
+
 async def update_partial(
     ctx: Context,
     comment_id: int,
-    user_id: int | Unset = UNSET,
-    level_id: int | Unset = UNSET,
-    content: str | Unset = UNSET,
-    percent: int | Unset = UNSET,
-    likes: int | Unset = UNSET,
-    post_ts: datetime | Unset = UNSET,
-    deleted: bool | Unset = UNSET,
+    **kwargs: Unpack[_LevelCommentUpdatePartial]
 ) -> LevelComment | None:
-    changed_data = {}
-
-    if is_set(user_id):
-        changed_data["user_id"] = user_id
-    if is_set(level_id):
-        changed_data["level_id"] = level_id
-    if is_set(content):
-        changed_data["content"] = content
-    if is_set(percent):
-        changed_data["percent"] = percent
-    if is_set(likes):
-        changed_data["likes"] = likes
-    if is_set(post_ts):
-        changed_data["post_ts"] = post_ts
-    if is_set(likes):
-        changed_data["likes"] = likes
-    if is_set(deleted):
-        changed_data["deleted"] = deleted
-
-    if not changed_data:
-        return await from_id(ctx, comment_id)
-
-    # Query construction from dict
-    query = "UPDATE level_comments SET "
-    query += ", ".join(f"{name} = :{name}" for name in changed_data.keys())
-    query += " WHERE id = :id"
-
-    changed_data["id"] = comment_id
-
-    await ctx.mysql.execute(query, changed_data)
+    changed_fields = modelling.unpack_enum_types(kwargs)
+    
+    await ctx.mysql.execute(
+        modelling.update_from_partial_dict("level_comments", comment_id, changed_fields),
+        changed_fields,
+    )
 
     return await from_id(ctx, comment_id, include_deleted=True)
 
@@ -124,7 +113,7 @@ async def from_level_id_paginated(
         order_by = "likes"
 
     comments_db = await ctx.mysql.fetch_all(
-        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM "
         f"level_comments WHERE level_id = :level_id {condition} "
         f"ORDER BY {order_by} DESC LIMIT :limit OFFSET :offset",
         {
@@ -154,7 +143,7 @@ async def from_user_id_paginated(
         order_by = "likes"
 
     comments_db = await ctx.mysql.fetch_all(
-        "SELECT id, user_id, level_id, content, percent, likes, post_ts, deleted FROM "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM "
         f"level_comments WHERE user_id = :user_id {condition} "
         f"ORDER BY {order_by} DESC LIMIT :limit OFFSET :offset",
         {

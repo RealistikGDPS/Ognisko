@@ -4,13 +4,13 @@ from datetime import datetime
 from typing import Any
 from typing import AsyncGenerator
 from typing import NamedTuple
+from typing import TypedDict
+from typing import Unpack
 
 from rgdps.common import data_utils
 from rgdps.common import time as time_utils
 from rgdps.common.context import Context
-from rgdps.common.typing import is_set
-from rgdps.common.typing import UNSET
-from rgdps.common.typing import Unset
+from rgdps.common import modelling
 from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
@@ -22,6 +22,14 @@ from rgdps.models.level import Level
 import orjson
 
 
+ALL_FIELDS = modelling.get_model_fields(Level)
+CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+
+
+_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
+_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
+_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+
 async def from_id(
     ctx: Context,
     level_id: int,
@@ -32,12 +40,7 @@ async def from_id(
         condition = " AND NOT deleted"
 
     level_db = await ctx.mysql.fetch_one(
-        "SELECT id, name, user_id, description, custom_song_id, official_song_id, "
-        "version, length, two_player, publicity, render_str, game_version, "
-        "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
-        "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
-        "search_flags, low_detail_mode, object_count, building_time, "
-        "update_locked, deleted, song_ids, sfx_ids FROM levels WHERE id = :id"
+        f"SELECT {_ALL_FIELDS_COMMA} FROM levels WHERE id = :id"
         + condition,
         {
             "id": level_id,
@@ -139,18 +142,7 @@ async def create(
 
 async def create_sql(ctx: Context, level: Level) -> int:
     return await ctx.mysql.execute(
-        "INSERT INTO levels (id, name, user_id, description, custom_song_id, "
-        "official_song_id, version, length, two_player, publicity, render_str, "
-        "game_version, binary_version, upload_ts, update_ts, original_id, downloads, likes, "
-        "stars, difficulty, demon_difficulty, coins, coins_verified, requested_stars, "
-        "feature_order, search_flags, low_detail_mode, object_count, "
-        "building_time, update_locked, deleted, song_ids, sfx_ids) VALUES (:id, :name, :user_id, "
-        ":description, :custom_song_id, :official_song_id, :version, :length, "
-        ":two_player, :publicity, :render_str, :game_version, :binary_version, "
-        ":upload_ts, :update_ts, :original_id, :downloads, :likes, :stars, :difficulty, "
-        ":demon_difficulty, :coins, :coins_verified, :requested_stars, :feature_order, "
-        ":search_flags, :low_detail_mode, :object_count, "
-        ":building_time, :update_locked, :deleted, :song_ids, :sfx_ids)",
+        f"INSERT INTO levels ({_ALL_FIELDS_COMMA}) VALUES ({_ALL_FIELDS_COLON})",
         _make_mysql_dict(level.as_dict(include_id=True)),
     )
 
@@ -238,139 +230,53 @@ async def multiple_create_meili(ctx: Context, levels: list[Level]) -> None:
     await index.add_documents(level_dicts)
 
 
-async def update_sql_full(ctx: Context, level: Level) -> None:
-    await ctx.mysql.execute(
-        "UPDATE levels SET name = :name, user_id = :user_id, description = :description, "
-        "custom_song_id = :custom_song_id, official_song_id = :official_song_id, "
-        "version = :version, length = :length, two_player = :two_player, "
-        "publicity = :publicity, render_str = :render_str, game_version = :game_version, "
-        "binary_version = :binary_version, upload_ts = :upload_ts, update_ts = :update_ts, "
-        "original_id = :original_id, downloads = :downloads, likes = :likes, stars = :stars, difficulty = :difficulty, "
-        "demon_difficulty = :demon_difficulty, coins = :coins, coins_verified = :coins_verified, "
-        "requested_stars = :requested_stars, feature_order = :feature_order, "
-        "search_flags = :search_flags, low_detail_mode = :low_detail_mode, "
-        "object_count = :object_count, song_ids = :song_ids, sfx_ids = :sfx_ids,"
-        "building_time = :building_time, update_locked = :update_locked, "
-        "deleted = :deleted WHERE id = :id",
-        _make_mysql_dict(level.as_dict(include_id=True)),
-    )
+class _LevelPartialUpdate(TypedDict):
+    name: str
+    user_id: int
+    description: str
+    custom_song_id: int | None
+    official_song_id: int | None
+    version: int
+    length: LevelLength
+    two_player: bool
+    publicity: LevelPublicity
+    render_str: str
+    game_version: int
+    binary_version: int
+    upload_ts: datetime
+    update_ts: datetime
+    original_id: int | None
+    downloads: int
+    likes: int
+    stars: int
+    difficulty: LevelDifficulty
+    demon_difficulty: LevelDemonDifficulty | None
+    coins: int
+    coins_verified: bool
+    requested_stars: int
+    feature_order: int
+    search_flags: LevelSearchFlag
+    low_detail_mode: bool
+    object_count: int
+    building_time: int
+    update_locked: bool
+    song_ids: list[int]
+    sfx_ids: list[int]
+    deleted: bool
 
 
 async def update_sql_partial(
     ctx: Context,
     level_id: int,
-    name: str | Unset = UNSET,
-    user_id: int | Unset = UNSET,
-    description: str | Unset = UNSET,
-    custom_song_id: int | None | Unset = UNSET,
-    official_song_id: int | None | Unset = UNSET,
-    version: int | Unset = UNSET,
-    length: LevelLength | Unset = UNSET,
-    two_player: bool | Unset = UNSET,
-    publicity: LevelPublicity | Unset = UNSET,
-    render_str: str | Unset = UNSET,
-    game_version: int | Unset = UNSET,
-    binary_version: int | Unset = UNSET,
-    upload_ts: datetime | Unset = UNSET,
-    update_ts: datetime | Unset = UNSET,
-    original_id: int | None | Unset = UNSET,
-    downloads: int | Unset = UNSET,
-    likes: int | Unset = UNSET,
-    stars: int | Unset = UNSET,
-    difficulty: LevelDifficulty | Unset = UNSET,
-    demon_difficulty: LevelDemonDifficulty | None | Unset = UNSET,
-    coins: int | Unset = UNSET,
-    coins_verified: bool | Unset = UNSET,
-    requested_stars: int | Unset = UNSET,
-    feature_order: int | Unset = UNSET,
-    search_flags: LevelSearchFlag | Unset = UNSET,
-    low_detail_mode: bool | Unset = UNSET,
-    object_count: int | Unset = UNSET,
-    building_time: int | Unset = UNSET,
-    update_locked: bool | Unset = UNSET,
-    song_ids: list[int] | Unset = UNSET,
-    sfx_ids: list[int] | Unset = UNSET,
-    deleted: bool | Unset = UNSET,
+    **kwargs: Unpack[_LevelPartialUpdate],
 ) -> Level | None:
-    changed_data = {}
+    changed_fields = modelling.unpack_enum_types(kwargs)
 
-    if is_set(name):
-        changed_data["name"] = name
-    if is_set(user_id):
-        changed_data["user_id"] = user_id
-    if is_set(description):
-        changed_data["description"] = description
-    if is_set(custom_song_id):
-        changed_data["custom_song_id"] = custom_song_id
-    if is_set(official_song_id):
-        changed_data["official_song_id"] = official_song_id
-    if is_set(version):
-        changed_data["version"] = version
-    if is_set(length):
-        changed_data["length"] = length.value
-    if is_set(two_player):
-        changed_data["two_player"] = two_player
-    if is_set(publicity):
-        changed_data["publicity"] = publicity.value
-    if is_set(render_str):
-        changed_data["render_str"] = render_str
-    if is_set(game_version):
-        changed_data["game_version"] = game_version
-    if is_set(binary_version):
-        changed_data["binary_version"] = binary_version
-    if is_set(upload_ts):
-        changed_data["upload_ts"] = upload_ts
-    if is_set(update_ts):
-        changed_data["update_ts"] = update_ts
-    if is_set(original_id):
-        changed_data["original_id"] = original_id
-    if is_set(downloads):
-        changed_data["downloads"] = downloads
-    if is_set(likes):
-        changed_data["likes"] = likes
-    if is_set(stars):
-        changed_data["stars"] = stars
-    if is_set(difficulty):
-        changed_data["difficulty"] = difficulty.value
-    if is_set(demon_difficulty):
-        if demon_difficulty is None:
-            changed_data["demon_difficulty"] = None
-        else:
-            changed_data["demon_difficulty"] = demon_difficulty.value
-    if is_set(coins):
-        changed_data["coins"] = coins
-    if is_set(coins_verified):
-        changed_data["coins_verified"] = coins_verified
-    if is_set(requested_stars):
-        changed_data["requested_stars"] = requested_stars
-    if is_set(feature_order):
-        changed_data["feature_order"] = feature_order
-    if is_set(search_flags):
-        changed_data["search_flags"] = search_flags.value
-    if is_set(low_detail_mode):
-        changed_data["low_detail_mode"] = low_detail_mode
-    if is_set(object_count):
-        changed_data["object_count"] = object_count
-    if is_set(building_time):
-        changed_data["building_time"] = building_time
-    if is_set(update_locked):
-        changed_data["update_locked"] = update_locked
-    if is_set(deleted):
-        changed_data["deleted"] = deleted
-    if is_set(song_ids):
-        changed_data["song_ids"] = song_ids
-    if is_set(sfx_ids):
-        changed_data["sfx_ids"] = sfx_ids
-
-    if not changed_data:
-        return await from_id(ctx, level_id)
-
-    query = "UPDATE levels SET "
-    query += ", ".join(f"{name} = :{name}" for name in changed_data.keys())
-    query += " WHERE id = :id"
-
-    changed_data["id"] = level_id
-    await ctx.mysql.execute(query, changed_data)
+    
+    await ctx.mysql.execute(
+        modelling.update_from_partial_dict("levels", level_id, changed_fields),
+        changed_fields,
+    )
 
     return await from_id(ctx, level_id, include_deleted=True)
 
@@ -378,188 +284,26 @@ async def update_sql_partial(
 async def update_meili_partial(
     ctx: Context,
     level_id: int,
-    name: str | Unset = UNSET,
-    user_id: int | Unset = UNSET,
-    description: str | Unset = UNSET,
-    custom_song_id: int | None | Unset = UNSET,
-    official_song_id: int | None | Unset = UNSET,
-    version: int | Unset = UNSET,
-    length: LevelLength | Unset = UNSET,
-    two_player: bool | Unset = UNSET,
-    publicity: LevelPublicity | Unset = UNSET,
-    render_str: str | Unset = UNSET,
-    game_version: int | Unset = UNSET,
-    binary_version: int | Unset = UNSET,
-    upload_ts: datetime | Unset = UNSET,
-    update_ts: datetime | Unset = UNSET,
-    original_id: int | None | Unset = UNSET,
-    downloads: int | Unset = UNSET,
-    likes: int | Unset = UNSET,
-    stars: int | Unset = UNSET,
-    difficulty: LevelDifficulty | Unset = UNSET,
-    demon_difficulty: LevelDemonDifficulty | None | Unset = UNSET,
-    coins: int | Unset = UNSET,
-    coins_verified: bool | Unset = UNSET,
-    requested_stars: int | Unset = UNSET,
-    feature_order: int | Unset = UNSET,
-    search_flags: LevelSearchFlag | Unset = UNSET,
-    low_detail_mode: bool | Unset = UNSET,
-    object_count: int | Unset = UNSET,
-    building_time: int | Unset = UNSET,
-    update_locked: bool | Unset = UNSET,
-    deleted: bool | Unset = UNSET,
-    song_ids: list[int] | Unset = UNSET,
-    sfx_ids: list[int] | Unset = UNSET,
+    **kwargs: Unpack[_LevelPartialUpdate],
 ) -> None:
-    changed_data: dict[str, Any] = {
-        "id": level_id,
-    }
-
-    if is_set(name):
-        changed_data["name"] = name
-    if is_set(user_id):
-        changed_data["user_id"] = user_id
-    if is_set(description):
-        changed_data["description"] = description
-    if is_set(custom_song_id):
-        changed_data["custom_song_id"] = custom_song_id
-    if is_set(official_song_id):
-        changed_data["official_song_id"] = official_song_id
-    if is_set(version):
-        changed_data["version"] = version
-    if is_set(length):
-        changed_data["length"] = length.value
-    if is_set(two_player):
-        changed_data["two_player"] = two_player
-    if is_set(publicity):
-        changed_data["publicity"] = publicity.value
-    if is_set(render_str):
-        changed_data["render_str"] = render_str
-    if is_set(game_version):
-        changed_data["game_version"] = game_version
-    if is_set(binary_version):
-        changed_data["binary_version"] = binary_version
-    if is_set(upload_ts):
-        changed_data["upload_ts"] = upload_ts
-    if is_set(update_ts):
-        changed_data["update_ts"] = update_ts
-    if is_set(original_id):
-        changed_data["original_id"] = original_id
-    if is_set(downloads):
-        changed_data["downloads"] = downloads
-    if is_set(likes):
-        changed_data["likes"] = likes
-    if is_set(stars):
-        changed_data["stars"] = stars
-    if is_set(difficulty):
-        changed_data["difficulty"] = difficulty.value
-    if is_set(demon_difficulty):
-        if demon_difficulty is None:
-            changed_data["demon_difficulty"] = None
-        else:
-            changed_data["demon_difficulty"] = demon_difficulty.value
-    if is_set(coins):
-        changed_data["coins"] = coins
-    if is_set(coins_verified):
-        changed_data["coins_verified"] = coins_verified
-    if is_set(requested_stars):
-        changed_data["requested_stars"] = requested_stars
-    if is_set(feature_order):
-        changed_data["feature_order"] = feature_order
-    if is_set(search_flags):
-        changed_data["search_flags"] = search_flags.value
-    if is_set(low_detail_mode):
-        changed_data["low_detail_mode"] = low_detail_mode
-    if is_set(object_count):
-        changed_data["object_count"] = object_count
-    if is_set(building_time):
-        changed_data["building_time"] = building_time
-    if is_set(update_locked):
-        changed_data["update_locked"] = update_locked
-    if is_set(deleted):
-        changed_data["deleted"] = deleted
-    if is_set(song_ids):
-        changed_data["song_ids"] = song_ids
-    if is_set(sfx_ids):
-        changed_data["sfx_ids"] = sfx_ids
-
-    changed_data = _make_meili_dict(changed_data)
+    changed_fields = modelling.unpack_enum_types(kwargs)
+    # Meili primary key
+    changed_fields["id"] = level_id
+    changed_fields = _make_meili_dict(changed_fields)
 
     index = ctx.meili.index("levels")
-    await index.update_documents([changed_data])
+    await index.update_documents([changed_fields])
 
 
 async def update_partial(
     ctx: Context,
     level_id: int,
-    name: str | Unset = UNSET,
-    user_id: int | Unset = UNSET,
-    description: str | Unset = UNSET,
-    custom_song_id: int | None | Unset = UNSET,
-    official_song_id: int | None | Unset = UNSET,
-    version: int | Unset = UNSET,
-    length: LevelLength | Unset = UNSET,
-    two_player: bool | Unset = UNSET,
-    publicity: LevelPublicity | Unset = UNSET,
-    render_str: str | Unset = UNSET,
-    game_version: int | Unset = UNSET,
-    binary_version: int | Unset = UNSET,
-    upload_ts: datetime | Unset = UNSET,
-    update_ts: datetime | Unset = UNSET,
-    original_id: int | None | Unset = UNSET,
-    downloads: int | Unset = UNSET,
-    likes: int | Unset = UNSET,
-    stars: int | Unset = UNSET,
-    difficulty: LevelDifficulty | Unset = UNSET,
-    demon_difficulty: LevelDemonDifficulty | None | Unset = UNSET,
-    coins: int | Unset = UNSET,
-    coins_verified: bool | Unset = UNSET,
-    requested_stars: int | Unset = UNSET,
-    feature_order: int | Unset = UNSET,
-    search_flags: LevelSearchFlag | Unset = UNSET,
-    low_detail_mode: bool | Unset = UNSET,
-    object_count: int | Unset = UNSET,
-    building_time: int | Unset = UNSET,
-    update_locked: bool | Unset = UNSET,
-    song_ids: list[int] | Unset = UNSET,
-    sfx_ids: list[int] | Unset = UNSET,
-    deleted: bool | Unset = UNSET,
+    **kwargs: Unpack[_LevelPartialUpdate],
 ) -> Level | None:
     level = await update_sql_partial(
         ctx,
         level_id=level_id,
-        name=name,
-        user_id=user_id,
-        description=description,
-        custom_song_id=custom_song_id,
-        official_song_id=official_song_id,
-        version=version,
-        length=length,
-        two_player=two_player,
-        publicity=publicity,
-        render_str=render_str,
-        game_version=game_version,
-        binary_version=binary_version,
-        upload_ts=upload_ts,
-        update_ts=update_ts,
-        original_id=original_id,
-        downloads=downloads,
-        likes=likes,
-        stars=stars,
-        difficulty=difficulty,
-        demon_difficulty=demon_difficulty,
-        coins=coins,
-        coins_verified=coins_verified,
-        requested_stars=requested_stars,
-        feature_order=feature_order,
-        search_flags=search_flags,
-        low_detail_mode=low_detail_mode,
-        object_count=object_count,
-        building_time=building_time,
-        update_locked=update_locked,
-        song_ids=song_ids,
-        sfx_ids=sfx_ids,
-        deleted=deleted,
+        **kwargs,
     )
 
     if level is None:
@@ -568,38 +312,7 @@ async def update_partial(
     await update_meili_partial(
         ctx,
         level_id=level_id,
-        name=name,
-        user_id=user_id,
-        description=description,
-        custom_song_id=custom_song_id,
-        official_song_id=official_song_id,
-        version=version,
-        length=length,
-        two_player=two_player,
-        publicity=publicity,
-        render_str=render_str,
-        game_version=game_version,
-        binary_version=binary_version,
-        upload_ts=upload_ts,
-        update_ts=update_ts,
-        original_id=original_id,
-        downloads=downloads,
-        likes=likes,
-        stars=stars,
-        difficulty=difficulty,
-        demon_difficulty=demon_difficulty,
-        coins=coins,
-        coins_verified=coins_verified,
-        requested_stars=requested_stars,
-        feature_order=feature_order,
-        search_flags=search_flags,
-        low_detail_mode=low_detail_mode,
-        object_count=object_count,
-        building_time=building_time,
-        update_locked=update_locked,
-        deleted=deleted,
-        song_ids=song_ids,
-        sfx_ids=sfx_ids,
+        **kwargs,
     )
 
     return level
@@ -734,12 +447,7 @@ async def all(
     include_deleted: bool = False,
 ) -> AsyncGenerator[Level, None]:
     async for level_db in ctx.mysql.iterate(
-        "SELECT id, name, user_id, description, custom_song_id, official_song_id, "
-        "version, length, two_player, publicity, render_str, game_version, "
-        "binary_version, upload_ts, update_ts, original_id, downloads, likes, stars, difficulty, "
-        "demon_difficulty, coins, coins_verified, requested_stars, feature_order, "
-        "search_flags, low_detail_mode, object_count, building_time, "
-        "update_locked, deleted, sfx_ids, song_ids FROM levels WHERE deleted IN :deleted",
+        f"SELECT {_ALL_FIELDS_COMMA} FROM levels WHERE deleted IN :deleted",
         {
             "deleted": (0, 1) if include_deleted else (0,),
         },
