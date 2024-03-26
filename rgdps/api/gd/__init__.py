@@ -296,6 +296,12 @@ router.add_api_route(
 )
 
 router.add_api_route(
+    "/deleteGJLevelUser20.php",
+    levels.level_delete_post,
+    methods=["POST"],
+)
+
+router.add_api_route(
     "/getGJDailyLevel.php",
     levels.daily_level_info_get,
     methods=["POST"],

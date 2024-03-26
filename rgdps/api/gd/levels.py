@@ -367,6 +367,65 @@ async def level_desc_post(
 
     return responses.success()
 
+async def level_delete_post(
+    ctx: HTTPContext = Depends(),
+    user: User = Depends(
+        authenticate_dependency(required_privileges=UserPrivileges.LEVEL_DELETE_OWN),
+    ),
+    level_id: int = Form(..., alias="levelID")
+):
+    level_result = await levels.get(ctx, level_id)
+    
+    if isinstance(level_result, ServiceError):
+        logger.info(
+            "Failed to fetch level.",
+            extra={
+                "user_id": user.id,
+                "level_id": level_id,
+                "error": level_result.value
+            }
+        )
+        return responses.fail()
+    
+    level = level_result.level
+    if level.user_id != user.id:
+        logger.info(
+            "User tried to delete level without being owner.",
+            extra={
+                "user_id": user.id,
+                "level_id": level_id,
+                "owner_id": level.user_id
+            }
+        )
+        return responses.fail()
+    
+    result = await levels.delete(
+        ctx,
+        level_id,
+        user.id,
+    )
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            "Failed to update description.",
+            extra={
+                "user_id": user.id,
+                "level_id": level_id,
+                "error": result.value,
+            },
+        )
+        return responses.fail()
+
+    logger.info(
+        "Successfully deleted level.",
+        extra={
+            "user_id": user.id,
+            "level_id": level_id,
+        },
+    )
+    return responses.success()
+    
+
 
 # XXX: Should this be here?
 async def daily_level_info_get(
