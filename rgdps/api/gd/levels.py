@@ -367,6 +367,40 @@ async def level_desc_post(
 
     return responses.success()
 
+async def level_delete_post(
+    ctx: HTTPContext = Depends(),
+    user: User = Depends(
+        authenticate_dependency(required_privileges=UserPrivileges.LEVEL_DELETE_OWN),
+    ),
+    level_id: int = Form(..., alias="levelID")
+):
+    result = await levels.delete(
+        ctx,
+        level_id,
+        user.id,
+    )
+
+    if isinstance(result, ServiceError):
+        logger.info(
+            "Failed to delete level.",
+            extra={
+                "user_id": user.id,
+                "level_id": level_id,
+                "error": result.value,
+            },
+        )
+        return responses.fail()
+
+    logger.info(
+        "Successfully deleted level.",
+        extra={
+            "user_id": user.id,
+            "level_id": level_id,
+        },
+    )
+    return responses.success()
+    
+
 
 # XXX: Should this be here?
 async def daily_level_info_get(
