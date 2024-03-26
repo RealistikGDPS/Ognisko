@@ -387,18 +387,6 @@ async def level_delete_post(
         )
         return responses.fail()
     
-    level = level_result.level
-    if level.user_id != user.id:
-        logger.info(
-            "User tried to delete level without being owner.",
-            extra={
-                "user_id": user.id,
-                "level_id": level_id,
-                "owner_id": level.user_id
-            }
-        )
-        return responses.fail()
-    
     result = await levels.delete(
         ctx,
         level_id,
