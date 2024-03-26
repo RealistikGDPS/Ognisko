@@ -407,7 +407,7 @@ async def level_delete_post(
 
     if isinstance(result, ServiceError):
         logger.info(
-            "Failed to update description.",
+            "Failed to delete level.",
             extra={
                 "user_id": user.id,
                 "level_id": level_id,
