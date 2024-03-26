@@ -13,6 +13,7 @@ from rgdps.common.validators import SocialMediaString
 from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import LoginResponse
+from rgdps.constants.responses import RegisterResponse
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
@@ -46,8 +47,13 @@ async def register_post(
                 "error": result.value,
             },
         )
-        # TODO: This is currently a service error. GD doesnt know that.
-        return str(result)
+        match result.value:
+            case ServiceError.USER_USERNAME_EXISTS: 
+                return responses.code(RegisterResponse.USERNAME_EXISTS)
+            case ServiceError.USER_EMAIL_EXISTS:
+                return responses.code(RegisterResponse.EMAIL_EXISTS)
+            case _: 
+                return responses.fail()
 
     logger.info(
         "User registration success.",
@@ -77,10 +83,15 @@ async def login_post(
             },
         )
 
-        if result is ServiceError.AUTH_NO_PRIVILEGE:
-            return responses.code(LoginResponse.ACCOUNT_DISABLED)
-
-        return responses.fail()
+        match result:
+            case ServiceError.AUTH_NOT_FOUND | \
+                ServiceError.USER_NOT_FOUND | \
+                ServiceError.AUTH_PASSWORD_MISMATCH:
+                return responses.code(LoginResponse.INVALID_CREDENTIALS)
+            case ServiceError.AUTH_NO_PRIVILEGE | ServiceError.AUTH_UNSUPPORTED_VERSION:
+                return responses.code(LoginResponse.ACCOUNT_DISABLED)
+            case _:
+                return responses.fail()
 
     logger.info(
         "User login successful!",
