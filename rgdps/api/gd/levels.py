@@ -77,7 +77,6 @@ async def level_post(
     binary_version: int = Form(..., alias="binaryVersion"),
     low_detail_mode: bool = Form(..., alias="ldm"),
     building_time: int = Form(..., alias="wt2"),
-    # TODO: There is some weird Pydantic behaviour here with the IntegerList validator.
     song_ids: CommaSeparatedIntList = Form(CommaSeparatedIntList(), alias="songIDs"),
     sfx_ids: CommaSeparatedIntList = Form(CommaSeparatedIntList(), alias="sfxIDs"),
 ):
