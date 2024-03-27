@@ -3,8 +3,8 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
-
 from rgdps.common import hashes
 
 TEXT_BOX_REGEX = re.compile(r"^[a-zA-Z0-9 ]+$")
@@ -125,31 +125,33 @@ class MessageContentString(str):
             raise ValueError("Input is not valid base64 and xor cipher") from e
 
 
-class IntegerList(list[int]):
+class CommaSeparatedIntList(list[int]):
     @classmethod
-    def _validate(
-        cls,
-        value: Any,
-        _: core_schema.ValidationInfo,
-    ) -> IntegerList:
-        # FIXME: What.
-        if isinstance(value, list):
-            value = value[0]
+    def _validate(cls, value: list[str]) -> list[int]:
+        if not isinstance(value, list):
+            raise TypeError(f"Value must be list, got {type(value)}")
 
-        if not isinstance(value, (str, bytes)):
-            raise TypeError("Value must be str or bytes. Received ", repr(value))
+        str_value = value[0]
+        if not isinstance(str_value, str):
+            raise TypeError(f"Value must be string, got {type(value)}")
 
-        if not isinstance(value, str):
-            value = value.decode()
-
-        return IntegerList(map(int, value.strip().split(",")))
+        try:
+            return CommaSeparatedIntList([int(x) for x in str_value.split(",")])
+        except Exception as e:
+            raise ValueError(f"Failed to convert list value to {int}") from e
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls,
-        _: type[Any],
+        cls, _: Any, __: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
-        return core_schema.with_info_after_validator_function(
+        return core_schema.no_info_after_validator_function(
             cls._validate,
-            core_schema.list_schema(),
+            core_schema.list_schema(
+                # XXX: due to type casting, fastapi converts the
+                # string to a list with this one string
+                # ensure that it's the only string in list.
+                core_schema.str_schema(),
+                min_length=1,
+                max_length=1,
+            ),
         )

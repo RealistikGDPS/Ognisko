@@ -12,7 +12,7 @@ from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
 from rgdps.common.validators import TextBoxString
-from rgdps.common.validators import IntegerList
+from rgdps.common.validators import CommaSeparatedIntList
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.constants.levels import LevelDemonRating
@@ -78,8 +78,8 @@ async def level_post(
     low_detail_mode: bool = Form(..., alias="ldm"),
     building_time: int = Form(..., alias="wt2"),
     # TODO: There is some weird Pydantic behaviour here with the IntegerList validator.
-    song_ids: IntegerList = Form(IntegerList(), alias="songIDs"),
-    sfx_ids: IntegerList = Form(IntegerList(), alias="sfxIDs"),
+    song_ids: CommaSeparatedIntList = Form(CommaSeparatedIntList(), alias="songIDs"),
+    sfx_ids: CommaSeparatedIntList = Form(CommaSeparatedIntList(), alias="sfxIDs"),
 ):
 
     level = await levels.create_or_update(
@@ -367,12 +367,13 @@ async def level_desc_post(
 
     return responses.success()
 
+
 async def level_delete_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(
         authenticate_dependency(required_privileges=UserPrivileges.LEVEL_DELETE_OWN),
     ),
-    level_id: int = Form(..., alias="levelID")
+    level_id: int = Form(..., alias="levelID"),
 ):
     result = await levels.delete(
         ctx,
@@ -399,7 +400,6 @@ async def level_delete_post(
         },
     )
     return responses.success()
-    
 
 
 # XXX: Should this be here?
