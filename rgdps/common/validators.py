@@ -119,7 +119,7 @@ class MessageContentString(str):
 
 class CommaSeparatedIntList(list[int]):
     @classmethod
-    def _validate(cls, value: list[str]) -> list[int]:
+    def _validate(cls, value: list[str]) -> CommaSeparatedIntList:
         if not isinstance(value, list):
             raise TypeError(f"Value must be list, got {type(value)}")
 
