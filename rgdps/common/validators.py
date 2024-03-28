@@ -13,31 +13,31 @@ SOCIAL_MEDIA_REGEX = re.compile(r"^[\w\-.' ]+$")
 
 class Base64String(str):
     @classmethod
+    def encode(cls, value: str) -> Base64String:
+        return Base64String(hashes.encode_base64(value))
+
+    @classmethod
+    def decode(cls, value: str) -> Base64String:
+        return Base64String(hashes.decode_base64(value))
+
+    @classmethod
+    def _validate(cls, value: str) -> Base64String:
+        if not isinstance(value, str):
+            raise TypeError(f"Value must be str, got {type(value)}")
+
+        try:
+            return Base64String.decode(value)
+        except Exception as e:
+            raise ValueError("Failed to decode base64 string") from e
+
+    @classmethod
     def __get_pydantic_core_schema__(
-        cls,
-        _: type[Any],
+        cls, _: Any, __: GetCoreSchemaHandler
     ) -> core_schema.CoreSchema:
-        return core_schema.general_after_validator_function(
+        return core_schema.no_info_after_validator_function(
             cls._validate,
             core_schema.str_schema(),
         )
-
-    @classmethod
-    def encode(cls, data: str) -> Base64String:
-        return Base64String(hashes.encode_base64(data))
-
-    @classmethod
-    def _validate(cls, value: Any, _: core_schema.ValidationInfo) -> Base64String:
-        if not isinstance(value, (str, bytes)):
-            raise TypeError("Value must be str or bytes")
-
-        if isinstance(value, bytes):
-            value = value.decode()
-
-        try:
-            return Base64String(hashes.decode_base64(value))
-        except Exception as e:
-            raise ValueError("Input is not valid base64") from e
 
 
 class TextBoxString(str):
