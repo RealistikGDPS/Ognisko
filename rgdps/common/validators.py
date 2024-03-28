@@ -98,31 +98,23 @@ class SocialMediaString(str):
 
 class MessageContentString(str):
     @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _: type[Any],
-    ) -> core_schema.CoreSchema:
-        return core_schema.general_after_validator_function(
-            cls._validate,
-            core_schema.str_schema(),
-        )
-
-    @classmethod
-    def _validate(
-        cls,
-        value: Any,
-        _: core_schema.ValidationInfo,
-    ) -> MessageContentString:
-        if not isinstance(value, (str, bytes)):
-            raise TypeError("Value must be str or bytes")
-
-        if isinstance(value, bytes):
-            value = value.decode()
+    def _validate(cls, value: str) -> MessageContentString:
+        if not isinstance(value, str):
+            raise TypeError(f"Value must be str, got {type(value)}")
 
         try:
             return MessageContentString(hashes.decrypt_message_content(value))
         except Exception as e:
-            raise ValueError("Input is not valid base64 and xor cipher") from e
+            raise ValueError("Failed to decrypt message content string") from e
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, _: Any, __: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls._validate,
+            core_schema.str_schema(),
+        )
 
 
 class CommaSeparatedIntList(list[int]):
