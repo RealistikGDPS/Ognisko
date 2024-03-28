@@ -51,7 +51,7 @@ async def from_target_and_recipient(
         condition = "AND deleted = 0"
 
     friend_request_db = await ctx.mysql.fetch_one(
-        f"SELECT {_ALL_FIELDS_COMMA} WHERE sender_user_id = :sender_user_id AND "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM friend_requests WHERE sender_user_id = :sender_user_id AND "
         f"recipient_user_id = :recipient_user_id {condition}",
         {"sender_user_id": sender_user_id, "recipient_user_id": recipient_user_id},
     )
