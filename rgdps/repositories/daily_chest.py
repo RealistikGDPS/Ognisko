@@ -41,7 +41,7 @@ async def from_user_id_and_type_latest(
     chest_type: DailyChestType,
 ) -> DailyChest | None:
     chest_db = await ctx.mysql.fetch_one(
-        f"SELECT {_ALL_FIELDS_COMMA} WHERE user_id = :user_id AND type = :chest_type "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM daily_chests WHERE user_id = :user_id AND type = :chest_type "
         "ORDER BY claimed_ts DESC LIMIT 1",
         {"user_id": user_id, "chest_type": chest_type.value},
     )
