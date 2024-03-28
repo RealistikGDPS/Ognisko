@@ -42,30 +42,26 @@ class Base64String(str):
 
 class TextBoxString(str):
     @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _: type[Any],
-    ) -> core_schema.CoreSchema:
-        return core_schema.general_after_validator_function(
-            cls._validate,
-            core_schema.str_schema(),
-        )
-
-    @classmethod
-    def _validate(cls, value: Any, _: core_schema.ValidationInfo) -> TextBoxString:
-        if not isinstance(value, (str, bytes)):
-            raise TypeError("Value must be str or bytes")
-
-        if isinstance(value, bytes):
-            value = value.decode()
+    def _validate(cls, value: str) -> TextBoxString:
+        if not isinstance(value, str):
+            raise TypeError(f"Value must be str, got {type(value)}")
 
         # Value needs to be: stripped and alphanumeric.
         value = value.strip()
 
         if not TEXT_BOX_REGEX.match(value):
-            raise ValueError("Input contains illegal characters")
+            raise ValueError("Value contains illegal characters")
 
         return TextBoxString(value)
+
+    @classmethod
+    def __get_pydantic_core_schema__(
+        cls, _: Any, __: GetCoreSchemaHandler
+    ) -> core_schema.CoreSchema:
+        return core_schema.no_info_after_validator_function(
+            cls._validate,
+            core_schema.str_schema(),
+        )
 
 
 class SocialMediaString(str):
