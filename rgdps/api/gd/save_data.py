@@ -3,7 +3,6 @@ from __future__ import annotations
 from fastapi import Depends
 from fastapi import Form
 from fastapi import Request
-from fastapi.responses import FileResponse
 
 from rgdps import logger
 from rgdps.api import responses
@@ -11,6 +10,7 @@ from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.config import config
 from rgdps.constants.errors import ServiceError
+from rgdps.common.validators import GameSaveData
 from rgdps.models.user import User
 from rgdps.usecases import save_data
 
@@ -44,7 +44,7 @@ async def save_data_get(
 async def save_data_post(
     ctx: HTTPContext = Depends(),
     user: User = Depends(authenticate_dependency()),
-    data: str = Form(..., alias="saveData"),  # Pain.
+    data: GameSaveData = Form(..., alias="saveData"),  # Pain.
     game_version: int = Form(..., alias="gameVersion"),
     binary_version: int = Form(..., alias="binaryVersion"),
 ):
