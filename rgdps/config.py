@@ -37,6 +37,9 @@ class Config:
     s3_secret_key: str = ""
     local_root: str = "/data"
     log_level: str = "INFO"
+    dd_enabled: bool = False
+    dd_api_key: str = ""
+    dd_site: str = ""
 
 
 def read_config_json() -> dict[str, Any]:

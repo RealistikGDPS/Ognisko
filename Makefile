@@ -28,6 +28,9 @@ shell:
 pma:
 	docker-compose up phpmyadmin
 
+datadog:
+	docker-compose up datadog
+
 converter:
 	APP_COMPONENT=converter docker-compose up \
 		redis \
