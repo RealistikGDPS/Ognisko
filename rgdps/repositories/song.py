@@ -183,5 +183,11 @@ async def get_cdn_url(ctx: Context) -> str | None:
 
     if isinstance(queried_url, GDRequestStatus):
         return None
+    
+    await ctx.redis.set(
+        CDN_URL_CACHE_KEY,
+        queried_url,
+        ex=timedelta(minutes=20),
+    )
 
     return queried_url
