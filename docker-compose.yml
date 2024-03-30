@@ -62,6 +62,7 @@ services:
       - LOGZIO_ENABLED=${LOGZIO_ENABLED}
       - LOGZIO_TOKEN=${LOGZIO_TOKEN}
       - LOGZIO_URL=${LOGZIO_URL}
+      - SRV_GD_URL=${SRV_GD_URL}
     volumes:
       - .:/app
       - ${RGDPS_DIR}:/data
