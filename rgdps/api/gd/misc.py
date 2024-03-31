@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from rgdps.config import config
+from rgdps import settings
 
 
 async def main_get() -> str:
-    return f"{config.srv_name} - Powered by RealistikGDPS"
+    return f"{settings.SERVER_NAME} - Powered by RealistikGDPS"
