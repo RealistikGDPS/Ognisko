@@ -40,6 +40,7 @@ class Config:
     logzio_enabled: bool = False
     logzio_token: str = ""
     logzio_url: str = "https://listener.logz.io:8071"
+    srv_gd_url: str = "https://www.boomlings.com/database"
 
 
 def read_config_json() -> dict[str, Any]:

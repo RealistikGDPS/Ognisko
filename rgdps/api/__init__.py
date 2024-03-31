@@ -29,6 +29,7 @@ from rgdps.services.mysql import MySQLService
 from rgdps.services.pubsub import listen_pubsubs
 from rgdps.services.storage import LocalStorage
 from rgdps.services.storage import S3Storage
+from rgdps.services.boomlings import GeometryDashClient
 
 
 def init_logging() -> None:
@@ -186,12 +187,17 @@ def init_local_storage(app: FastAPI) -> None:
         logger.info("Connected to the local storage.")
 
 
-def init_http(app: FastAPI) -> None:
-    app.state.http = httpx.AsyncClient()
+def init_gd(app: FastAPI) -> None:
+    app.state.gd = GeometryDashClient(
+        config.srv_gd_url,
+    )
 
-    @app.on_event("shutdown")
-    async def shutdown() -> None:
-        await app.state.http.aclose()
+    logger.info(
+        "Initialised the main Geometry Dash client.",
+        extra={
+            "server_url": config.srv_gd_url,
+        }
+    )
 
 
 def init_cache_stateful(app: FastAPI) -> None:
@@ -294,7 +300,7 @@ def init_api() -> FastAPI:
     init_mysql(app)
     init_redis(app)
     init_meili(app)
-    init_http(app)
+    init_gd(app)
 
     if config.s3_enabled:
         init_s3_storage(app)

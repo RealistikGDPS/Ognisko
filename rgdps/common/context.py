@@ -4,7 +4,6 @@ from abc import ABC
 from abc import abstractmethod
 from typing import TYPE_CHECKING
 
-import httpx
 from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 from types_aiobotocore_s3 import S3Client
@@ -14,6 +13,7 @@ if TYPE_CHECKING:
     from rgdps.common.cache.base import AbstractAsyncCache
     from rgdps.services.mysql import AbstractMySQLService
     from rgdps.services.storage import AbstractStorage
+    from rgdps.services.boomlings import GeometryDashClient
 
 
 class Context(ABC):
@@ -43,4 +43,4 @@ class Context(ABC):
 
     @property
     @abstractmethod
-    def http(self) -> httpx.AsyncClient: ...
+    def gd(self) -> GeometryDashClient: ...

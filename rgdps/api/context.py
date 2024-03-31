@@ -12,6 +12,7 @@ from rgdps.common.cache.base import AbstractAsyncCache
 from rgdps.common.context import Context
 from rgdps.services.mysql import AbstractMySQLService
 from rgdps.services.storage import AbstractStorage
+from rgdps.services.boomlings import GeometryDashClient
 
 if TYPE_CHECKING:
     from rgdps.models.user import User
@@ -47,12 +48,12 @@ class HTTPContext(Context):
         return self.request.app.state.password_cache
 
     @property
-    def http(self) -> httpx.AsyncClient:
-        return self.request.app.state.http
+    def gd(self) -> GeometryDashClient:
+        return self.request.app.state.gd
 
 
 # FIXME: Proper context for pubsub handlers that does not rely on app.
-class PubsubContext(HTTPContext):
+class PubsubContext(Context):
     """A shared context for pubsub handlers."""
 
     def __init__(self, app: FastAPI) -> None:
@@ -81,7 +82,11 @@ class PubsubContext(HTTPContext):
     @property
     def password_cache(self) -> AbstractAsyncCache[str]:
         return self.state.password_cache
+    
+    @property
+    def storage(self) -> AbstractStorage:
+        return self.state.storage
 
     @property
-    def http(self) -> httpx.AsyncClient:
-        return self.state.http
+    def gd(self) -> GeometryDashClient:
+        return self.state.gd

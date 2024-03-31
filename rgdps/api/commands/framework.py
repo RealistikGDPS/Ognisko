@@ -32,6 +32,7 @@ if TYPE_CHECKING:
     from rgdps.common.cache.base import AbstractAsyncCache
     from rgdps.services.mysql import AbstractMySQLService
     from rgdps.services.storage import AbstractStorage
+    from rgdps.services.boomlings import GeometryDashClient
 
 
 # Private parsing functions.
@@ -246,8 +247,8 @@ class CommandContext(Context):
         return self._base_context.password_cache
 
     @property
-    def http(self) -> httpx.AsyncClient:
-        return self._base_context.http
+    def gd(self) -> GeometryDashClient:
+        return self._base_context.gd
 
 
 CommandEventHandler = Callable[[CommandContext], Awaitable[str]]

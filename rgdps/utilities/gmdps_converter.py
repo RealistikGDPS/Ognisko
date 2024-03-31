@@ -43,6 +43,7 @@ from rgdps.constants.songs import SongSource
 from rgdps.services.mysql import MySQLService
 from rgdps.services.storage import AbstractStorage
 from rgdps.models.user import User
+from rgdps.services.boomlings import GeometryDashClient
 
 if TYPE_CHECKING:
     from rgdps.common.cache.base import AbstractAsyncCache
@@ -60,7 +61,6 @@ class ConverterContext(Context):
     _meili: MeiliClient
     _user_cache: AbstractAsyncCache[User]
     _password_cache: AbstractAsyncCache[str]
-    _http: httpx.AsyncClient
     old_sql: MySQLService
     user_id_map: dict[int, int]
 
@@ -85,8 +85,8 @@ class ConverterContext(Context):
         return self._password_cache
 
     @property
-    def http(self) -> httpx.AsyncClient:
-        return self._http
+    def gd(self) -> GeometryDashClient:
+        raise NotImplementedError("The GMDPS converter does not use HTTP.")
 
     @property
     def storage(self) -> AbstractStorage:
@@ -175,7 +175,6 @@ async def get_context() -> ConverterContext:
         meili,
         user_cache,
         password_cache,
-        http,
         old_sql,
         user_id_map,
     )
