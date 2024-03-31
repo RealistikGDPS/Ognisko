@@ -9,38 +9,38 @@ sys.path.append(".")
 # The database converter for the GMDPS database.
 # Please see the README for more information.
 import asyncio
-from datetime import datetime
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 import urllib.parse
+from dataclasses import dataclass
+from datetime import datetime
+from typing import TYPE_CHECKING
 
 from databases import DatabaseURL
 from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 
-from rgdps import settings
 from rgdps import logger
 from rgdps import repositories
+from rgdps import settings
 from rgdps.common import gd_obj
+from rgdps.common import hashes
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.context import Context
 from rgdps.common.time import from_unix_ts
-from rgdps.common import hashes
 from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
-from rgdps.constants.users import UserPrivacySetting
-from rgdps.constants.user_credentials import CredentialVersion
-from rgdps.constants.users import UserRelationshipType
-from rgdps.constants.users import DEFAULT_PRIVILEGES
-from rgdps.constants.users import UserPrivileges
 from rgdps.constants.songs import SongSource
-from rgdps.services.mysql import MySQLService
-from rgdps.services.storage import AbstractStorage
+from rgdps.constants.user_credentials import CredentialVersion
+from rgdps.constants.users import DEFAULT_PRIVILEGES
+from rgdps.constants.users import UserPrivacySetting
+from rgdps.constants.users import UserPrivileges
+from rgdps.constants.users import UserRelationshipType
 from rgdps.models.user import User
 from rgdps.services.boomlings import GeometryDashClient
+from rgdps.services.mysql import MySQLService
+from rgdps.services.storage import AbstractStorage
 
 if TYPE_CHECKING:
     from rgdps.common.cache.base import AbstractAsyncCache

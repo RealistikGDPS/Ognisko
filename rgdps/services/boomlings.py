@@ -5,11 +5,12 @@ from typing import Any
 
 import httpx
 
-from rgdps.common import gd_obj
 from rgdps import logger
+from rgdps.common import gd_obj
+
 
 class GDRequestStatus(str, Enum):
-    """Returns the outcome status of a Geometry Dash request, including 
+    """Returns the outcome status of a Geometry Dash request, including
     success."""
 
     NONE = "none"
@@ -23,14 +24,14 @@ class GDRequestStatus(str, Enum):
         """Checks if the request encountered an issue."""
 
         return self != GDRequestStatus.NONE
-    
+
     @property
     def is_severe_error(self) -> bool:
         """Checks if the request encountered an issue that should
         warrant an investivation."""
 
         return self in _SEVERE_ERRORS
-    
+
 
 _SEVERE_ERRORS = (
     GDRequestStatus.CLOUDFLARE_ERROR,
@@ -68,37 +69,40 @@ _SFX_CDN_ENDPOINT = "/getCustomContentURL.php"
 _LOGGING_CONTENT_TRIM = 100
 """How many characters of the content should be stored in logs."""
 
+
 def _is_response_valid(http_code: int, response: str) -> GDRequestStatus:
     """Classifies a response into a general request status.
-    
+
     Note:
         Assumes `response` has already been stripped.
     """
 
     if http_code in range(500, 600):
         return GDRequestStatus.SERVER_ERROR
-    
+
     elif response == _GENERIC_ERROR_RESPONSE:
         return GDRequestStatus.NOT_FOUND
-    
+
     elif response == _ROBTOP_ERROR_RESPONSE:
         return GDRequestStatus.ROBTOP_BLACKLIST
-    
+
     elif response == _CLOUDFLARE_ERROR_RESPONSE:
         return GDRequestStatus.CLOUDFLARE_ERROR
-    
+
     return GDRequestStatus.NONE
+
 
 type GDStatus[T] = T | GDRequestStatus
 type IntKeyResponse = dict[int, str]
+
 
 class GeometryDashClient:
     """A client for interacting with the Geometry Dash servers."""
 
     def __init__(
-            self,
-            server_url: str = GEOMETRY_DASH_URL,
-            client_header: str = GEOMETRY_DASH_HEADER,
+        self,
+        server_url: str = GEOMETRY_DASH_URL,
+        client_header: str = GEOMETRY_DASH_HEADER,
     ) -> None:
         self.server_url = server_url
 
@@ -109,15 +113,18 @@ class GeometryDashClient:
             timeout=2,
         )
 
-    
-    async def __make_post_request(self, endpoint: str, data: dict[str, Any] = {}) -> GDStatus[str]:
+    async def __make_post_request(
+        self,
+        endpoint: str,
+        data: dict[str, Any] = {},
+    ) -> GDStatus[str]:
         request_url = self.server_url + endpoint
 
         logger.debug(
             "Making a POST request to the Geometry Dash servers.",
             extra={
                 "endpoint": endpoint,
-            }
+            },
         )
 
         response = await self._client.post(
@@ -133,14 +140,14 @@ class GeometryDashClient:
                 "endpoint": endpoint,
                 "status_code": response.status_code,
                 "content": content[:_LOGGING_CONTENT_TRIM],
-            }
+            },
         )
 
         if (check := _is_response_valid(response.status_code, content)).is_error:
             return check
-        
+
         return content
-    
+
     # XXX: GD only has a **SINGLE** `GET` endpoint ANYWHERE in the protocol. Doesn't use data.
     async def __make_get_request(self, endpoint: str) -> GDStatus[str]:
         request_url = self.server_url + endpoint
@@ -149,7 +156,7 @@ class GeometryDashClient:
             "Making a GET request to the Geometry Dash servers.",
             extra={
                 "endpoint": endpoint,
-            }
+            },
         )
 
         response = await self._client.get(
@@ -164,14 +171,13 @@ class GeometryDashClient:
                 "endpoint": endpoint,
                 "status_code": response.status_code,
                 "content": content[:_LOGGING_CONTENT_TRIM],
-            }
+            },
         )
 
         if (check := _is_response_valid(response.status_code, content)).is_error:
             return check
-        
+
         return content
-    
 
     async def get_song(self, song_id: int) -> GDStatus[IntKeyResponse]:
         """Queries the official servers for a song with a given id. Parses
@@ -197,7 +203,7 @@ class GeometryDashClient:
                 )
 
             return song_info
-        
+
         song_parsed = gd_obj.loads(
             song_info,
             sep="~|~",
@@ -206,7 +212,6 @@ class GeometryDashClient:
         )
 
         return song_parsed
-    
 
     async def get_cdn_url(self) -> GDStatus[str]:
         """Queries the official servers for the URL for the official Geometry Dash

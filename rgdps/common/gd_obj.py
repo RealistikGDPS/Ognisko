@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 import urllib.parse
-from typing import Callable
+from collections.abc import Callable
 from typing import NamedTuple
 
 from rgdps.common import hashes
 from rgdps.common.time import into_str_ts
-from rgdps.common.time import into_unix_ts
 from rgdps.common.typing import SupportsStr
 from rgdps.constants.daily_chests import DailyChestType
 from rgdps.constants.friends import FriendStatus
@@ -43,7 +42,8 @@ def dumps(
 
 
 def loads[
-    KT, VT
+    KT,
+    VT,
 ](
     data: str,
     sep: str = ":",

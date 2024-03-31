@@ -3,16 +3,16 @@ from __future__ import annotations
 import typing
 from abc import ABC
 from abc import abstractmethod
+from collections.abc import Awaitable
+from collections.abc import Callable
 from dataclasses import dataclass
 from enum import Enum
+from typing import TYPE_CHECKING
 from typing import Any
-from typing import Awaitable
-from typing import Callable
+from typing import Union
 from typing import get_args
 from typing import get_origin
 from typing import get_type_hints
-from typing import TYPE_CHECKING
-from typing import Union
 
 from rgdps import logger
 from rgdps import repositories
@@ -24,15 +24,14 @@ from rgdps.models.rgb import RGB
 from rgdps.models.user import User
 
 if TYPE_CHECKING:
-    import httpx
     from meilisearch_python_sdk import AsyncClient as MeiliClient
     from redis.asyncio import Redis
 
-    from rgdps.models.user import User
     from rgdps.common.cache.base import AbstractAsyncCache
+    from rgdps.models.user import User
+    from rgdps.services.boomlings import GeometryDashClient
     from rgdps.services.mysql import AbstractMySQLService
     from rgdps.services.storage import AbstractStorage
-    from rgdps.services.boomlings import GeometryDashClient
 
 
 # Private parsing functions.

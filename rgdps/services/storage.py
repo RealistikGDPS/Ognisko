@@ -7,7 +7,6 @@ from abc import abstractmethod
 
 from aiobotocore.config import AioConfig
 from aiobotocore.session import get_session
-from types_aiobotocore_s3 import S3Client
 
 from rgdps import logger
 

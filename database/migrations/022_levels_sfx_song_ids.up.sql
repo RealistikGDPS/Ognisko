@@ -1,4 +1,4 @@
-ALTER TABLE `levels` 
+ALTER TABLE `levels`
     ADD COLUMN `sfx_ids` JSON AFTER `update_ts`,
     ADD COLUMN `song_ids` JSON AFTER `update_ts`;
 

@@ -1,21 +1,20 @@
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import Any
-from typing import AsyncGenerator
 from typing import NamedTuple
+from typing import NotRequired
 from typing import TypedDict
 from typing import Unpack
-from typing import NotRequired
 
+from rgdps.common import modelling
 from rgdps.common import time as time_utils
 from rgdps.common.context import Context
 from rgdps.constants.users import DEFAULT_PRIVILEGES
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
-from rgdps.common import modelling
-
 
 ALL_FIELDS = modelling.get_model_fields(User)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -24,7 +23,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def from_db(ctx: Context, user_id: int) -> User | None:
@@ -221,7 +222,7 @@ async def update_sql_partial(
     **kwargs: Unpack[_UserUpdatePartial],
 ) -> User | None:
     changed_fields = modelling.unpack_enum_types(kwargs)
-    
+
     await ctx.mysql.execute(
         modelling.update_from_partial_dict("users", user_id, changed_fields),
         changed_fields,
@@ -238,7 +239,6 @@ async def update_meili_partial(
     changed_data = modelling.unpack_enum_types(kwargs)
     changed_data["id"] = user_id
     changed_data = _make_meili_dict(changed_data)
-    
 
     index = ctx.meili.index("users")
     await index.update_documents([changed_data])

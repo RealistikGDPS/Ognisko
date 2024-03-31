@@ -4,9 +4,9 @@ from rgdps.api.commands.framework import CommandContext
 from rgdps.api.commands.framework import CommandRouter
 from rgdps.api.commands.framework import unwrap_service
 from rgdps.constants.users import UserPrivileges
+from rgdps.models.rgb import RGB
 from rgdps.models.user import User
 from rgdps.usecases import users
-from rgdps.models.rgb import RGB
 
 router = CommandRouter("users_root")
 
@@ -95,7 +95,7 @@ async def comments_colour_set(
     comment_colour_rgb: RGB,
 ) -> str:
     unwrap_service(
-        await users.update_comment_colour(ctx, ctx.user.id, comment_colour_rgb)
+        await users.update_comment_colour(ctx, ctx.user.id, comment_colour_rgb),
     )
 
     return f"Your comment colour has been updated to the following RGB: {comment_colour_rgb!r}"

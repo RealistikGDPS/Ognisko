@@ -21,7 +21,6 @@ from rgdps.models.user import User
 from rgdps.usecases import user_credentials
 from rgdps.usecases import users
 
-
 PAGE_SIZE = 10
 
 
@@ -48,11 +47,11 @@ async def register_post(
             },
         )
         match result.value:
-            case ServiceError.USER_USERNAME_EXISTS: 
+            case ServiceError.USER_USERNAME_EXISTS:
                 return responses.code(RegisterResponse.USERNAME_EXISTS)
             case ServiceError.USER_EMAIL_EXISTS:
                 return responses.code(RegisterResponse.EMAIL_EXISTS)
-            case _: 
+            case _:
                 return responses.fail()
 
     logger.info(
@@ -84,9 +83,11 @@ async def login_post(
         )
 
         match result:
-            case ServiceError.AUTH_NOT_FOUND | \
-                ServiceError.USER_NOT_FOUND | \
-                ServiceError.AUTH_PASSWORD_MISMATCH:
+            case (
+                ServiceError.AUTH_NOT_FOUND
+                | ServiceError.USER_NOT_FOUND
+                | ServiceError.AUTH_PASSWORD_MISMATCH
+            ):
                 return responses.code(LoginResponse.INVALID_CREDENTIALS)
             case ServiceError.AUTH_NO_PRIVILEGE | ServiceError.AUTH_UNSUPPORTED_VERSION:
                 return responses.code(LoginResponse.ACCOUNT_DISABLED)

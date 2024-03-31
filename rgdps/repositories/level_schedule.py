@@ -3,11 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from datetime import timedelta
 
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.models.level_schedule import LevelSchedule
-from rgdps.common import modelling
-
 
 ALL_FIELDS = modelling.get_model_fields(LevelSchedule)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -16,7 +15,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def create(

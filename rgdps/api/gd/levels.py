@@ -11,8 +11,8 @@ from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
 from rgdps.common.validators import Base64String
-from rgdps.common.validators import TextBoxString
 from rgdps.common.validators import CommaSeparatedIntList
+from rgdps.common.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.constants.levels import LevelDemonRating
@@ -23,7 +23,6 @@ from rgdps.models.user import User
 from rgdps.usecases import level_schedules
 from rgdps.usecases import levels
 from rgdps.usecases import songs
-
 
 PAGE_SIZE = 10
 

@@ -4,12 +4,11 @@ import urllib.parse
 from datetime import timedelta
 
 from rgdps import logger
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.constants.songs import SongSource
 from rgdps.models.song import Song
-from rgdps.common import modelling
 from rgdps.services.boomlings import GDRequestStatus
-
 
 ALL_FIELDS = modelling.get_model_fields(Song)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -18,7 +17,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def from_db(
@@ -183,7 +184,7 @@ async def get_cdn_url(ctx: Context) -> str | None:
 
     if isinstance(queried_url, GDRequestStatus):
         return None
-    
+
     await ctx.redis.set(
         CDN_URL_CACHE_KEY,
         queried_url,

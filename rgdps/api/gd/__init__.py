@@ -5,6 +5,8 @@ from fastapi import Depends
 from fastapi.responses import PlainTextResponse
 from fastapi_limiter.depends import RateLimiter
 
+from rgdps import settings
+
 from . import leaderboards
 from . import level_comments
 from . import levels
@@ -15,8 +17,6 @@ from . import save_data
 from . import user_comments
 from . import user_relationships
 from . import users
-
-from rgdps import settings
 
 router = APIRouter(
     prefix=settings.APP_URL_PREFIX,

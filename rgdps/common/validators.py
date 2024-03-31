@@ -5,6 +5,7 @@ from typing import Any
 
 from pydantic import GetCoreSchemaHandler
 from pydantic_core import core_schema
+
 from rgdps.common import hashes
 
 TEXT_BOX_REGEX = re.compile(r"^[a-zA-Z0-9 ]+$")
@@ -12,7 +13,7 @@ SOCIAL_MEDIA_REGEX = re.compile(r"^[\w\-.' ]+$")
 # Its basically base64 string + ; + another base64 string
 GAME_SAVE_DATA_REGEX = re.compile(
     r"^(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{4}|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]"
-    r"{2}={2})\;(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{4}|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{2}={2})$"
+    r"{2}={2})\;(?:[A-Za-z0-9+\/]{4})*(?:[A-Za-z0-9+\/]{4}|[A-Za-z0-9+\/]{3}=|[A-Za-z0-9+\/]{2}={2})$",
 )
 
 
@@ -37,7 +38,9 @@ class Base64String(str):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, _: Any, __: GetCoreSchemaHandler
+        cls,
+        _: Any,
+        __: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls._validate,
@@ -61,7 +64,9 @@ class TextBoxString(str):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, _: Any, __: GetCoreSchemaHandler
+        cls,
+        _: Any,
+        __: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls._validate,
@@ -85,7 +90,9 @@ class SocialMediaString(str):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, _: Any, __: GetCoreSchemaHandler
+        cls,
+        _: Any,
+        __: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls._validate,
@@ -106,7 +113,9 @@ class MessageContentString(str):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, _: Any, __: GetCoreSchemaHandler
+        cls,
+        _: Any,
+        __: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls._validate,
@@ -131,7 +140,9 @@ class CommaSeparatedIntList(list[int]):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, _: Any, __: GetCoreSchemaHandler
+        cls,
+        _: Any,
+        __: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls._validate,
@@ -175,7 +186,9 @@ class GameSaveData(str):
 
     @classmethod
     def __get_pydantic_core_schema__(
-        cls, _: Any, __: GetCoreSchemaHandler
+        cls,
+        _: Any,
+        __: GetCoreSchemaHandler,
     ) -> core_schema.CoreSchema:
         return core_schema.no_info_after_validator_function(
             cls._validate,

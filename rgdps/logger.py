@@ -3,11 +3,10 @@ from __future__ import annotations
 import logging.config
 import sys
 import threading
+from collections.abc import Callable
 from types import TracebackType
 from typing import Any
-from typing import Callable
 from typing import Optional
-
 
 # TODO: Look into more customisability.
 _LOGGING_CONFIG = {
@@ -90,8 +89,8 @@ ExceptionHook = Callable[
 ]
 ThreadingExceptionHook = Callable[[threading.ExceptHookArgs], Any]
 
-_default_excepthook: Optional[ExceptionHook] = None
-_default_threading_excepthook: Optional[ThreadingExceptionHook] = None
+_default_excepthook: ExceptionHook | None = None
+_default_threading_excepthook: ThreadingExceptionHook | None = None
 
 
 # NOTE: This doesn't work on Uvicorn because it uses its own exception handler.
@@ -99,7 +98,7 @@ _default_threading_excepthook: Optional[ThreadingExceptionHook] = None
 def internal_exception_handler(
     exc_type: type[BaseException],
     exc_value: BaseException,
-    exc_traceback: Optional[TracebackType],
+    exc_traceback: TracebackType | None,
 ) -> Any:
     LOGGER.exception(
         "An unhandled exception occurred!",

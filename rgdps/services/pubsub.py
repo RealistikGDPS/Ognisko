@@ -2,8 +2,8 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Awaitable
-from typing import Callable
+from collections.abc import Awaitable
+from collections.abc import Callable
 
 from redis.asyncio import Redis
 

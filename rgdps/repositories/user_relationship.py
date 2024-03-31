@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import NotRequired
 from typing import TypedDict
 from typing import Unpack
-from typing import NotRequired
 
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.constants.users import UserRelationshipType
 from rgdps.models.user_relationship import UserRelationship
-from rgdps.common import modelling
-
 
 ALL_FIELDS = modelling.get_model_fields(UserRelationship)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -18,7 +17,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def from_id(
@@ -216,15 +217,20 @@ class _UserRelationshipUpdatePartial(TypedDict):
     seen_ts: NotRequired[datetime]
     deleted: NotRequired[bool]
 
+
 async def update_partial(
     ctx: Context,
     relationship_id: int,
     **kwargs: Unpack[_UserRelationshipUpdatePartial],
 ) -> UserRelationship | None:
     changed_fields = modelling.unpack_enum_types(kwargs)
-    
+
     await ctx.mysql.execute(
-        modelling.update_from_partial_dict("user_relationships", relationship_id, changed_fields),
+        modelling.update_from_partial_dict(
+            "user_relationships",
+            relationship_id,
+            changed_fields,
+        ),
         changed_fields,
     )
 

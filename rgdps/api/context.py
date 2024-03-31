@@ -1,7 +1,6 @@
 # from __future__ import annotations # This causes a pydantic issue. Yikes.
 from typing import TYPE_CHECKING
 
-import httpx
 from fastapi import FastAPI
 from fastapi import Request
 from meilisearch_python_sdk import AsyncClient as MeiliClient
@@ -10,9 +9,9 @@ from types_aiobotocore_s3 import S3Client
 
 from rgdps.common.cache.base import AbstractAsyncCache
 from rgdps.common.context import Context
+from rgdps.services.boomlings import GeometryDashClient
 from rgdps.services.mysql import AbstractMySQLService
 from rgdps.services.storage import AbstractStorage
-from rgdps.services.boomlings import GeometryDashClient
 
 if TYPE_CHECKING:
     from rgdps.models.user import User
@@ -82,7 +81,7 @@ class PubsubContext(Context):
     @property
     def password_cache(self) -> AbstractAsyncCache[str]:
         return self.state.password_cache
-    
+
     @property
     def storage(self) -> AbstractStorage:
         return self.state.storage

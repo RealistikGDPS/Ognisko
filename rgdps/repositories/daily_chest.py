@@ -5,11 +5,10 @@ from __future__ import annotations
 
 from datetime import datetime
 
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.constants.daily_chests import DailyChestType
 from rgdps.models.daily_chest import DailyChest
-from rgdps.common import modelling
-
 
 ALL_FIELDS = modelling.get_model_fields(DailyChest)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -18,7 +17,10 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
+
 
 async def from_id(
     ctx: Context,

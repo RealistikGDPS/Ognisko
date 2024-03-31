@@ -15,19 +15,20 @@ from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 from starlette.middleware.base import RequestResponseEndpoint
 
-from . import context
-from . import gd
-from . import pubsub
 from rgdps import logger
 from rgdps import settings
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.cache.redis import SimpleRedisCache
 from rgdps.constants.responses import GenericResponse
+from rgdps.services.boomlings import GeometryDashClient
 from rgdps.services.mysql import MySQLService
 from rgdps.services.pubsub import listen_pubsubs
 from rgdps.services.storage import LocalStorage
 from rgdps.services.storage import S3Storage
-from rgdps.services.boomlings import GeometryDashClient
+
+from . import context
+from . import gd
+from . import pubsub
 
 
 def init_logging() -> None:

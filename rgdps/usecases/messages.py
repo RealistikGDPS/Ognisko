@@ -67,7 +67,8 @@ async def get_sent(
     )
 
     users = await repositories.user.multiple_from_id(
-        ctx, [message.sender_user_id for message in messages]
+        ctx,
+        [message.sender_user_id for message in messages],
     )
     messages_resp = [
         MessageResponse(message, user) for message, user in zip(messages, users)
@@ -101,7 +102,8 @@ async def get_user(
     )
 
     users = await repositories.user.multiple_from_id(
-        ctx, [message.recipient_user_id for message in messages]
+        ctx,
+        [message.recipient_user_id for message in messages],
     )
     messages_resp = [
         MessageResponse(message, user) for message, user in zip(messages, users)

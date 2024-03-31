@@ -76,5 +76,5 @@ async def delete(
 
     if comment is None:
         return ServiceError.COMMENTS_NOT_FOUND
-    
+
     return comment
