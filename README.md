@@ -23,29 +23,19 @@ It is written in asynchronous, modern Python and is meant as a replacement for o
 
 TODO: Non-docker setup instructions.
 
-You may use environment variables (no `.env` file support yet) for config by setting the `USE_ENV_CONFIG` variable to "1".
-
 ## Configuration
 As previously mentioned, RealistikGDPS currently supports two ways of configuring the server.
-
-### Using Docker (compose)
-The Docker configuration process is by far the simplest as it includes all services in one.
+In both cases the configuration is done through the `.env` file.
 
 - Create a copy of `.env.example` named `.env`
 This creates a copy of the default config with all the field names ready for editing.
 
 - Edit the `.env` file to your liking
-Due to the all-in-one nature of Docker, the defaults are unlikely to require any changing with the exception
+When using Docker, the defaults are unlikely to require any changing with the exception
 `SRV_NAME`, representing the name of your GDPS.
 
-### Without Docker
-Configuring a bare instance of RealistikGDPS requires more work as you are responsible for setting up the services
-(such as MySQL and Redis). This means that the majority of the configuration is setup dependent.
+However if you are running the server without Docker, you need to adjust all fields to point to your services.
 
-By default, RealistikGDPS will generate a `config.json` file on first run that you are able to edit with all the fields present.
-Equally, you may select to use environment variables for configuration if the `USE_ENV_CONFIG` var is set to "1".
-
-Both methods accept the same values (identical names).
 
 ## Upgrading an existing server
 Assuming your server is based off [Cvolton's server implementation](https://github.com/Cvolton/GMDprivateServer), there exists a migration
