@@ -5,10 +5,10 @@ from fastapi import Form
 from fastapi import Request
 
 from rgdps import logger
+from rgdps import settings
 from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
-from rgdps.config import config
 from rgdps.constants.errors import ServiceError
 from rgdps.common.validators import GameSaveData
 from rgdps.models.user import User
@@ -78,4 +78,4 @@ async def save_data_post(
 # An endpoint that specified which server to use for storing user save data.
 # TODO: Support an external save server.
 async def get_save_endpoint(request: Request) -> str:
-    return f"https://{request.url.hostname}{config.http_url_prefix}"
+    return f"https://{request.url.hostname}{settings.APP_URL_PREFIX}"

@@ -9,18 +9,16 @@ sys.path.append(".")
 # The database converter for the GMDPS database.
 # Please see the README for more information.
 import asyncio
-import base64
 from datetime import datetime
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 import urllib.parse
-import traceback
 
-import httpx
 from databases import DatabaseURL
 from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 
+from rgdps import settings
 from rgdps import logger
 from rgdps import repositories
 from rgdps.common import gd_obj
@@ -28,7 +26,6 @@ from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.context import Context
 from rgdps.common.time import from_unix_ts
 from rgdps.common import hashes
-from rgdps.config import config
 from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
@@ -127,11 +124,11 @@ async def create_role_assign_map(conn: MySQLService) -> dict[int, int]:
 async def get_context() -> ConverterContext:
     database_url = DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
-            username=config.sql_user,
-            password=urllib.parse.quote(config.sql_pass),
-            host=config.sql_host,
-            port=config.sql_port,
-            db=config.sql_db,
+            username=settings.SQL_USER,
+            password=urllib.parse.quote(settings.SQL_PASS),
+            host=settings.SQL_HOST,
+            port=settings.SQL_PORT,
+            db=settings.SQL_DB,
         ),
     )
 
@@ -141,9 +138,9 @@ async def get_context() -> ConverterContext:
     old_database_url = DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
             username=OLD_DB_USER,
-            password=urllib.parse.quote(config.sql_pass),
-            host=config.sql_host,
-            port=config.sql_port,
+            password=urllib.parse.quote(settings.SQL_PASS),
+            host=settings.SQL_HOST,
+            port=settings.SQL_PORT,
             db=OLD_DB,
         ),
     )
@@ -152,20 +149,19 @@ async def get_context() -> ConverterContext:
     await old_sql.connect()
 
     redis = Redis.from_url(
-        f"redis://{config.redis_host}:{config.redis_port}/{config.redis_db}",
+        f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
     )
     await redis.initialize()
 
     meili = MeiliClient(
-        f"http://{config.meili_host}:{config.meili_port}",
-        config.meili_key,
+        f"http://{settings.MEILI_HOST}:{settings.MEILI_PORT}",
+        settings.MEILI_KEY,
         timeout=10,
     )
     await meili.health()
 
     user_cache = SimpleAsyncMemoryCache[User]()
     password_cache = SimpleAsyncMemoryCache[str]()
-    http = httpx.AsyncClient()
 
     user_id_map = await create_user_id_map(old_sql)
 

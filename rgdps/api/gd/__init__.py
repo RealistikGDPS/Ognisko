@@ -15,10 +15,11 @@ from . import save_data
 from . import user_comments
 from . import user_relationships
 from . import users
-from rgdps.config import config
+
+from rgdps import settings
 
 router = APIRouter(
-    prefix=config.http_url_prefix,
+    prefix=settings.APP_URL_PREFIX,
     default_response_class=PlainTextResponse,
 )
 

@@ -3,6 +3,6 @@ set -euo pipefail
 
 echo "Starting server..."
 exec uvicorn rgdps.main:asgi_app \
-    --host $HTTP_HOST \
-    --port $HTTP_PORT \
+    --host $APP_HOST \
+    --port $APP_PORT \
     --reload
