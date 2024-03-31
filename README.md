@@ -31,11 +31,8 @@ In both cases the configuration is done through the `.env` file.
 This creates a copy of the default config with all the field names ready for editing.
 
 - Edit the `.env` file to your liking
-When using Docker, the defaults are unlikely to require any changing with the exception
+Due to the all-in-one nature of Docker, the defaults are unlikely to require any changing with the exception
 `SRV_NAME`, representing the name of your GDPS.
-
-However if you are running the server without Docker, you need to adjust all fields to point to your services.
-
 
 ## Upgrading an existing server
 Assuming your server is based off [Cvolton's server implementation](https://github.com/Cvolton/GMDprivateServer), there exists a migration
