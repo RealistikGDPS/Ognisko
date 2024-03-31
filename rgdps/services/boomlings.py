@@ -48,18 +48,18 @@ GEOMETRY_DASH_HEADER = ""
 for by the firewall."""
 
 _CLOUDFLARE_ERROR_RESPONSE = "error code: 1005"
-"""A CloudFlare firewall response if your response was blocked with an empty
+"""A Cloudflare firewall response if your response was blocked with an empty
 User-Agent header."""
 
 _ROBTOP_ERROR_RESPONSE = "no"
-"""Unknown fully but generally if rob does something personally againts you/your IP,
+"""Unknown fully but generally if rob does something personally against you/your IP,
 this is what is returned."""
 
 _GENERIC_ERROR_RESPONSE = "-1"
 """General error response code. Could be as simple as "not found"."""
 
 
-_SONG_ENDPOIT = "/getGJSongInfo.php"
+_SONG_ENDPOINT = "/getGJSongInfo.php"
 """The endpoint for Geometry Dash song information."""
 
 _SFX_CDN_ENDPOINT = "/getCustomContentURL.php"
@@ -178,7 +178,7 @@ class GeometryDashClient:
         the response into a dictionary."""
 
         song_info = await self.__make_post_request(
-            _SONG_ENDPOIT,
+            _SONG_ENDPOINT,
             # TODO: Is the secret necessary here?
             data={
                 "songID": song_id,
