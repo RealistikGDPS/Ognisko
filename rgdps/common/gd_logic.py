@@ -23,6 +23,12 @@ def calculate_creator_points(level: Level) -> int:
     if level.search_flags & LevelSearchFlag.EPIC:
         creator_points += 1
 
+    if level.search_flags & LevelSearchFlag.LEGENDARY:
+        creator_points += 1
+    
+    if level.search_flags & LevelSearchFlag.MYTHICAL:
+        creator_points += 1
+
     return creator_points
 
 

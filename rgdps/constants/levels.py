@@ -10,6 +10,8 @@ class LevelSearchFlag(IntFlag):
     EPIC = 1 << 0
     AWARDED = 1 << 1
     MAGIC = 1 << 2
+    LEGENDARY = 1 << 3
+    MYTHICAL = 1 << 4
 
 
 class LevelDifficulty(IntEnum):
