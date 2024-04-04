@@ -196,6 +196,8 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     del level_dict["epic"]
     del level_dict["magic"]
     del level_dict["awarded"]
+    del level_dict["legendary"]
+    del level_dict["mythical"]
 
     # FIXME: Temporary migration measure.
     if "song_ids" not in level_dict:

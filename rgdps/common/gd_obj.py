@@ -250,7 +250,7 @@ def create_level_minimal(level: Level) -> GDSerialisable:
         38: 1 if level.coins_verified else 0,
         39: level.requested_stars,
         40: int(level.low_detail_mode),
-        42: 1 if level.search_flags & LevelSearchFlag.EPIC else 0,
+        42: level.search_flags.as_feature().value - 1,
         43: level.demon_difficulty.value if level.demon_difficulty else 0,
         45: level.object_count,
         46: level.building_time,

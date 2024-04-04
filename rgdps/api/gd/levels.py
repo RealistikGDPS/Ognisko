@@ -18,6 +18,7 @@ from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.constants.levels import LevelDemonRating
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelSearchType
+from rgdps.constants.levels import LevelFeature
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
 from rgdps.usecases import level_schedules
@@ -292,7 +293,7 @@ async def suggest_level_stars(
     ),
     level_id: int = Form(..., alias="levelID"),
     stars: int = Form(...),
-    feature: bool = Form(...),
+    feature: LevelFeature = Form(...),
 ):
     result = await levels.suggest_stars(
         ctx,

@@ -37,7 +37,9 @@ curl \
         \"length\", \
         \"two_player\", \
         \"difficulty\", \
-        \"id\" \
+        \"id\", \
+        \"legendary\", \
+        \"mythical\" \
     ], \
     \"sortableAttributes\": [ \
       \"downloads\", \

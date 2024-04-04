@@ -15,6 +15,7 @@ from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
+from rgdps.constants.levels import LevelFeature
 from rgdps.constants.users import CREATOR_PRIVILEGES
 from rgdps.models.level import Level
 from rgdps.models.song import Song
@@ -320,7 +321,7 @@ async def suggest_stars(
     ctx: Context,
     level_id: int,
     stars: int,
-    feature: bool,
+    feature: LevelFeature,
 ) -> Level | ServiceError:
     existing_level = await repositories.level.from_id(ctx, level_id=level_id)
 
@@ -338,6 +339,13 @@ async def suggest_stars(
 
     difficulty = LevelDifficulty.from_stars(stars)
 
+    # Calculating the search flags, keeping the unchanged attributes.
+    flags = (
+        feature.as_search_flag()
+        | (existing_level.search_flags & LevelSearchFlag.MAGIC)
+        | (existing_level.search_flags & LevelSearchFlag.AWARDED)
+    )
+
     level = await repositories.level.update_partial(
         ctx,
         level_id=level_id,
@@ -345,6 +353,7 @@ async def suggest_stars(
         feature_order=feature_order,
         difficulty=difficulty,
         coins_verified=True,
+        search_flags=flags,
     )
     if level is None:
         return ServiceError.LEVELS_NOT_FOUND

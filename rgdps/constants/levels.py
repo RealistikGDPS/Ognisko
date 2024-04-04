@@ -13,6 +13,38 @@ class LevelSearchFlag(IntFlag):
     LEGENDARY = 1 << 3
     MYTHICAL = 1 << 4
 
+    def as_feature(self) -> LevelFeature:
+        if self & LevelSearchFlag.MYTHICAL:
+            return LevelFeature.MYTHICAL
+        
+        if self & LevelSearchFlag.LEGENDARY:
+            return LevelFeature.LEGENDARY
+        
+        if self & LevelSearchFlag.EPIC:
+            return LevelFeature.EPIC
+        
+        return LevelFeature.NONE
+
+
+class LevelFeature(IntEnum):
+    NONE = 0
+    FEATURE = 1
+    EPIC = 2
+    LEGENDARY = 3
+    MYTHICAL = 4
+
+    def as_search_flag(self) -> LevelSearchFlag:
+        return _LEVEL_FEATURE_MAP[self]
+
+
+_LEVEL_FEATURE_MAP = {
+    LevelFeature.NONE: LevelSearchFlag.NONE,
+    LevelFeature.FEATURE: LevelSearchFlag.NONE,
+    LevelFeature.EPIC: LevelSearchFlag.EPIC,
+    LevelFeature.LEGENDARY: LevelSearchFlag.EPIC | LevelSearchFlag.LEGENDARY,
+    LevelFeature.MYTHICAL: LevelSearchFlag.EPIC | LevelSearchFlag.LEGENDARY | LevelSearchFlag.MYTHICAL,
+}
+
 
 class LevelDifficulty(IntEnum):
     NA = 0
