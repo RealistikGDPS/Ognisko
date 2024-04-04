@@ -106,13 +106,14 @@ services:
       - DD_API_KEY=${DD_API_KEY}
       - DD_SITE=${DD_SITE}
       - DD_DOGSTATSD_NON_LOCAL_TRAFFIC=true
-      #- DD_APM_ENABLED=true
-      #- DD_APM_NON_LOCAL_TRAFFIC=true
-      #- DD_APM_RECEIVER_SOCKET=/opt/datadog/apm/inject/run/apm.socket
-      #- DD_DOGSTATSD_SOCKET=/opt/datadog/apm/inject/run/dsd.socket
+      - DD_APM_ENABLED=true
+      - DD_APM_NON_LOCAL_TRAFFIC=true
+      - DD_APM_RECEIVER_SOCKET=/opt/datadog/apm/inject/run/apm.socket
+      - DD_DOGSTATSD_SOCKET=/opt/datadog/apm/inject/run/dsd.socket
+      - DD_LOGS_ENABLED=true
     volumes:
       - /opt/datadog/apm:/opt/datadog/apm
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /proc/:/host/proc/:ro
       - /sys/fs/cgroup/:/host/sys/fs/cgroup:ro
-      - /var/lib/docker/containers:/var/lib/docker/containers:r
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro

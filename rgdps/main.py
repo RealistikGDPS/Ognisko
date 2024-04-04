@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import sys
 
+import ddtrace
+
 from rgdps.api import init_api
 
 if sys.platform != "win32":
@@ -15,4 +17,5 @@ else:
     winloop.install()
 
 
+ddtrace.patch_all()
 asgi_app = init_api()
