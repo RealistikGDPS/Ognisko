@@ -1,7 +1,6 @@
 FROM python:3.12
 
 ENV PYTHONUNBUFFERED=1
-ENV USE_ENV_CONFIG=1
 
 # Apt dependencies
 RUN apt update && apt install default-mysql-client curl -y

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
-from typing import Mapping
 
 from rgdps.constants.level_schedules import LevelScheduleType
 

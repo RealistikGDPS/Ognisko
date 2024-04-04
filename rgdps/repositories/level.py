@@ -1,17 +1,19 @@
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from datetime import datetime
 from typing import Any
-from typing import AsyncGenerator
 from typing import NamedTuple
+from typing import NotRequired
 from typing import TypedDict
 from typing import Unpack
-from typing import NotRequired
+
+import orjson
 
 from rgdps.common import data_utils
+from rgdps.common import modelling
 from rgdps.common import time as time_utils
 from rgdps.common.context import Context
-from rgdps.common import modelling
 from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
@@ -20,9 +22,6 @@ from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
 from rgdps.models.level import Level
 
-import orjson
-
-
 ALL_FIELDS = modelling.get_model_fields(Level)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
@@ -30,6 +29,7 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+
 
 async def from_id(
     ctx: Context,
@@ -41,8 +41,7 @@ async def from_id(
         condition = " AND NOT deleted"
 
     level_db = await ctx.mysql.fetch_one(
-        f"SELECT {_ALL_FIELDS_COMMA} FROM levels WHERE id = :id"
-        + condition,
+        f"SELECT {_ALL_FIELDS_COMMA} FROM levels WHERE id = :id" + condition,
         {
             "id": level_id,
         },
@@ -163,6 +162,8 @@ def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
         level_dict["awarded"] = bool(
             level_dict["search_flags"] & LevelSearchFlag.AWARDED,
         )
+        level_dict["legendary"] = bool(level_dict["search_flags"] & LevelSearchFlag.LEGENDARY)
+        level_dict["mythical"] = bool(level_dict["search_flags"] & LevelSearchFlag.MYTHICAL)
 
     return level_dict
 
@@ -184,11 +185,19 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     if level_dict["awarded"]:
         search_flags |= LevelSearchFlag.AWARDED
 
+    if level_dict["legendary"]:
+        search_flags |= LevelSearchFlag.LEGENDARY
+
+    if level_dict["mythical"]:
+        search_flags |= LevelSearchFlag.MYTHICAL
+
     level_dict["search_flags"] = search_flags
 
     del level_dict["epic"]
     del level_dict["magic"]
     del level_dict["awarded"]
+    del level_dict["legendary"]
+    del level_dict["mythical"]
 
     # FIXME: Temporary migration measure.
     if "song_ids" not in level_dict:
@@ -273,7 +282,6 @@ async def update_sql_partial(
 ) -> Level | None:
     changed_fields = modelling.unpack_enum_types(kwargs)
 
-    
     await ctx.mysql.execute(
         modelling.update_from_partial_dict("levels", level_id, changed_fields),
         changed_fields,

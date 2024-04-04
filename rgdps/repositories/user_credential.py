@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.constants.user_credentials import CredentialVersion
 from rgdps.models.user_credential import UserCredential
-from rgdps.common import modelling
-
 
 ALL_FIELDS = modelling.get_model_fields(UserCredential)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -13,7 +12,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def create(

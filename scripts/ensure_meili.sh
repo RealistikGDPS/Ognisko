@@ -37,7 +37,9 @@ curl \
         \"length\", \
         \"two_player\", \
         \"difficulty\", \
-        \"id\" \
+        \"id\", \
+        \"legendary\", \
+        \"mythical\" \
     ], \
     \"sortableAttributes\": [ \
       \"downloads\", \
@@ -45,6 +47,14 @@ curl \
       \"feature_order\", \
       \"upload_ts\" \
     ] \
+  }"
+
+curl \
+  -X PATCH "http://${MEILI_HOST}:${MEILI_PORT}/indexes/levels/settings/pagination" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer ${MEILI_KEY}" \
+  --data-binary " { \
+    \"maxTotalHits\": 100000
   }"
 
 curl \

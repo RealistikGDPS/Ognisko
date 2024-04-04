@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import NotRequired
 from typing import TypedDict
 from typing import Unpack
-from typing import NotRequired
 
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.models.friend_request import FriendRequest
-from rgdps.common import modelling
-
 
 ALL_FIELDS = modelling.get_model_fields(FriendRequest)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -17,7 +16,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def from_id(
@@ -51,7 +52,7 @@ async def from_target_and_recipient(
         condition = "AND deleted = 0"
 
     friend_request_db = await ctx.mysql.fetch_one(
-        f"SELECT {_ALL_FIELDS_COMMA} WHERE sender_user_id = :sender_user_id AND "
+        f"SELECT {_ALL_FIELDS_COMMA} FROM friend_requests WHERE sender_user_id = :sender_user_id AND "
         f"recipient_user_id = :recipient_user_id {condition}",
         {"sender_user_id": sender_user_id, "recipient_user_id": recipient_user_id},
     )
@@ -193,15 +194,20 @@ class _FriendRequestUpdatePartial(TypedDict):
     seen_ts: NotRequired[datetime]
     deleted: NotRequired[bool]
 
+
 async def update_partial(
     ctx: Context,
     request_id: int,
-    **kwargs: Unpack[_FriendRequestUpdatePartial]
+    **kwargs: Unpack[_FriendRequestUpdatePartial],
 ) -> FriendRequest | None:
     changed_fields = modelling.unpack_enum_types(kwargs)
-    
+
     await ctx.mysql.execute(
-        modelling.update_from_partial_dict("friend_requests", request_id, changed_fields),
+        modelling.update_from_partial_dict(
+            "friend_requests",
+            request_id,
+            changed_fields,
+        ),
         changed_fields,
     )
 

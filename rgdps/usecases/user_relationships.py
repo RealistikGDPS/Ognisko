@@ -34,7 +34,8 @@ async def get_user(
     )
 
     users = await repositories.user.multiple_from_id(
-        ctx, [relationship.target_user_id for relationship in relationships]
+        ctx,
+        [relationship.target_user_id for relationship in relationships],
     )
     relationships_responses = [
         UserRelationshipResponse(relationship, user)

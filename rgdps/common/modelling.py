@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
+from collections.abc import Mapping
+from enum import Enum
 from typing import Any
 from typing import get_type_hints
-from typing import Mapping
-from typing import Iterable
-from enum import Enum
 
 
 def unpack_enum_types(data: Mapping[str, Any]) -> dict[str, Any]:
@@ -19,7 +19,6 @@ def unpack_enum_types(data: Mapping[str, Any]) -> dict[str, Any]:
 
         res[key] = value
 
-    
     return res
 
 
@@ -57,6 +56,4 @@ def comma_separated(values: Iterable[str]) -> str:
 
 
 def colon_prefixed_comma_separated(values: Iterable[str]) -> str:
-    return comma_separated(
-        map(lambda x: f":{x}", values)
-    )
+    return comma_separated(map(lambda x: f":{x}", values))

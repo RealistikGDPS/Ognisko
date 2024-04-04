@@ -1,10 +1,9 @@
 from __future__ import annotations
 
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.constants.likes import LikeType
 from rgdps.models.like import Like
-from rgdps.common import modelling
-
 
 ALL_FIELDS = modelling.get_model_fields(Like)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -13,7 +12,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def from_id(ctx: Context, id: int) -> Like | None:

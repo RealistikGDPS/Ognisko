@@ -1,7 +1,6 @@
 # from __future__ import annotations # This causes a pydantic issue. Yikes.
 from typing import TYPE_CHECKING
 
-import httpx
 from fastapi import FastAPI
 from fastapi import Request
 from meilisearch_python_sdk import AsyncClient as MeiliClient
@@ -10,6 +9,7 @@ from types_aiobotocore_s3 import S3Client
 
 from rgdps.common.cache.base import AbstractAsyncCache
 from rgdps.common.context import Context
+from rgdps.services.boomlings import GeometryDashClient
 from rgdps.services.mysql import AbstractMySQLService
 from rgdps.services.storage import AbstractStorage
 
@@ -47,12 +47,12 @@ class HTTPContext(Context):
         return self.request.app.state.password_cache
 
     @property
-    def http(self) -> httpx.AsyncClient:
-        return self.request.app.state.http
+    def gd(self) -> GeometryDashClient:
+        return self.request.app.state.gd
 
 
 # FIXME: Proper context for pubsub handlers that does not rely on app.
-class PubsubContext(HTTPContext):
+class PubsubContext(Context):
     """A shared context for pubsub handlers."""
 
     def __init__(self, app: FastAPI) -> None:
@@ -83,5 +83,9 @@ class PubsubContext(HTTPContext):
         return self.state.password_cache
 
     @property
-    def http(self) -> httpx.AsyncClient:
-        return self.state.http
+    def storage(self) -> AbstractStorage:
+        return self.state.storage
+
+    @property
+    def gd(self) -> GeometryDashClient:
+        return self.state.gd

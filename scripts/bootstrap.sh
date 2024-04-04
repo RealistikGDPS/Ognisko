@@ -6,9 +6,13 @@ if [ -z "$APP_COMPONENT" ]; then
   exit 1
 fi
 
-echo "Waiting for SQL to become available..."
+echo "Waiting for services to become available..."
 
+SERVICE_READINESS_TIMEOUT=60
 ./scripts/await_service.sh $SQL_HOST $SQL_PORT $SERVICE_READINESS_TIMEOUT
+./scripts/await_service.sh $REDIS_HOST $REDIS_PORT $SERVICE_READINESS_TIMEOUT
+./scripts/await_service.sh $MEILI_HOST $MEILI_PORT $SERVICE_READINESS_TIMEOUT
+
 
 ./scripts/ensure_sql.sh
 ./scripts/ensure_meili.sh

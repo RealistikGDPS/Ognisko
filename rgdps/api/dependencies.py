@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from typing import Awaitable
-from typing import Callable
+from collections.abc import Awaitable
+from collections.abc import Callable
 
 from fastapi import Depends
 from fastapi import Form
@@ -10,7 +10,6 @@ from fastapi.exceptions import HTTPException
 from rgdps import logger
 from rgdps import usecases
 from rgdps.api.context import HTTPContext
-from rgdps.common import hashes
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import GenericResponse
 from rgdps.constants.users import UserPrivileges

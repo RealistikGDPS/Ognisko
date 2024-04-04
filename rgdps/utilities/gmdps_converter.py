@@ -9,40 +9,38 @@ sys.path.append(".")
 # The database converter for the GMDPS database.
 # Please see the README for more information.
 import asyncio
-import base64
-from datetime import datetime
-from dataclasses import dataclass
-from typing import TYPE_CHECKING
 import urllib.parse
-import traceback
+from dataclasses import dataclass
+from datetime import datetime
+from typing import TYPE_CHECKING
 
-import httpx
 from databases import DatabaseURL
 from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 
 from rgdps import logger
 from rgdps import repositories
+from rgdps import settings
 from rgdps.common import gd_obj
+from rgdps.common import hashes
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.context import Context
 from rgdps.common.time import from_unix_ts
-from rgdps.common import hashes
-from rgdps.config import config
 from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
-from rgdps.constants.users import UserPrivacySetting
-from rgdps.constants.user_credentials import CredentialVersion
-from rgdps.constants.users import UserRelationshipType
-from rgdps.constants.users import DEFAULT_PRIVILEGES
-from rgdps.constants.users import UserPrivileges
 from rgdps.constants.songs import SongSource
+from rgdps.constants.user_credentials import CredentialVersion
+from rgdps.constants.users import DEFAULT_PRIVILEGES
+from rgdps.constants.users import UserPrivacySetting
+from rgdps.constants.users import UserPrivileges
+from rgdps.constants.users import UserRelationshipType
+from rgdps.models.user import User
+from rgdps.services.boomlings import GeometryDashClient
 from rgdps.services.mysql import MySQLService
 from rgdps.services.storage import AbstractStorage
-from rgdps.models.user import User
 
 if TYPE_CHECKING:
     from rgdps.common.cache.base import AbstractAsyncCache
@@ -60,7 +58,6 @@ class ConverterContext(Context):
     _meili: MeiliClient
     _user_cache: AbstractAsyncCache[User]
     _password_cache: AbstractAsyncCache[str]
-    _http: httpx.AsyncClient
     old_sql: MySQLService
     user_id_map: dict[int, int]
 
@@ -85,8 +82,8 @@ class ConverterContext(Context):
         return self._password_cache
 
     @property
-    def http(self) -> httpx.AsyncClient:
-        return self._http
+    def gd(self) -> GeometryDashClient:
+        raise NotImplementedError("The GMDPS converter does not use HTTP.")
 
     @property
     def storage(self) -> AbstractStorage:
@@ -127,11 +124,11 @@ async def create_role_assign_map(conn: MySQLService) -> dict[int, int]:
 async def get_context() -> ConverterContext:
     database_url = DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
-            username=config.sql_user,
-            password=urllib.parse.quote(config.sql_pass),
-            host=config.sql_host,
-            port=config.sql_port,
-            db=config.sql_db,
+            username=settings.SQL_USER,
+            password=urllib.parse.quote(settings.SQL_PASS),
+            host=settings.SQL_HOST,
+            port=settings.SQL_PORT,
+            db=settings.SQL_DB,
         ),
     )
 
@@ -141,9 +138,9 @@ async def get_context() -> ConverterContext:
     old_database_url = DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
             username=OLD_DB_USER,
-            password=urllib.parse.quote(config.sql_pass),
-            host=config.sql_host,
-            port=config.sql_port,
+            password=urllib.parse.quote(settings.SQL_PASS),
+            host=settings.SQL_HOST,
+            port=settings.SQL_PORT,
             db=OLD_DB,
         ),
     )
@@ -152,20 +149,19 @@ async def get_context() -> ConverterContext:
     await old_sql.connect()
 
     redis = Redis.from_url(
-        f"redis://{config.redis_host}:{config.redis_port}/{config.redis_db}",
+        f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
     )
     await redis.initialize()
 
     meili = MeiliClient(
-        f"http://{config.meili_host}:{config.meili_port}",
-        config.meili_key,
+        f"http://{settings.MEILI_HOST}:{settings.MEILI_PORT}",
+        settings.MEILI_KEY,
         timeout=10,
     )
     await meili.health()
 
     user_cache = SimpleAsyncMemoryCache[User]()
     password_cache = SimpleAsyncMemoryCache[str]()
-    http = httpx.AsyncClient()
 
     user_id_map = await create_user_id_map(old_sql)
 
@@ -175,7 +171,6 @@ async def get_context() -> ConverterContext:
         meili,
         user_cache,
         password_cache,
-        http,
         old_sql,
         user_id_map,
     )

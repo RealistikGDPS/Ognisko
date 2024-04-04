@@ -7,7 +7,6 @@ from rgdps.common import hashes
 from rgdps.common.context import Context
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.friends import FriendStatus
-from rgdps.constants.users import DEFAULT_PRIVILEGES
 from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges

@@ -1,15 +1,14 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import NotRequired
 from typing import TypedDict
 from typing import Unpack
-from typing import NotRequired
 
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.constants.level_comments import LevelCommentSorting
 from rgdps.models.level_comment import LevelComment
-from rgdps.common import modelling
-
 
 ALL_FIELDS = modelling.get_model_fields(LevelComment)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -18,7 +17,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def from_id(
@@ -81,15 +82,20 @@ class _LevelCommentUpdatePartial(TypedDict):
     post_ts: NotRequired[datetime]
     deleted: NotRequired[bool]
 
+
 async def update_partial(
     ctx: Context,
     comment_id: int,
-    **kwargs: Unpack[_LevelCommentUpdatePartial]
+    **kwargs: Unpack[_LevelCommentUpdatePartial],
 ) -> LevelComment | None:
     changed_fields = modelling.unpack_enum_types(kwargs)
-    
+
     await ctx.mysql.execute(
-        modelling.update_from_partial_dict("level_comments", comment_id, changed_fields),
+        modelling.update_from_partial_dict(
+            "level_comments",
+            comment_id,
+            changed_fields,
+        ),
         changed_fields,
     )
 

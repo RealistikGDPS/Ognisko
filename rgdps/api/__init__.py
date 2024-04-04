@@ -3,7 +3,6 @@ from __future__ import annotations
 import urllib.parse
 import uuid
 
-import httpx
 from databases import DatabaseURL
 from fastapi import FastAPI
 from fastapi import status
@@ -16,23 +15,24 @@ from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 from starlette.middleware.base import RequestResponseEndpoint
 
-from . import context
-from . import gd
-from . import pubsub
-from . import responses
 from rgdps import logger
+from rgdps import settings
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.cache.redis import SimpleRedisCache
-from rgdps.config import config
 from rgdps.constants.responses import GenericResponse
+from rgdps.services.boomlings import GeometryDashClient
 from rgdps.services.mysql import MySQLService
 from rgdps.services.pubsub import listen_pubsubs
 from rgdps.services.storage import LocalStorage
 from rgdps.services.storage import S3Storage
 
+from . import context
+from . import gd
+from . import pubsub
+
 
 def init_logging() -> None:
-    logger.init_basic_logging(config.log_level)
+    logger.init_basic_logging(settings.LOG_LEVEL)
 
 
 def init_events(app: FastAPI) -> None:
@@ -52,7 +52,7 @@ def init_events(app: FastAPI) -> None:
         )
 
         # If its a GD related request, give them something the client understands.
-        if str(request.url).startswith(config.http_url_prefix):
+        if str(request.url).startswith(settings.APP_URL_PREFIX):
             return Response(str(GenericResponse.FAIL))
 
         return JSONResponse(
@@ -64,11 +64,11 @@ def init_events(app: FastAPI) -> None:
 def init_mysql(app: FastAPI) -> None:
     database_url = DatabaseURL(
         "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
-            username=config.sql_user,
-            password=urllib.parse.quote(config.sql_pass),
-            host=config.sql_host,
-            port=config.sql_port,
-            db=config.sql_db,
+            username=settings.SQL_USER,
+            password=urllib.parse.quote(settings.SQL_PASS),
+            host=settings.SQL_HOST,
+            port=settings.SQL_PORT,
+            db=settings.SQL_DB,
         ),
     )
 
@@ -80,8 +80,8 @@ def init_mysql(app: FastAPI) -> None:
         logger.info(
             "Connected to the MySQL database.",
             extra={
-                "host": config.sql_host,
-                "db": config.sql_db,
+                "host": settings.SQL_HOST,
+                "db": settings.SQL_DB,
             },
         )
 
@@ -92,7 +92,7 @@ def init_mysql(app: FastAPI) -> None:
 
 def init_redis(app: FastAPI) -> None:
     app.state.redis = Redis.from_url(
-        f"redis://{config.redis_host}:{config.redis_port}/{config.redis_db}",
+        f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
     )
 
     @app.on_event("startup")
@@ -114,8 +114,8 @@ def init_redis(app: FastAPI) -> None:
         logger.info(
             "Connected to the Redis database.",
             extra={
-                "host": config.redis_host,
-                "db": config.redis_db,
+                "host": settings.REDIS_HOST,
+                "db": settings.REDIS_DB,
             },
         )
 
@@ -126,8 +126,8 @@ def init_redis(app: FastAPI) -> None:
 
 def init_meili(app: FastAPI) -> None:
     app.state.meili = MeiliClient(
-        f"http://{config.meili_host}:{config.meili_port}",
-        config.meili_key,
+        f"http://{settings.MEILI_HOST}:{settings.MEILI_PORT}",
+        settings.MEILI_KEY,
         timeout=10,
     )
 
@@ -137,18 +137,18 @@ def init_meili(app: FastAPI) -> None:
         logger.info(
             "Connected to the MeiliSearch database.",
             extra={
-                "host": config.meili_host,
+                "host": settings.MEILI_HOST,
             },
         )
 
 
 def init_s3_storage(app: FastAPI) -> None:
     app.state.storage = S3Storage(
-        region=config.s3_region,
-        endpoint=config.s3_endpoint,
-        access_key=config.s3_access_key,
-        secret_key=config.s3_secret_key,
-        bucket=config.s3_bucket,
+        region=settings.S3_REGION,
+        endpoint=settings.S3_ENDPOINT,
+        access_key=settings.S3_ACCESS_KEY,
+        secret_key=settings.S3_SECRET_KEY,
+        bucket=settings.S3_BUCKET,
         retries=10,
         timeout=5,
     )
@@ -159,8 +159,8 @@ def init_s3_storage(app: FastAPI) -> None:
         logger.info(
             "Connected to S3 storage.",
             extra={
-                "bucket": config.s3_bucket,
-                "region": config.s3_region,
+                "bucket": settings.S3_BUCKET,
+                "region": settings.S3_REGION,
             },
         )
 
@@ -171,7 +171,7 @@ def init_s3_storage(app: FastAPI) -> None:
 
 def init_local_storage(app: FastAPI) -> None:
     app.state.storage = LocalStorage(
-        root=config.local_root,
+        root=settings.INTERNAL_RGDPS_DIRECTORY,
     )
 
     @app.on_event("startup")
@@ -179,12 +179,17 @@ def init_local_storage(app: FastAPI) -> None:
         logger.info("Connected to the local storage.")
 
 
-def init_http(app: FastAPI) -> None:
-    app.state.http = httpx.AsyncClient()
+def init_gd(app: FastAPI) -> None:
+    app.state.gd = GeometryDashClient(
+        settings.SERVER_GD_URL,
+    )
 
-    @app.on_event("shutdown")
-    async def shutdown() -> None:
-        await app.state.http.aclose()
+    logger.info(
+        "Initialised the main Geometry Dash client.",
+        extra={
+            "server_url": settings.SERVER_GD_URL,
+        },
+    )
 
 
 def init_cache_stateful(app: FastAPI) -> None:
@@ -234,7 +239,7 @@ def init_middlewares(app: FastAPI) -> None:
         call_next: RequestResponseEndpoint,
     ) -> Response:
         # Verifying request header for client endpoints.
-        if str(request.url).startswith(config.http_url_prefix):
+        if str(request.url).startswith(settings.APP_URL_PREFIX):
             # GD sends an empty User-Agent header.
             user_agent = request.headers.get("User-Agent")
             if user_agent != "":
@@ -287,14 +292,14 @@ def init_api() -> FastAPI:
     init_mysql(app)
     init_redis(app)
     init_meili(app)
-    init_http(app)
+    init_gd(app)
 
-    if config.s3_enabled:
+    if settings.S3_ENABLED:
         init_s3_storage(app)
     else:
         init_local_storage(app)
 
-    if config.srv_stateless:
+    if settings.SERVER_STATELESS:
         init_cache_stateless(app)
     else:
         init_cache_stateful(app)

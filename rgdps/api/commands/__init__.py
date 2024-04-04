@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from rgdps import settings
+
 from . import framework
 from . import levels
 from . import misc
 from . import schedule
 from . import sync
 from . import users
-from rgdps.config import config
 
 router = framework.CommandRouter("root")
 router.merge(misc.router)
@@ -17,8 +18,8 @@ router.merge(schedule.router)
 
 
 def is_command(entry: str) -> bool:
-    return entry.startswith(config.srv_command_prefix)
+    return entry.startswith(settings.SERVER_COMMAND_PREFIX)
 
 
 def strip_prefix(entry: str) -> str:
-    return entry.removeprefix(config.srv_command_prefix)
+    return entry.removeprefix(settings.SERVER_COMMAND_PREFIX)

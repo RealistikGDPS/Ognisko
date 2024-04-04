@@ -4,12 +4,11 @@ import urllib.parse
 from datetime import timedelta
 
 from rgdps import logger
-from rgdps.common import gd_obj
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.constants.songs import SongSource
 from rgdps.models.song import Song
-from rgdps.common import modelling
-
+from rgdps.services.boomlings import GDRequestStatus
 
 ALL_FIELDS = modelling.get_model_fields(Song)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -18,7 +17,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def from_db(
@@ -99,37 +100,10 @@ async def create(
 
 
 async def from_boomlings(ctx: Context, song_id: int) -> Song | None:
-    # May raise an exception in case of network issue.
-    song_api = await ctx.http.post(
-        "http://www.boomlings.com/database/getGJSongInfo.php",
-        data={
-            "secret": "Wmfd2893gb7",
-            "songID": song_id,
-        },
-        timeout=2,
-        headers={
-            "User-Agent": "",
-        },
-    )
+    song_data = await ctx.gd.get_song(song_id)
 
-    # Endpoint always returns a 200 HTTP code, result to checking the format.
-    response_data = song_api.content.decode()
-
-    logger.debug(
-        "Crawled song data from Boomlings.",
-        extra={
-            "song_id": song_id,
-            "response_data": response_data,
-        },
-    )
-
-    if "~|~" not in response_data:
+    if isinstance(song_data, GDRequestStatus):
         return None
-
-    song_data = gd_obj.loads(
-        data=response_data,
-        sep="~|~",
-    )
 
     # TODO: maybe make a gd_obj.load_song
     return Song(
@@ -195,44 +169,26 @@ async def get_count(ctx: Context) -> int:
     return await ctx.mysql.fetch_val("SELECT COUNT(*) FROM songs")
 
 
-CDN_QUERY_URL = "https://www.boomlings.com/database/getCustomContentURL.php"
-FALLBACK_CDN_URL = "https://geometrydashfiles.b-cdn.net'"
-
-
-async def _query_current_cdn_url(ctx: Context) -> str | None:
-    logger.debug("Querying Boomlings for the custom content CDN url.")
-
-    sfx_url = await ctx.http.post(
-        CDN_QUERY_URL,
-        timeout=2,
-        headers={
-            "User-Agent": "",
-        },
-    )
-
-    if "http" not in sfx_url.text:
-        return FALLBACK_CDN_URL
-
-    return sfx_url.text
-
-
 CDN_URL_CACHE_KEY = "rgdps:cache:cdn_url"
 
 
 async def get_cdn_url(ctx: Context) -> str | None:
-    res = await ctx.redis.get(CDN_URL_CACHE_KEY)
+    cached = await ctx.redis.get(CDN_URL_CACHE_KEY)
 
-    if res is not None:
-        return res.decode()
+    if cached is not None:
+        return cached.decode()
 
-    res = await _query_current_cdn_url(ctx)
+    logger.debug("CDN URL cache miss. Querying the servers.")
 
-    if res is not None:
-        logger.debug("Using cached custom content CDN url.")
-        await ctx.redis.set(
-            CDN_URL_CACHE_KEY,
-            res,
-            timedelta(minutes=30),
-        )
+    queried_url = await ctx.gd.get_cdn_url()
 
-    return res
+    if isinstance(queried_url, GDRequestStatus):
+        return None
+
+    await ctx.redis.set(
+        CDN_URL_CACHE_KEY,
+        queried_url,
+        ex=timedelta(minutes=20),
+    )
+
+    return queried_url

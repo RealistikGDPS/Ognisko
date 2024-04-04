@@ -4,7 +4,6 @@ import asyncio
 
 from rgdps.api.commands.framework import CommandContext
 from rgdps.api.commands.framework import CommandRouter
-from rgdps.api.commands.framework import unwrap_service
 from rgdps.constants.users import UserPrivileges
 from rgdps.usecases import leaderboards
 from rgdps.usecases import levels

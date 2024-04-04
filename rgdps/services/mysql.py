@@ -5,15 +5,14 @@ from __future__ import annotations
 
 from abc import ABC
 from abc import abstractmethod
+from collections.abc import AsyncGenerator
+from collections.abc import Mapping
 from typing import Any
-from typing import Mapping
-from typing import AsyncGenerator
 
 from databases import Database
 from databases import DatabaseURL
 from databases.core import Connection
 from databases.core import Transaction
-
 
 MySQLValue = Any
 MySQLRow = Mapping[str, MySQLValue]
@@ -47,7 +46,9 @@ class AbstractMySQLService(ABC):
 
     @abstractmethod
     def iterate(
-        self, query: str, values: MySQLValues | None = None
+        self,
+        query: str,
+        values: MySQLValues | None = None,
     ) -> AsyncGenerator[MySQLRow, None]: ...
 
 

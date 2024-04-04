@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 from datetime import datetime
+from typing import NotRequired
 from typing import TypedDict
 from typing import Unpack
-from typing import NotRequired
 
+from rgdps.common import modelling
 from rgdps.common.context import Context
 from rgdps.models.user_comment import UserComment
-from rgdps.common import modelling
-
 
 ALL_FIELDS = modelling.get_model_fields(UserComment)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
@@ -17,7 +16,9 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(CUSTOMISABLE_FIELDS)
+_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
+    CUSTOMISABLE_FIELDS,
+)
 
 
 async def from_id(
@@ -50,7 +51,8 @@ async def from_user_id(
     if not include_deleted:
         condition = " AND NOT deleted"
     comments_db = await ctx.mysql.fetch_all(
-        f"SELECT {_ALL_FIELDS_COMMA} FROM user_comments WHERE user_id = :user_id" + condition,
+        f"SELECT {_ALL_FIELDS_COMMA} FROM user_comments WHERE user_id = :user_id"
+        + condition,
         {"user_id": user_id},
     )
 
@@ -136,10 +138,9 @@ async def update_partial(
     ctx: Context,
     comment_id: int,
     **kwargs: Unpack[_UserCommentUpdatePartial],
-    
 ) -> UserComment | None:
     changed_fields = modelling.unpack_enum_types(kwargs)
-    
+
     await ctx.mysql.execute(
         modelling.update_from_partial_dict("user_comments", comment_id, changed_fields),
         changed_fields,
