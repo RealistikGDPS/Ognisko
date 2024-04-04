@@ -162,6 +162,8 @@ def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
         level_dict["awarded"] = bool(
             level_dict["search_flags"] & LevelSearchFlag.AWARDED,
         )
+        level_dict["legendary"] = bool(level_dict["search_flags"] & LevelSearchFlag.LEGENDARY)
+        level_dict["mythical"] = bool(level_dict["search_flags"] & LevelSearchFlag.MYTHICAL)
 
     return level_dict
 
@@ -183,11 +185,19 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     if level_dict["awarded"]:
         search_flags |= LevelSearchFlag.AWARDED
 
+    if level_dict["legendary"]:
+        search_flags |= LevelSearchFlag.LEGENDARY
+
+    if level_dict["mythical"]:
+        search_flags |= LevelSearchFlag.MYTHICAL
+
     level_dict["search_flags"] = search_flags
 
     del level_dict["epic"]
     del level_dict["magic"]
     del level_dict["awarded"]
+    del level_dict["legendary"]
+    del level_dict["mythical"]
 
     # FIXME: Temporary migration measure.
     if "song_ids" not in level_dict:

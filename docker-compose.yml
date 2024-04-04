@@ -19,7 +19,7 @@ services:
       driver: none
     image: redis
     restart: always
-    command: redis-server
+    command: "redis-server --port ${REDIS_PORT}"
     ports:
       - "${REDIS_PORT}:${REDIS_PORT}"
     volumes:
