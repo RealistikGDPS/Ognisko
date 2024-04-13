@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import urllib.parse
+import logging
 import uuid
 
 from databases import DatabaseURL
@@ -41,7 +42,7 @@ def init_events(app: FastAPI) -> None:
         request: Request,
         e: RequestValidationError,
     ) -> Response:
-        logger.exception(
+        logging.exception(
             f"A validation error has occured while parsing a request.",
             extra={
                 "url": str(request.url),
@@ -77,7 +78,7 @@ def init_mysql(app: FastAPI) -> None:
     @app.on_event("startup")
     async def on_startup() -> None:
         await app.state.mysql.connect()
-        logger.info(
+        logging.info(
             "Connected to the MySQL database.",
             extra={
                 "host": settings.SQL_HOST,
@@ -111,7 +112,7 @@ def init_redis(app: FastAPI) -> None:
             prefix="rgdps:ratelimit",
         )
 
-        logger.info(
+        logging.info(
             "Connected to the Redis database.",
             extra={
                 "host": settings.REDIS_HOST,
@@ -134,7 +135,7 @@ def init_meili(app: FastAPI) -> None:
     @app.on_event("startup")
     async def startup() -> None:
         await app.state.meili.health()
-        logger.info(
+        logging.info(
             "Connected to the MeiliSearch database.",
             extra={
                 "host": settings.MEILI_HOST,
@@ -156,7 +157,7 @@ def init_s3_storage(app: FastAPI) -> None:
     @app.on_event("startup")
     async def startup() -> None:
         app.state.storage = await app.state.storage.connect()
-        logger.info(
+        logging.info(
             "Connected to S3 storage.",
             extra={
                 "bucket": settings.S3_BUCKET,
@@ -176,7 +177,7 @@ def init_local_storage(app: FastAPI) -> None:
 
     @app.on_event("startup")
     async def startup() -> None:
-        logger.info("Connected to the local storage.")
+        logging.info("Connected to the local storage.")
 
 
 def init_gd(app: FastAPI) -> None:
@@ -184,7 +185,7 @@ def init_gd(app: FastAPI) -> None:
         settings.SERVER_GD_URL,
     )
 
-    logger.info(
+    logging.info(
         "Initialised the main Geometry Dash client.",
         extra={
             "server_url": settings.SERVER_GD_URL,
@@ -196,7 +197,7 @@ def init_cache_stateful(app: FastAPI) -> None:
     app.state.user_cache = SimpleAsyncMemoryCache()
     app.state.password_cache = SimpleAsyncMemoryCache()
 
-    logger.info("Initialised stateful caching.")
+    logging.info("Initialised stateful caching.")
 
 
 def init_cache_stateless(app: FastAPI) -> None:
@@ -211,7 +212,7 @@ def init_cache_stateless(app: FastAPI) -> None:
         serialise=lambda x: x.encode(),
     )
 
-    logger.info("Initialised stateless caching.")
+    logging.info("Initialised stateless caching.")
 
 
 def init_routers(app: FastAPI) -> None:
@@ -223,7 +224,7 @@ def init_routers(app: FastAPI) -> None:
 def init_middlewares(app: FastAPI) -> None:
     @app.middleware("http")
     async def mysql_transaction(request: Request, call_next):
-        logger.debug(
+        logging.debug(
             "Opened a new MySQL transaction for request.",
             extra={
                 "uuid": request.state.uuid,
@@ -243,7 +244,7 @@ def init_middlewares(app: FastAPI) -> None:
             # GD sends an empty User-Agent header.
             user_agent = request.headers.get("User-Agent")
             if user_agent != "":
-                logger.info(
+                logging.info(
                     "Client request stopped due to invalid User-Agent header.",
                     extra={
                         "url": str(request.url),
@@ -263,7 +264,7 @@ def init_middlewares(app: FastAPI) -> None:
         try:
             return await call_next(request)
         except Exception as e:
-            logger.exception(
+            logging.exception(
                 f"An exception has occured while processing a request!",
                 extra={
                     "url": str(request.url),
@@ -281,6 +282,7 @@ def init_middlewares(app: FastAPI) -> None:
 
 def init_api() -> FastAPI:
     init_logging()
+
     app = FastAPI(
         title="RealistikGDPS",
         openapi_url=None,

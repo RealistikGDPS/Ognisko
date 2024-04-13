@@ -3,41 +3,27 @@ from __future__ import annotations
 import logging.config
 import sys
 import threading
+import yaml
 from collections.abc import Callable
 from types import TracebackType
 from typing import Any
 from typing import Optional
 
+def configure_logging(log_level: str | int) -> None:
+    with open("logging.yaml") as f:
+        config = yaml.safe_load(f.read())
 
-LOGGER = logging.getLogger("rgdps")
+        # dynamically map levels for each handler 
+        for handler in config["handlers"].values():
+            handler["level"] = log_level
 
+        config["root"]["level"] = log_level
+
+        logging.config.dictConfig(config)
 
 def init_basic_logging(log_level: str | int) -> None:
-    logging.basicConfig(level=log_level)
+    configure_logging(log_level)
     hook_exception_handlers()
-
-def debug(*args, **kwargs) -> None:
-    return LOGGER.debug(*args, **kwargs)
-
-
-def info(*args, **kwargs) -> None:
-    return LOGGER.info(*args, **kwargs)
-
-
-def warning(*args, **kwargs) -> None:
-    return LOGGER.warning(*args, **kwargs)
-
-
-def error(*args, **kwargs) -> None:
-    return LOGGER.error(*args, **kwargs)
-
-
-def critical(*args, **kwargs) -> None:
-    return LOGGER.critical(*args, **kwargs)
-
-
-def exception(*args, **kwargs) -> None:
-    return LOGGER.exception(*args, **kwargs)
 
 
 # Hooking the exception handler to log uncaught exceptions.
@@ -60,7 +46,7 @@ def internal_exception_handler(
     exc_value: BaseException,
     exc_traceback: TracebackType | None,
 ) -> Any:
-    LOGGER.exception(
+    logging.exception(
         "An unhandled exception occurred!",
         exc_info=(exc_type, exc_value, exc_traceback),
     )
@@ -70,13 +56,13 @@ def internal_thread_exception_handler(
     args: threading.ExceptHookArgs,
 ) -> Any:
     if args.exc_value is not None:
-        LOGGER.exception(
+        logging.exception(
             "An unhandled exception occurred!",
             exc_info=(args.exc_type, args.exc_value, args.exc_traceback),
             extra={"thread_vars": vars(args.thread)},
         )
     else:
-        LOGGER.warning(
+        logging.warning(
             "A thread exception hook was called without an exception value!",
             extra={
                 "exc_type": args.exc_type,

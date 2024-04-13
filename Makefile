@@ -7,6 +7,7 @@ run:
 		redis \
 		mysql \
 		meilisearch \
+		datadog \
 		realistikgdps
 
 run-bg:
@@ -14,6 +15,7 @@ run-bg:
 		redis \
 		mysql \
 		meilisearch \
+		datadog \
 		realistikgdps
 
 stop:
