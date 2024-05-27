@@ -16,7 +16,7 @@ INTERVALS = (
 
 def into_str_ts(ts: datetime) -> str:
     unix_ts = int(time.mktime(ts.timetuple()))
-    value = int(time.time()) - unix_ts
+    value = round(time.time()) - unix_ts
 
     for name, count in INTERVALS:
         if value < count:

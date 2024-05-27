@@ -13,7 +13,7 @@ class RGB:
         if text in COLOUR_PRESETS:
             return COLOUR_PRESETS[text]
 
-        text_split = text.strip(" ").split(",", maxsplit=3)
+        text_split = text.replace(", ", ",").strip(" ").split(",", maxsplit=3)
         if len(text_split) != 3:
             return None
 
