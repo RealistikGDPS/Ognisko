@@ -14,6 +14,9 @@ from rgdps.common.cache import AbstractAsyncCache
 from .save_data import SaveData
 from .save_data import SaveDataRepository
 
+from .user import User
+from .user import UserRepository
+
 class Context(ABC):
     @property
     @abstractmethod
