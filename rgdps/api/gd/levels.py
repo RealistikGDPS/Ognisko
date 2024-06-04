@@ -10,9 +10,9 @@ from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
 from rgdps.common import gd_obj
-from rgdps.common.validators import Base64String
-from rgdps.common.validators import CommaSeparatedIntList
-from rgdps.common.validators import TextBoxString
+from rgdps.api.validators import Base64String
+from rgdps.api.validators import CommaSeparatedIntList
+from rgdps.api.validators import TextBoxString
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.constants.levels import LevelDemonRating
