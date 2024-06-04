@@ -11,7 +11,6 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 from fastapi_limiter import FastAPILimiter
-from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 from starlette.middleware.base import RequestResponseEndpoint
 
@@ -25,6 +24,7 @@ from rgdps.adapters.mysql import MySQLService
 from rgdps.adapters.pubsub import listen_pubsubs
 from rgdps.adapters.storage import LocalStorage
 from rgdps.adapters.storage import S3Storage
+from rgdps.adapters import MeiliSearchClient
 
 from . import context
 from . import gd
@@ -132,8 +132,9 @@ def init_redis(app: FastAPI) -> None:
 
 
 def init_meili(app: FastAPI) -> None:
-    app.state.meili = MeiliClient(
-        f"http://{settings.MEILI_HOST}:{settings.MEILI_PORT}",
+    app.state.meili = MeiliSearchClient.from_host(
+        settings.MEILI_HOST,
+        settings.MEILI_PORT,
         settings.MEILI_KEY,
         timeout=10,
     )
