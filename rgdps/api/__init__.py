@@ -200,21 +200,10 @@ def init_gd(app: FastAPI) -> None:
     )
 
 
-def init_cache_stateful(app: FastAPI) -> None:
+def init_cache(app: FastAPI) -> None:
     app.state.password_cache = SimpleAsyncMemoryCache()
 
     logger.info("Initialised stateful caching.")
-
-
-def init_cache_stateless(app: FastAPI) -> None:
-    app.state.password_cache = SimpleRedisCache(
-        redis=app.state.redis,
-        key_prefix="rgdps:cache:password",
-        deserialise=lambda x: x.decode(),
-        serialise=lambda x: x.encode(),
-    )
-
-    logger.info("Initialised stateless caching.")
 
 
 def init_routers(app: FastAPI) -> None:
@@ -302,10 +291,7 @@ def init_api() -> FastAPI:
     else:
         init_local_storage(app)
 
-    if settings.SERVER_STATELESS:
-        init_cache_stateless(app)
-    else:
-        init_cache_stateful(app)
+    init_cache(app)
 
     init_routers(app)
 
