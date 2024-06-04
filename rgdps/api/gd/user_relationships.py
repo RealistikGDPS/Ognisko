@@ -12,8 +12,8 @@ from rgdps.common.validators import Base64String
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.users import UserRelationshipType
 from rgdps.models.user import User
-from rgdps.usecases import friend_requests
-from rgdps.usecases import user_relationships
+from rgdps.services import friend_requests
+from rgdps.services import user_relationships
 
 PAGE_SIZE = 10
 

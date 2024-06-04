@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def read_comma_separated_list(value: str) -> list[Any]:
+def read_comma_separated_list(value: str) -> list[str]:
     return [x.strip() for x in value.split(",")]
 
 

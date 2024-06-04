@@ -18,8 +18,8 @@ from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivilegeLevel
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
-from rgdps.usecases import user_credentials
-from rgdps.usecases import users
+from rgdps.services import user_credentials
+from rgdps.services import users
 
 PAGE_SIZE = 10
 

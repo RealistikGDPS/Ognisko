@@ -13,7 +13,7 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.message import MessageDirection
 from rgdps.models.user import User
-from rgdps.usecases import messages
+from rgdps.services import messages
 
 PAGE_SIZE = 10
 

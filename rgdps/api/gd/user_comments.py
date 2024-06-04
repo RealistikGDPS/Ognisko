@@ -14,8 +14,8 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.likes import LikeType
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
-from rgdps.usecases import likes
-from rgdps.usecases import user_comments
+from rgdps.services import likes
+from rgdps.services import user_comments
 
 PAGE_SIZE = 10
 

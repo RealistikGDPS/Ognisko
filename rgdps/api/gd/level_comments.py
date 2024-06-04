@@ -14,7 +14,7 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_comments import LevelCommentSorting
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
-from rgdps.usecases import level_comments
+from rgdps.services import level_comments
 
 PAGE_SIZE = 10
 

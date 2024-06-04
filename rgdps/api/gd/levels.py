@@ -21,9 +21,9 @@ from rgdps.constants.levels import LevelSearchType
 from rgdps.constants.levels import LevelFeature
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.user import User
-from rgdps.usecases import level_schedules
-from rgdps.usecases import levels
-from rgdps.usecases import songs
+from rgdps.services import level_schedules
+from rgdps.services import levels
+from rgdps.services import songs
 
 PAGE_SIZE = 10
 

@@ -20,11 +20,11 @@ from rgdps import settings
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.cache.redis import SimpleRedisCache
 from rgdps.constants.responses import GenericResponse
-from rgdps.services.boomlings import GeometryDashClient
-from rgdps.services.mysql import MySQLService
-from rgdps.services.pubsub import listen_pubsubs
-from rgdps.services.storage import LocalStorage
-from rgdps.services.storage import S3Storage
+from rgdps.adapters.boomlings import GeometryDashClient
+from rgdps.adapters.mysql import MySQLService
+from rgdps.adapters.pubsub import listen_pubsubs
+from rgdps.adapters.storage import LocalStorage
+from rgdps.adapters.storage import S3Storage
 
 from . import context
 from . import gd
@@ -200,17 +200,12 @@ def init_gd(app: FastAPI) -> None:
 
 
 def init_cache_stateful(app: FastAPI) -> None:
-    app.state.user_cache = SimpleAsyncMemoryCache()
     app.state.password_cache = SimpleAsyncMemoryCache()
 
     logger.info("Initialised stateful caching.")
 
 
 def init_cache_stateless(app: FastAPI) -> None:
-    app.state.user_cache = SimpleRedisCache(
-        redis=app.state.redis,
-        key_prefix="rgdps:cache:user",
-    )
     app.state.password_cache = SimpleRedisCache(
         redis=app.state.redis,
         key_prefix="rgdps:cache:password",

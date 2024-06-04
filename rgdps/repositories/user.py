@@ -256,49 +256,20 @@ async def update_partial(
 
     await update_meili_partial(ctx, user_id, **kwargs)
 
-    await drop_cache(ctx, user_id)
-
     return user
 
-
-async def drop_cache(ctx: Context, user_id: int) -> None:
-    await ctx.user_cache.delete(user_id)
 
 
 async def multiple_from_id(ctx: Context, user_ids: list[int]) -> list[User]:
     if not user_ids:
         return []
 
-    users: list[User] = []
-    uncached_ids = []
-
-    for user_id in user_ids:
-        cache_user = await ctx.user_cache.get(user_id)
-        if cache_user is not None:
-            users.append(cache_user)
-        else:
-            uncached_ids.append(user_id)
-
-    db_users = await multiple_from_db(ctx, uncached_ids)
-    users.extend(db_users)
-
-    # since we fetch from cache first and db for the rest
-    # users may not be in the same order they were provided in
-    users.sort(key=lambda user: user_ids.index(user.id))
-
-    return users
+    db_users = await multiple_from_db(ctx, user_ids)
+    return db_users
 
 
 async def from_id(ctx: Context, user_id: int) -> User | None:
-    cache_user = await ctx.user_cache.get(user_id)
-    if cache_user is not None:
-        return cache_user
-
-    user = await from_db(ctx, user_id)
-    if user is not None:
-        await ctx.user_cache.set(user_id, user)
-
-    return user
+    return await from_db(ctx, user_id)
 
 
 async def check_email_exists(ctx: Context, email: str) -> bool:
