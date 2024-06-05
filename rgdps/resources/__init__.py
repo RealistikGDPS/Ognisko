@@ -12,6 +12,10 @@ from .user import UserRepository
 from .level_data import LevelData
 from .level_data import LevelDataRepository
 
+from .user_replationship import UserRelationship
+from .user_replationship import UserRelationshipRepository
+from .user_replationship import UserRelationshipType
+
 class Context(ABC):
     @property
     @abstractmethod
@@ -24,3 +28,7 @@ class Context(ABC):
     @property
     @abstractmethod
     def level_data(self) -> LevelDataRepository: ...
+
+    @property
+    @abstractmethod
+    def relationships(self) -> UserRelationshipRepository: ...

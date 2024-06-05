@@ -15,3 +15,4 @@ from . import user_relationships
 from . import users
 
 from ._common import ServiceError
+from ._common import ErrorOr
