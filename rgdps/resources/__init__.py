@@ -16,6 +16,9 @@ from .user_replationship import UserRelationship
 from .user_replationship import UserRelationshipRepository
 from .user_replationship import UserRelationshipType
 
+from .user_credential import UserCredential
+from .user_credential import UserCredentialRepository
+
 class Context(ABC):
     @property
     @abstractmethod
@@ -32,3 +35,8 @@ class Context(ABC):
     @property
     @abstractmethod
     def relationships(self) -> UserRelationshipRepository: ...
+
+
+    @property
+    @abstractmethod
+    def credentials(self) -> UserCredentialRepository: ...
