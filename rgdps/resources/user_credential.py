@@ -53,4 +53,31 @@ class UserCredentialRepository:
         return credential
     
 
-    async def from_
+    async def from_user_id(
+            self,
+            user_id: int,
+    ) -> UserCredential | None:
+        res = await self._mysql.fetch_one(
+            f"SELECT {_ALL_FIELDS_COMMA} FROM user_credentials WHERE user_id = :user_id "
+            "ORDER BY id DESC LIMIT 1",
+            {"user_id": user_id},
+        )
+
+        if not res:
+            return None
+        
+        return UserCredential(**res)
+    
+
+    async def delete_from_user_id(self, user_id: int) -> None:
+        await self._mysql.execute(
+            "DELETE FROM user_credentials WHERE user_id = :user_id",
+            {"user_id": user_id},
+        )
+
+    
+    async def delete_from_id(self, credential_id: int) -> None:
+        await self._mysql.execute(
+            "DELETE FROM user_credentials WHERE id = :credential_id",
+            {"credential_id": credential_id},
+        )
