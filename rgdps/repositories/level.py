@@ -407,6 +407,7 @@ async def search(
 
     if featured:
         filters.append("feature_order > 0")
+        sort.append("feature_order:desc")
 
     if original:
         filters.append("original_id IS NULL")
