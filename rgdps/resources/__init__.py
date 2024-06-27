@@ -19,6 +19,9 @@ from .user_replationship import UserRelationshipType
 from .user_credential import UserCredential
 from .user_credential import UserCredentialRepository
 
+from .daily_chest import DailyChest
+from .daily_chest import DailyChestRepository
+
 class Context(ABC):
     @property
     @abstractmethod
@@ -40,3 +43,8 @@ class Context(ABC):
     @property
     @abstractmethod
     def credentials(self) -> UserCredentialRepository: ...
+
+
+    @property
+    @abstractmethod
+    def daily_chests(self) -> DailyChestRepository: ...
