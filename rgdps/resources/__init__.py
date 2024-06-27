@@ -21,6 +21,8 @@ from .user_credential import UserCredentialRepository
 
 from .daily_chest import DailyChest
 from .daily_chest import DailyChestRepository
+from .daily_chest import DailyChestType
+from .daily_chest import DailyChestRewardType
 
 class Context(ABC):
     @property

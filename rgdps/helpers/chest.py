@@ -1,35 +1,11 @@
 from __future__ import annotations
 
 import random
+import base64
 from typing import NamedTuple
 
-from rgdps.constants.daily_chests import DailyChestRewardType
-from rgdps.constants.levels import LevelSearchFlag
-from rgdps.models.level import Level
-
-
-def calculate_creator_points(level: Level) -> int:
-    creator_points = 0
-
-    # One for a rated level
-    if level.stars > 0:
-        creator_points += 1
-
-    # One for a featured level
-    if level.feature_order > 0:
-        creator_points += 1
-
-    # One for being rated epic
-    if level.search_flags & LevelSearchFlag.EPIC:
-        creator_points += 1
-
-    if level.search_flags & LevelSearchFlag.LEGENDARY:
-        creator_points += 1
-    
-    if level.search_flags & LevelSearchFlag.MYTHICAL:
-        creator_points += 1
-
-    return creator_points
+from rgdps.utilities import cryptography
+from rgdps.resources import DailyChestRewardType
 
 
 class ChestReward(NamedTuple):
@@ -47,17 +23,6 @@ SMALL_CHEST_MANA = [
     50,
 ]
 SMALL_CHEST_DIAMONDS = [1, 2, 3, 4]
-
-
-def get_small_chest() -> list[ChestReward]:
-    mana = random.choice(SMALL_CHEST_MANA)
-    diamonds = random.choice(SMALL_CHEST_DIAMONDS)
-
-    return [
-        ChestReward(DailyChestRewardType.MANA, mana),
-        ChestReward(DailyChestRewardType.DIAMONDS, diamonds),
-    ]
-
 
 LARGE_CHEST_MANA = [
     100,
@@ -78,8 +43,16 @@ SHARD_CHANCE = 50
 MAX_SHARDS = 2
 LOW_DIAMONDS_ROLL = [4, 5]
 
+def generate_small_chest() -> list[ChestReward]:
+    mana = random.choice(SMALL_CHEST_MANA)
+    diamonds = random.choice(SMALL_CHEST_DIAMONDS)
 
-def get_large_chest() -> list[ChestReward]:
+    return [
+        ChestReward(DailyChestRewardType.MANA, mana),
+        ChestReward(DailyChestRewardType.DIAMONDS, diamonds),
+    ]
+
+def generate_large_chest() -> list[ChestReward]:
     rewards = [ChestReward(DailyChestRewardType.MANA, random.choice(LARGE_CHEST_MANA))]
 
     diamonds = random.choice(LOW_DIAMONDS_ROLL)
@@ -93,3 +66,24 @@ def get_large_chest() -> list[ChestReward]:
             rewards.append(ChestReward(random.choice(POSSIBLE_SHARDS), 1))
 
     return rewards
+
+
+CHEST_XOR_KEY = b"59182"
+
+def encrypt_chests(response: str) -> str:
+    return base64.urlsafe_b64encode(
+        xor_cipher.cyclic_xor_unsafe(
+            data=response.encode(),
+            key=CHEST_XOR_KEY,
+        ),
+    ).decode()
+
+
+def decrypt_chest_check(check_string: str) -> str:
+    valid_check = check_string[5:]
+    de_b64 = cryptography.decode_base64(valid_check)
+
+    return xor_cipher.cyclic_xor_unsafe(
+        data=de_b64.encode(),
+        key=CHEST_XOR_KEY,
+    ).decode()
