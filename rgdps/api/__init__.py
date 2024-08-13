@@ -204,7 +204,7 @@ def init_gd(app: FastAPI) -> None:
 def init_cache(app: FastAPI) -> None:
     app.state.password_cache = SimpleAsyncMemoryCache()
 
-    logger.info("Initialised stateful caching.")
+    logger.info("Initialised stateful password caching.")
 
 
 def init_gd_routers(app: FastAPI) -> None:
