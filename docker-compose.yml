@@ -13,6 +13,11 @@ services:
     volumes:
       - ${MYSQL_DIRECTORY}:/var/lib/mysql
     restart: always
+    healthcheck:
+      test: "/usr/bin/mysql --user=$$MYSQL_USER --password=$$MYSQL_PASSWORD --execute \"SELECT 1;\""
+      interval: 2s
+      timeout: 20s
+      retries: 10
 
   redis:
     logging:
@@ -24,15 +29,23 @@ services:
       - "${REDIS_PORT}:${REDIS_PORT}"
     volumes:
       - ${REDIS_DIRECTORY}:/data
+    healthcheck:
+      test: "redis-cli -p ${REDIS_PORT} ping"
+      interval: 2s
+      timeout: 20s
+      retries: 10
 
   realistikgdps:
     image: realistikgdps:latest
     ports:
       - "${APP_PORT}:${APP_PORT}"
     depends_on:
-      - mysql
-      - redis
-      - meilisearch
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
     restart: always
     environment:
       - APP_PORT=${APP_PORT}
@@ -75,6 +88,7 @@ services:
     volumes:
       - .:/app
       - ${RGDPS_DIRECTORY}:/data # <- INTERNAL_RGDPS_DIRECTORY
+    
 
   meilisearch:
     image: getmeili/meilisearch:v1.3.1
