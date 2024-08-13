@@ -5,7 +5,7 @@ from typing import NamedTuple
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
-from rgdps.common.colour import Colour
+from rgdps.utilities.colour import Colour
 
 
 class DatabaseModel(BaseModel):
