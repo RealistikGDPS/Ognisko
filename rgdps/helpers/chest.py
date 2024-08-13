@@ -4,6 +4,8 @@ import base64
 import random
 from typing import NamedTuple
 
+import xor_cipher
+
 from rgdps.resources import DailyChestRewardType
 from rgdps.utilities import cryptography
 
@@ -75,7 +77,7 @@ CHEST_XOR_KEY = b"59182"
 
 def encrypt_chests(response: str) -> str:
     return base64.urlsafe_b64encode(
-        xor_cipher.cyclic_xor_unsafe(
+        xor_cipher.cyclic_xor(
             data=response.encode(),
             key=CHEST_XOR_KEY,
         ),
@@ -86,7 +88,7 @@ def decrypt_chest_check(check_string: str) -> str:
     valid_check = check_string[5:]
     de_b64 = cryptography.decode_base64(valid_check)
 
-    return xor_cipher.cyclic_xor_unsafe(
+    return xor_cipher.cyclic_xor(
         data=de_b64.encode(),
         key=CHEST_XOR_KEY,
     ).decode()

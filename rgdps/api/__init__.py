@@ -106,9 +106,12 @@ def init_redis(app: FastAPI) -> None:
 
     @app.on_event("startup")
     async def on_startup() -> None:
-        await app.state.redis.initialise()
         # TODO: Fix.
         shared_ctx = context.PubsubContext(app)
+        pubsub.inject_context(shared_ctx)
+        app.state.redis.include_router(pubsub.router)
+
+        await app.state.redis.initialise()
 
         # TODO: Custom ratelimit callback that returns `-1`.
         await FastAPILimiter.init(
@@ -204,10 +207,10 @@ def init_cache(app: FastAPI) -> None:
     logger.info("Initialised stateful caching.")
 
 
-def init_routers(app: FastAPI) -> None:
+def init_gd_routers(app: FastAPI) -> None:
     import rgdps.api
 
-    app.include_router(rgdps.api.gd.router)
+    app.include_router(rgdps.api.gd.routes.router)
 
 
 def init_middlewares(app: FastAPI) -> None:
@@ -291,6 +294,6 @@ def init_api() -> FastAPI:
 
     init_cache(app)
 
-    init_routers(app)
+    init_gd_routers(app)
 
     return app

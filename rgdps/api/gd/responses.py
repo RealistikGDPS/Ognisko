@@ -5,10 +5,10 @@ from typing import NoReturn
 from fastapi import HTTPException
 from fastapi.responses import PlainTextResponse
 
-from rgdps.common.typing import SupportsStr
 from rgdps.constants.responses import GenericResponse
 from rgdps.services import ErrorOr
 from rgdps.services import ServiceError
+from rgdps.utilities.typing import SupportsStr
 
 _SERVEICE_ERROR_CODE_MAP = {
     ServiceError.USER_USERNAME_EXISTS: -2,

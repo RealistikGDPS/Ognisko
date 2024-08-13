@@ -42,7 +42,7 @@ def hash_level_password(password: int) -> str:
     if not password:
         return "0"
 
-    xor_password = xor_cipher.cyclic_xor_unsafe(
+    xor_password = xor_cipher.cyclic_xor(
         data=str(password).encode(),
         key=LEVEL_PASSWORD_XOR_KEY,
     )

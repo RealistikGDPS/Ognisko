@@ -11,7 +11,7 @@ MESSAGE_XOR_KEY = b"14251"
 
 def encrypt_message_content(content: str) -> str:
     return base64.urlsafe_b64encode(
-        xor_cipher.cyclic_xor_unsafe(
+        xor_cipher.cyclic_xor(
             data=content.encode(),
             key=MESSAGE_XOR_KEY,
         ),
@@ -21,7 +21,7 @@ def encrypt_message_content(content: str) -> str:
 def decrypt_message_content(content: str) -> str:
     de_b64 = cryptography.decode_base64(content)
 
-    return xor_cipher.cyclic_xor_unsafe(
+    return xor_cipher.cyclic_xor(
         data=de_b64.encode(),
         key=MESSAGE_XOR_KEY,
     ).decode()
