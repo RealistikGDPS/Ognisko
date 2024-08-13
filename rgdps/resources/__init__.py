@@ -24,6 +24,8 @@ from .daily_chest import DailyChestRepository
 from .daily_chest import DailyChestType
 from .daily_chest import DailyChestRewardType
 
+from .leaderboard import LeaderboardRepository
+
 class Context(ABC):
     @property
     @abstractmethod
@@ -50,3 +52,8 @@ class Context(ABC):
     @property
     @abstractmethod
     def daily_chests(self) -> DailyChestRepository: ...
+
+
+    @property
+    @abstractmethod
+    def leaderboards(self) -> LeaderboardRepository: ...
