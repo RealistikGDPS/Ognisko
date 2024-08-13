@@ -127,10 +127,11 @@ class SongRepository:
         song_dump = song.model_dump()
         song_dump["id"] = song_id
 
-        return await self._mysql.execute(
+        song.id = await self._mysql.execute(
             f"INSERT INTO songs ({_ALL_FIELDS_COMMA}) VALUES ({_ALL_FIELDS_COLON})",
             song_dump,
         )
+        return song
 
     async def from_id(
         self,

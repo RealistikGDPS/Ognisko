@@ -16,6 +16,8 @@ from .save_data import SaveData
 from .save_data import SaveDataRepository
 from .user import User
 from .user import UserRepository
+from .user_comment import UserComment
+from .user_comment import UserCommentRepository
 from .user_credential import UserCredential
 from .user_credential import UserCredentialRepository
 from .user_replationship import UserRelationship
@@ -55,3 +57,7 @@ class Context(ABC):
     @property
     @abstractmethod
     def messages(self) -> MessageRepository: ...
+
+    @property
+    @abstractmethod
+    def user_comments(self) -> UserCommentRepository: ...
