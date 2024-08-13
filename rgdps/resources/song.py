@@ -42,7 +42,7 @@ class SongRepository:
     
     async def __from_db(self, song_id: int, *, allow_blocked: bool = False) -> Song | None:
         song_db = await self._mysql.fetch_one(
-            f"SELECT {_ALL_FIELDS_COMMA} FROM songs id = :song_id AND "
+            f"SELECT * FROM songs id = :song_id AND "
             "blocked IN :blocked",
             {
                 "song_id": song_id,
@@ -63,7 +63,7 @@ class SongRepository:
             allow_blocked: bool = False,
     ) -> list[Song]:
         songs_db = self._mysql.iterate(
-            f"SELECT {_ALL_FIELDS_COMMA} FROM songs WHERE id IN :song_ids "
+            f"SELECT * FROM songs WHERE id IN :song_ids "
             "AND blocked IN :blocked",
             {
                 "song_ids": tuple(song_ids),
