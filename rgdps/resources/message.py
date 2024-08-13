@@ -1,14 +1,15 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import TypedDict
 from typing import NotRequired
+from typing import TypedDict
 from typing import Unpack
 
 from rgdps.adapters import AbstractMySQLService
-from rgdps.utilities.enum import StrEnum
 from rgdps.common import modelling
 from rgdps.resources._common import DatabaseModel
+from rgdps.utilities.enum import StrEnum
+
 
 class MessageDirection(StrEnum):
     # NOTE: message direction is relative to the user who is
@@ -52,14 +53,13 @@ class MessageRepository:
             return None
 
         return Message(**message_db)
-    
 
     async def from_recipient_user_id_paginated(
-            self,
-            recipient_user_id: int,
-            page: int,
-            page_size: int,
-            include_deleted: bool = False,
+        self,
+        recipient_user_id: int,
+        page: int,
+        page_size: int,
+        include_deleted: bool = False,
     ) -> list[Message]:
         condition = ""
         if not include_deleted:
@@ -76,14 +76,13 @@ class MessageRepository:
         )
 
         return [Message(**message_db) async for message_db in messages_db]
-    
 
     async def from_sender_user_id_paginated(
-            self,
-            sender_user_id: int,
-            page: int,
-            page_size: int,
-            include_deleted: bool = False,
+        self,
+        sender_user_id: int,
+        page: int,
+        page_size: int,
+        include_deleted: bool = False,
     ) -> list[Message]:
         condition = ""
         if not include_deleted:
@@ -100,12 +99,11 @@ class MessageRepository:
         )
 
         return [Message(**message_db) async for message_db in messages_db]
-    
 
     async def count_from_recipient_user_id(
-            self,
-            recipient_user_id: int,
-            include_deleted: bool = False,
+        self,
+        recipient_user_id: int,
+        include_deleted: bool = False,
     ) -> int:
         condition = ""
         if not include_deleted:
@@ -119,12 +117,11 @@ class MessageRepository:
         )
 
         return message_count
-    
 
     async def count_new_from_recipient_user_id(
-            self,
-            recipient_user_id: int,
-            include_deleted: bool = False,
+        self,
+        recipient_user_id: int,
+        include_deleted: bool = False,
     ) -> int:
         condition = ""
         if not include_deleted:
@@ -139,12 +136,11 @@ class MessageRepository:
         )
 
         return message_count
-    
 
     async def count_from_sender_user_id(
-            self,
-            sender_user_id: int,
-            include_deleted: bool = False,
+        self,
+        sender_user_id: int,
+        include_deleted: bool = False,
     ) -> int:
         condition = ""
         if not include_deleted:
@@ -158,12 +154,11 @@ class MessageRepository:
         )
 
         return message_count
-    
 
     async def count_new_from_sender_user_id(
-            self,
-            sender_user_id: int,
-            include_deleted: bool = False,
+        self,
+        sender_user_id: int,
+        include_deleted: bool = False,
     ) -> int:
         condition = ""
         if not include_deleted:
@@ -178,14 +173,13 @@ class MessageRepository:
         )
 
         return message_count
-    
 
     async def create(
-            self,
-            sender_user_id: int,
-            recipient_user_id: int,
-            subject: str,
-            content: str,
+        self,
+        sender_user_id: int,
+        recipient_user_id: int,
+        subject: str,
+        content: str,
     ) -> int:
         message_id = await self._mysql.execute(
             "INSERT INTO messages (sender_user_id, recipient_user_id, subject, content) "
@@ -199,12 +193,11 @@ class MessageRepository:
         )
 
         return message_id
-    
 
     async def update_partial(
-            self,
-            message_id: int,
-            **kwargs: Unpack[_MessageUpdatePartial],
+        self,
+        message_id: int,
+        **kwargs: Unpack[_MessageUpdatePartial],
     ) -> Message | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
 
@@ -213,7 +206,6 @@ class MessageRepository:
             changed_fields,
         )
         return await self.from_id(message_id)
-    
 
     async def count_all(self) -> int:
         return (await self._mysql.fetch_val("SELECT COUNT(*) FROM messages")) or 0

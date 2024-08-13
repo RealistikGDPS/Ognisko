@@ -11,11 +11,11 @@ from rgdps.constants.errors import ServiceError
 from rgdps.constants.level_schedules import LevelScheduleType
 from rgdps.constants.levels import LevelDemonDifficulty
 from rgdps.constants.levels import LevelDifficulty
+from rgdps.constants.levels import LevelFeature
 from rgdps.constants.levels import LevelLength
 from rgdps.constants.levels import LevelPublicity
 from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.levels import LevelSearchType
-from rgdps.constants.levels import LevelFeature
 from rgdps.constants.users import CREATOR_PRIVILEGES
 from rgdps.models.level import Level
 from rgdps.models.song import Song

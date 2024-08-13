@@ -16,15 +16,15 @@ from starlette.middleware.base import RequestResponseEndpoint
 
 from rgdps import logger
 from rgdps import settings
+from rgdps.adapters import MeiliSearchClient
+from rgdps.adapters.boomlings import GeometryDashClient
+from rgdps.adapters.mysql import MySQLService
+from rgdps.adapters.redis import RedisClient
+from rgdps.adapters.storage import LocalStorage
+from rgdps.adapters.storage import S3Storage
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
 from rgdps.common.cache.redis import SimpleRedisCache
 from rgdps.constants.responses import GenericResponse
-from rgdps.adapters.boomlings import GeometryDashClient
-from rgdps.adapters.mysql import MySQLService
-from rgdps.adapters.storage import LocalStorage
-from rgdps.adapters.storage import S3Storage
-from rgdps.adapters import MeiliSearchClient
-from rgdps.adapters.redis import RedisClient
 
 from . import context
 from . import gd

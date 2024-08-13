@@ -16,13 +16,13 @@ class LevelSearchFlag(IntFlag):
     def as_feature(self) -> LevelFeature:
         if self & LevelSearchFlag.MYTHICAL:
             return LevelFeature.MYTHICAL
-        
+
         if self & LevelSearchFlag.LEGENDARY:
             return LevelFeature.LEGENDARY
-        
+
         if self & LevelSearchFlag.EPIC:
             return LevelFeature.EPIC
-        
+
         return LevelFeature.NONE
 
 
@@ -42,7 +42,9 @@ _LEVEL_FEATURE_MAP = {
     LevelFeature.FEATURE: LevelSearchFlag.NONE,
     LevelFeature.EPIC: LevelSearchFlag.EPIC,
     LevelFeature.LEGENDARY: LevelSearchFlag.EPIC | LevelSearchFlag.LEGENDARY,
-    LevelFeature.MYTHICAL: LevelSearchFlag.EPIC | LevelSearchFlag.LEGENDARY | LevelSearchFlag.MYTHICAL,
+    LevelFeature.MYTHICAL: LevelSearchFlag.EPIC
+    | LevelSearchFlag.LEGENDARY
+    | LevelSearchFlag.MYTHICAL,
 }
 
 

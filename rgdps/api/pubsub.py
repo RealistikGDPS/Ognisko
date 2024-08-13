@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from rgdps import logger
-from rgdps.common.context import Context
 from rgdps.adapters.pubsub import RedisPubsubRouter
+from rgdps.common.context import Context
 from rgdps.services import leaderboards
 from rgdps.services import levels
 from rgdps.services import users

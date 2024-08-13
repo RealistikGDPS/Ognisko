@@ -3,9 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from enum import IntEnum
 
-from rgdps.common import modelling
 from rgdps.adapters import AbstractMySQLService
+from rgdps.common import modelling
 from rgdps.resources._common import DatabaseModel
+
 
 class DailyChestView(IntEnum):
     VIEW = 0
@@ -55,6 +56,7 @@ class DailyChest(DatabaseModel):
     demon_keys: int
     claimed_ts: datetime
 
+
 ALL_FIELDS = modelling.get_model_fields(DailyChest)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
@@ -68,14 +70,11 @@ _CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
 
 
 class DailyChestRepository:
-    __slots__ = (
-        "_mysql",
-    )
+    __slots__ = ("_mysql",)
 
     def __init__(self, mysql: AbstractMySQLService) -> None:
         self._mysql = mysql
 
-    
     async def from_id(self, chest_id: int) -> DailyChest | None:
         chest_db = await self._mysql.fetch_one(
             "SELECT * FROM daily_chests WHERE id = :chest_id",
@@ -84,14 +83,13 @@ class DailyChestRepository:
 
         if chest_db is None:
             return None
-        
+
         return DailyChest(**chest_db)
-    
 
     async def from_user_id_and_type_latest(
-            self,
-            user_id: int,
-            chest_type: DailyChestType,
+        self,
+        user_id: int,
+        chest_type: DailyChestType,
     ) -> DailyChest | None:
         chest_db = await self._mysql.fetch_one(
             "SELECT * FROM daily_chests WHERE user_id = :user_id AND "
@@ -101,12 +99,11 @@ class DailyChestRepository:
 
         if chest_db is None:
             return None
-        
+
         return DailyChest(**chest_db)
-    
 
     async def create(
-            self,
+        self,
         user_id: int,
         chest_type: DailyChestType,
         *,
@@ -143,11 +140,10 @@ class DailyChestRepository:
             model.model_dump(exclude={"id"}),
         )
         return model
-    
 
     async def sum_mana_from_user_id(
-            self,
-            user_id: int,
+        self,
+        user_id: int,
     ) -> int:
         return int(
             await self._mysql.fetch_val(
@@ -156,12 +152,11 @@ class DailyChestRepository:
             )
             or 0,
         )
-    
 
     async def count_of_type(
-            self,
-            user_id: int,
-            chest_type: DailyChestType,
+        self,
+        user_id: int,
+        chest_type: DailyChestType,
     ) -> int:
         return (
             await self._mysql.fetch_val(

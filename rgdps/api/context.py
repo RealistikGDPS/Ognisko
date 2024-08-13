@@ -8,11 +8,11 @@ from meilisearch_python_sdk import AsyncClient as MeiliClient
 from redis.asyncio import Redis
 from types_aiobotocore_s3 import S3Client
 
-from rgdps.common.cache.base import AbstractAsyncCache
-from rgdps.common.context import Context
 from rgdps.adapters.boomlings import GeometryDashClient
 from rgdps.adapters.mysql import AbstractMySQLService
 from rgdps.adapters.storage import AbstractStorage
+from rgdps.common.cache.base import AbstractAsyncCache
+from rgdps.common.context import Context
 
 
 class HTTPContext(Context):
@@ -77,7 +77,7 @@ class PubsubContext(Context):
     @property
     def s3(self) -> S3Client | None:
         return self.state.s3
-    
+
     @override
     @property
     def password_cache(self) -> AbstractAsyncCache[str]:

@@ -27,11 +27,11 @@ if TYPE_CHECKING:
     from meilisearch_python_sdk import AsyncClient as MeiliClient
     from redis.asyncio import Redis
 
-    from rgdps.common.cache.base import AbstractAsyncCache
-    from rgdps.models.user import User
     from rgdps.adapters.boomlings import GeometryDashClient
     from rgdps.adapters.mysql import AbstractMySQLService
     from rgdps.adapters.storage import AbstractStorage
+    from rgdps.common.cache.base import AbstractAsyncCache
+    from rgdps.models.user import User
 
 
 # Private parsing functions.

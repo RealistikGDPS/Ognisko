@@ -21,6 +21,9 @@ from redis.asyncio import Redis
 from rgdps import logger
 from rgdps import repositories
 from rgdps import settings
+from rgdps.adapters.boomlings import GeometryDashClient
+from rgdps.adapters.mysql import MySQLService
+from rgdps.adapters.storage import AbstractStorage
 from rgdps.common import gd_obj
 from rgdps.common import hashes
 from rgdps.common.cache.memory import SimpleAsyncMemoryCache
@@ -38,9 +41,6 @@ from rgdps.constants.users import UserPrivacySetting
 from rgdps.constants.users import UserPrivileges
 from rgdps.constants.users import UserRelationshipType
 from rgdps.models.user import User
-from rgdps.adapters.boomlings import GeometryDashClient
-from rgdps.adapters.mysql import MySQLService
-from rgdps.adapters.storage import AbstractStorage
 
 if TYPE_CHECKING:
     from rgdps.common.cache.base import AbstractAsyncCache

@@ -6,10 +6,11 @@ import xor_cipher
 
 from rgdps.constants.levels import LevelSearchFlag
 
+
 def calculate_creator_points(
-        stars: int,
-        feature_order: int,
-        search_flags: LevelSearchFlag,
+    stars: int,
+    feature_order: int,
+    search_flags: LevelSearchFlag,
 ) -> int:
     creator_points = 0
 
@@ -27,7 +28,7 @@ def calculate_creator_points(
 
     if search_flags & LevelSearchFlag.LEGENDARY:
         creator_points += 1
-    
+
     if search_flags & LevelSearchFlag.MYTHICAL:
         creator_points += 1
 
@@ -36,14 +37,14 @@ def calculate_creator_points(
 
 LEVEL_PASSWORD_XOR_KEY = b"26364"
 
+
 def hash_level_password(password: int) -> str:
     if not password:
         return "0"
 
     xor_password = xor_cipher.cyclic_xor_unsafe(
         data=str(password).encode(),
-        key=LEVEL_PASSWORD_XOR_KEY
+        key=LEVEL_PASSWORD_XOR_KEY,
     )
 
     return base64.urlsafe_b64encode(xor_password).decode()
-

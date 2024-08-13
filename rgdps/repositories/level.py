@@ -162,8 +162,12 @@ def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
         level_dict["awarded"] = bool(
             level_dict["search_flags"] & LevelSearchFlag.AWARDED,
         )
-        level_dict["legendary"] = bool(level_dict["search_flags"] & LevelSearchFlag.LEGENDARY)
-        level_dict["mythical"] = bool(level_dict["search_flags"] & LevelSearchFlag.MYTHICAL)
+        level_dict["legendary"] = bool(
+            level_dict["search_flags"] & LevelSearchFlag.LEGENDARY,
+        )
+        level_dict["mythical"] = bool(
+            level_dict["search_flags"] & LevelSearchFlag.MYTHICAL,
+        )
 
     return level_dict
 

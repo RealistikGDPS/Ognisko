@@ -3,10 +3,11 @@ from __future__ import annotations
 import asyncio
 import base64
 import hashlib
-import string
 import random
+import string
 
 import bcrypt
+
 
 def _compare_bcrypt(hashed: str, plain: str) -> bool:
     return bcrypt.checkpw(plain.encode(), hashed.encode())
@@ -30,6 +31,7 @@ def hash_md5(plain: str) -> str:
 
 def hash_sha1(plain: str) -> str:
     return hashlib.sha1(plain.encode()).hexdigest()
+
 
 def encode_base64(data: str) -> str:
     return base64.urlsafe_b64encode(data.encode()).decode()

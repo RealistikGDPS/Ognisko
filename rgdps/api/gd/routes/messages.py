@@ -6,9 +6,9 @@ from rgdps.api import commands
 from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
-from rgdps.common import gd_obj
 from rgdps.api.validators import Base64String
 from rgdps.api.validators import MessageContentString
+from rgdps.common import gd_obj
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.message import MessageDirection

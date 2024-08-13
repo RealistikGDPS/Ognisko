@@ -13,6 +13,5 @@ from . import user_comments
 from . import user_credentials
 from . import user_relationships
 from . import users
-
-from ._common import ServiceError
 from ._common import ErrorOr
+from ._common import ServiceError

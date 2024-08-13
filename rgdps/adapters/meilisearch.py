@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from meilisearch_python_sdk import AsyncClient
 
-
 DEFAULT_TIMEOUT = 10
+
 
 class MeiliSearchClient(AsyncClient):
     """An asynchronous MeiliSearch client."""

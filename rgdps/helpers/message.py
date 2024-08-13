@@ -6,8 +6,8 @@ import xor_cipher
 
 from rgdps.utilities import cryptography
 
-
 MESSAGE_XOR_KEY = b"14251"
+
 
 def encrypt_message_content(content: str) -> str:
     return base64.urlsafe_b64encode(
@@ -25,4 +25,3 @@ def decrypt_message_content(content: str) -> str:
         data=de_b64.encode(),
         key=MESSAGE_XOR_KEY,
     ).decode()
-

@@ -99,7 +99,7 @@ type IntKeyResponse = dict[int, str]
 
 
 class BoomlingsSong(BaseModel):
-    """A model representing a song response from """
+    """A model representing a song response from"""
 
     id: int
     name: str
@@ -109,6 +109,7 @@ class BoomlingsSong(BaseModel):
     size: float
     download_url: str
 
+
 class BoomlingURL:
     """A class wrapping a URL retrieved from the Geometry Dash server.
     Used for typing convenience."""
@@ -116,9 +117,9 @@ class BoomlingURL:
     def __init__(self, url: str) -> None:
         self._url = url
 
-    
     def url(self) -> str:
         return self._url
+
 
 class GeometryDashClient:
     """A client for interacting with the Geometry Dash servers."""

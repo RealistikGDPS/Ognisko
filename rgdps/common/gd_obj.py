@@ -10,7 +10,6 @@ from rgdps.common.typing import SupportsStr
 from rgdps.constants.daily_chests import DailyChestType
 from rgdps.constants.friends import FriendStatus
 from rgdps.constants.levels import LevelDifficulty
-from rgdps.constants.levels import LevelSearchFlag
 from rgdps.constants.users import UserPrivileges
 from rgdps.models.daily_chest import DailyChest
 from rgdps.models.friend_request import FriendRequest

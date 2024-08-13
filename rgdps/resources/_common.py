@@ -12,9 +12,11 @@ class DatabaseModel(BaseModel):
     """An expansion of Pydantic's `BaseModel` froviding extended functionality
     for RealistikGDPS."""
 
-    model_config = ConfigDict(json_encoders={
-        Colour: lambda c: c.as_format_str(),
-    })
+    model_config = ConfigDict(
+        json_encoders={
+            Colour: lambda c: c.as_format_str(),
+        },
+    )
 
 
 class SearchResults[T](NamedTuple):

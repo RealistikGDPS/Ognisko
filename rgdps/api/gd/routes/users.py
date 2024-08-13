@@ -8,9 +8,9 @@ from rgdps import logger
 from rgdps.api import responses
 from rgdps.api.context import HTTPContext
 from rgdps.api.dependencies import authenticate_dependency
-from rgdps.common import gd_obj
 from rgdps.api.validators import SocialMediaString
 from rgdps.api.validators import TextBoxString
+from rgdps.common import gd_obj
 from rgdps.constants.errors import ServiceError
 from rgdps.constants.responses import LoginResponse
 from rgdps.constants.responses import RegisterResponse

@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-import random
 import base64
+import random
 from typing import NamedTuple
 
-from rgdps.utilities import cryptography
 from rgdps.resources import DailyChestRewardType
+from rgdps.utilities import cryptography
 
 
 class ChestReward(NamedTuple):
@@ -43,6 +43,7 @@ SHARD_CHANCE = 50
 MAX_SHARDS = 2
 LOW_DIAMONDS_ROLL = [4, 5]
 
+
 def generate_small_chest() -> list[ChestReward]:
     mana = random.choice(SMALL_CHEST_MANA)
     diamonds = random.choice(SMALL_CHEST_DIAMONDS)
@@ -51,6 +52,7 @@ def generate_small_chest() -> list[ChestReward]:
         ChestReward(DailyChestRewardType.MANA, mana),
         ChestReward(DailyChestRewardType.DIAMONDS, diamonds),
     ]
+
 
 def generate_large_chest() -> list[ChestReward]:
     rewards = [ChestReward(DailyChestRewardType.MANA, random.choice(LARGE_CHEST_MANA))]
@@ -69,6 +71,7 @@ def generate_large_chest() -> list[ChestReward]:
 
 
 CHEST_XOR_KEY = b"59182"
+
 
 def encrypt_chests(response: str) -> str:
     return base64.urlsafe_b64encode(
