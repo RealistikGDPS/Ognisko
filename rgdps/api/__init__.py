@@ -21,10 +21,10 @@ from rgdps.common.cache.redis import SimpleRedisCache
 from rgdps.constants.responses import GenericResponse
 from rgdps.adapters.boomlings import GeometryDashClient
 from rgdps.adapters.mysql import MySQLService
-from rgdps.adapters.pubsub import listen_pubsubs
 from rgdps.adapters.storage import LocalStorage
 from rgdps.adapters.storage import S3Storage
 from rgdps.adapters import MeiliSearchClient
+from rgdps.adapters.redis import RedisClient
 
 from . import context
 from . import gd
@@ -98,19 +98,17 @@ def init_mysql(app: FastAPI) -> None:
 
 
 def init_redis(app: FastAPI) -> None:
-    app.state.redis = Redis.from_url(
-        f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}",
+    app.state.redis = RedisClient(
+        settings.REDIS_HOST,
+        settings.REDIS_PORT,
+        settings.REDIS_DB,
     )
 
     @app.on_event("startup")
     async def on_startup() -> None:
-        await app.state.redis.initialize()
+        await app.state.redis.initialise()
+        # TODO: Fix.
         shared_ctx = context.PubsubContext(app)
-        await listen_pubsubs(
-            shared_ctx,
-            app.state.redis,
-            pubsub.router,
-        )
 
         # TODO: Custom ratelimit callback that returns `-1`.
         await FastAPILimiter.init(
