@@ -59,6 +59,7 @@ class MessageRepository:
         recipient_user_id: int,
         page: int,
         page_size: int,
+        *,
         include_deleted: bool = False,
     ) -> list[Message]:
         condition = ""
@@ -82,6 +83,7 @@ class MessageRepository:
         sender_user_id: int,
         page: int,
         page_size: int,
+        *,
         include_deleted: bool = False,
     ) -> list[Message]:
         condition = ""
@@ -103,6 +105,7 @@ class MessageRepository:
     async def count_from_recipient_user_id(
         self,
         recipient_user_id: int,
+        *,
         include_deleted: bool = False,
     ) -> int:
         condition = ""
@@ -121,6 +124,7 @@ class MessageRepository:
     async def count_new_from_recipient_user_id(
         self,
         recipient_user_id: int,
+        *,
         include_deleted: bool = False,
     ) -> int:
         condition = ""
@@ -140,6 +144,7 @@ class MessageRepository:
     async def count_from_sender_user_id(
         self,
         sender_user_id: int,
+        *,
         include_deleted: bool = False,
     ) -> int:
         condition = ""
@@ -158,6 +163,7 @@ class MessageRepository:
     async def count_new_from_sender_user_id(
         self,
         sender_user_id: int,
+        *,
         include_deleted: bool = False,
     ) -> int:
         condition = ""
@@ -180,15 +186,19 @@ class MessageRepository:
         recipient_user_id: int,
         subject: str,
         content: str,
+        deleted: bool = False,
+        sender_deleted: bool = False,
     ) -> int:
         message_id = await self._mysql.execute(
-            "INSERT INTO messages (sender_user_id, recipient_user_id, subject, content) "
-            "VALUES (:sender_user_id, :recipient_user_id, :subject, :content)",
+            "INSERT INTO messages (sender_user_id, recipient_user_id, subject, content, deleted, sender_deleted) "
+            "VALUES (:sender_user_id, :recipient_user_id, :subject, :content, :deleted, :sender_deleted)",
             {
                 "sender_user_id": sender_user_id,
                 "recipient_user_id": recipient_user_id,
                 "subject": subject,
                 "content": content,
+                "deleted": deleted,
+                "sender_deleted": sender_deleted,
             },
         )
 

@@ -10,6 +10,9 @@ from .daily_chest import DailyChestType
 from .leaderboard import LeaderboardRepository
 from .level_data import LevelData
 from .level_data import LevelDataRepository
+from .like import Like
+from .like import LikeRepository
+from .like import LikeType
 from .message import Message
 from .message import MessageRepository
 from .save_data import SaveData
@@ -61,3 +64,7 @@ class Context(ABC):
     @property
     @abstractmethod
     def user_comments(self) -> UserCommentRepository: ...
+
+    @property
+    @abstractmethod
+    def likes(self) -> LikeRepository: ...
