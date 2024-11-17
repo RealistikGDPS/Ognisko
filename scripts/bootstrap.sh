@@ -6,10 +6,6 @@ if [ -z "$APP_COMPONENT" ]; then
   exit 1
 fi
 
-./scripts/ensure_sql.sh
-./scripts/ensure_meili.sh
-./scripts/migrate.sh up
-
 if [ $APP_COMPONENT = "api" ]; then
   exec /app/scripts/run_api.sh
 elif [ $APP_COMPONENT = "converter" ]; then

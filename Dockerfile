@@ -1,16 +1,6 @@
-FROM python:3.12
+FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1
-
-# Apt dependencies
-RUN apt update && apt install default-mysql-client curl -y
-
-# Setup Go Migrate
-RUN wget https://github.com/golang-migrate/migrate/releases/download/v4.15.2/migrate.linux-amd64.tar.gz && \
-    tar zxvf migrate.linux-amd64.tar.gz && \
-    mv migrate /usr/local/bin/go-migrate && \
-    chmod u+x /usr/local/bin/go-migrate && \
-    rm migrate.linux-amd64.tar.gz
 
 # Python Dependencies
 COPY requirements/main.txt .

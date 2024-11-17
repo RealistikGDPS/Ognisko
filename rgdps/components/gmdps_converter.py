@@ -123,7 +123,7 @@ async def create_role_assign_map(conn: MySQLService) -> dict[int, int]:
 
 async def get_context() -> ConverterContext:
     database_url = DatabaseURL(
-        "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
+        "mysql://{username}:{password}@{host}:{port}/{db}".format(
             username=settings.SQL_USER,
             password=urllib.parse.quote(settings.SQL_PASS),
             host=settings.SQL_HOST,
@@ -136,7 +136,7 @@ async def get_context() -> ConverterContext:
     await mysql.connect()
 
     old_database_url = DatabaseURL(
-        "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
+        "mysql://{username}:{password}@{host}:{port}/{db}".format(
             username=OLD_DB_USER,
             password=urllib.parse.quote(settings.SQL_PASS),
             host=settings.SQL_HOST,

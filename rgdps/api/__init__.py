@@ -62,8 +62,18 @@ def init_events(app: FastAPI) -> None:
 
 
 def init_mysql(app: FastAPI) -> None:
+    # Use asyncmy if available (~2x faster than the default MySQL driver).
+    protocol = "mysql"
+    try:
+        import asyncmy  # noqa
+        protocol = "mysql+asyncmy"
+        logger.debug("Using asyncmy as the MySQL driver.")
+    except ImportError:
+        logger.debug("Using Database's default MySQL driver.")
+
     database_url = DatabaseURL(
-        "mysql+asyncmy://{username}:{password}@{host}:{port}/{db}".format(
+        "{protocol}://{username}:{password}@{host}:{port}/{db}".format(
+            protocol=protocol,
             username=settings.SQL_USER,
             password=urllib.parse.quote(settings.SQL_PASS),
             host=settings.SQL_HOST,
