@@ -32,14 +32,7 @@ from . import pubsub
 
 
 def init_logging() -> None:
-    if settings.LOGZIO_ENABLED:
-        logger.init_logzio_logging(
-            settings.LOGZIO_TOKEN,
-            settings.LOG_LEVEL,
-            settings.LOGZIO_URL,
-        )
-    else:
-        logger.init_basic_logging(settings.LOG_LEVEL)
+    logger.init_basic_logging(settings.LOG_LEVEL)
 
 
 def init_events(app: FastAPI) -> None:

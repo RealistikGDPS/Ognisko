@@ -47,7 +47,3 @@ SERVER_COMMAND_PREFIX = os.environ["SERVER_COMMAND_PREFIX"]
 SERVER_GD_URL = os.environ["SERVER_GD_URL"]
 
 LOG_LEVEL = os.environ["LOG_LEVEL"]
-
-LOGZIO_ENABLED = read_boolean(os.environ["LOGZIO_ENABLED"])
-LOGZIO_TOKEN = os.environ["LOGZIO_TOKEN"]
-LOGZIO_URL = os.environ["LOGZIO_URL"]

@@ -77,11 +77,6 @@ services:
       - SERVER_COMMAND_PREFIX=${SERVER_COMMAND_PREFIX}
       - SERVER_GD_URL=${SERVER_GD_URL}
 
-      - LOG_LEVEL=${LOG_LEVEL}
-      - LOGZIO_ENABLED=${LOGZIO_ENABLED}
-      - LOGZIO_TOKEN=${LOGZIO_TOKEN}
-      - LOGZIO_URL=${LOGZIO_URL}
-
       # Internal docker specific variables
       - INTERNAL_RGDPS_DIRECTORY=/data # NOTE: Ensure this matches the volume mount below.
       - APP_COMPONENT=${APP_COMPONENT:-api}
