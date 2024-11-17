@@ -6,9 +6,13 @@ ENV PYTHONUNBUFFERED=1
 COPY requirements/main.txt .
 RUN pip install -r main.txt
 
+# Copy the pre-requisites
 COPY ./tests /app/tests
 COPY ./requirements /app/requirements
 COPY ./scripts /app/scripts
+
+# Copy the application
+COPY ./ognisko /app/ognisko
 WORKDIR /app
 
 # Run the application
