@@ -1,4 +1,4 @@
-from rgdps.constants.users import UserPrivileges
+from ognisko.constants.users import UserPrivileges
 
 
 def test_user_privilege_bounds() -> None:

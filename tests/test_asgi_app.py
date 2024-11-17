@@ -1,7 +1,7 @@
 import pytest
 from fastapi import FastAPI
 
-from rgdps.api import init_api
+from ognisko.api import init_api
 
 
 @pytest.fixture

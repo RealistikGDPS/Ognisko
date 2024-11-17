@@ -2,7 +2,7 @@
 set -euo pipefail
 
 echo "Starting server..."
-exec uvicorn rgdps.main:asgi_app \
-    --host $APP_HOST \
-    --port $APP_PORT \
+exec uvicorn ognisko.main:asgi_app \
+    --host $OGNISKO_HTTP_HOST \
+    --port $OGNISKO_HTTP_PORT \
     --reload

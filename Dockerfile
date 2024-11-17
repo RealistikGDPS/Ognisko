@@ -6,7 +6,9 @@ ENV PYTHONUNBUFFERED=1
 COPY requirements/main.txt .
 RUN pip install -r main.txt
 
-COPY . /app
+COPY ./tests /app/tests
+COPY ./requirements /app/requirements
+COPY ./scripts /app/scripts
 WORKDIR /app
 
 # Run the application
