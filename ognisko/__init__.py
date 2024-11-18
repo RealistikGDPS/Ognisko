@@ -4,7 +4,7 @@ from . import adapters
 from . import api
 from . import common
 from . import constants
-from . import models
-from . import repositories
+from . import helpers
+from . import resources
 from . import services
-from . import settings
+from . import utilities

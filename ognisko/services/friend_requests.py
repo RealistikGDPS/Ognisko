@@ -3,12 +3,11 @@ from __future__ import annotations
 from datetime import datetime
 from typing import NamedTuple
 
-from ognisko import repositories
-from ognisko.common.context import Context
-from ognisko.constants.errors import ServiceError
-from ognisko.constants.users import UserRelationshipType
-from ognisko.models.friend_request import FriendRequest
-from ognisko.models.user import User
+from ognisko.resources import Context
+from ognisko.resources import FriendRequest
+from ognisko.resources import User
+from ognisko.resources import UserRelationshipType
+from ognisko.services._common import ServiceError
 
 
 class FriendRequestResponse(NamedTuple):
@@ -28,17 +27,22 @@ async def get_user(
     page_size: int = 10,
     is_sender_user_id: bool = False,
 ) -> PaginatedFriendRequestResponse | ServiceError:
-    requests = await repositories.friend_requests.from_user_id_paginated(
-        ctx,
-        user_id,
-        page,
-        page_size,
-        is_sender_user_id=is_sender_user_id,
-        include_deleted=False,
-    )
+    if is_sender_user_id:
+        requests = await ctx.friend_requests.from_sender_user_id_paginated(
+            user_id,
+            page,
+            page_size,
+            include_deleted=False,
+        )
+    else:
+        requests = await ctx.friend_requests.from_recipient_user_id_paginated(
+            user_id,
+            page,
+            page_size,
+            include_deleted=False,
+        )
 
-    users = await repositories.user.multiple_from_id(
-        ctx,
+    users = await ctx.users.multiple_from_id(
         # Swap the sender and recipient according to the from_sender_id flag
         [
             request.recipient_user_id if is_sender_user_id else request.sender_user_id
@@ -49,13 +53,14 @@ async def get_user(
         FriendRequestResponse(request, user) for request, user in zip(requests, users)
     ]
 
-    friend_request_count = (
-        await repositories.friend_requests.get_user_friend_request_count(
-            ctx,
+    if is_sender_user_id:
+        friend_request_count = await ctx.friend_requests.count_outgoing_requests(
             user_id,
-            is_sender_user_id=is_sender_user_id,
         )
-    )
+    else:
+        friend_request_count = await ctx.friend_requests.count_incoming_requests(
+            user_id,
+        )
 
     return PaginatedFriendRequestResponse(
         friend_request_responses,
@@ -68,7 +73,7 @@ async def mark_as_seen(
     user_id: int,
     request_id: int,
 ) -> FriendRequest | ServiceError:
-    request = await repositories.friend_requests.from_id(ctx, request_id)
+    request = await ctx.friend_requests.from_id(request_id)
 
     if request is None:
         return ServiceError.FRIEND_REQUEST_NOT_FOUND
@@ -77,8 +82,7 @@ async def mark_as_seen(
     if request.recipient_user_id != user_id:
         return ServiceError.FRIEND_REQUEST_INVALID_OWNER
 
-    request = await repositories.friend_requests.update_partial(
-        ctx,
+    request = await ctx.friend_requests.update_partial(
         request_id,
         seen_ts=datetime.now(),
     )
@@ -95,7 +99,7 @@ async def accept(
     recipient_user_id: int,
     request_id: int,
 ) -> ServiceError | None:
-    request = await repositories.friend_requests.from_id(ctx, request_id)
+    request = await ctx.friend_requests.from_id(request_id)
 
     if request is None:
         return ServiceError.FRIEND_REQUEST_NOT_FOUND
@@ -109,8 +113,7 @@ async def accept(
     ):
         return ServiceError.FRIEND_REQUEST_INVALID_OWNER
 
-    request = await repositories.friend_requests.update_partial(
-        ctx,
+    request = await ctx.friend_requests.update_partial(
         request.id,
         deleted=True,
     )
@@ -119,14 +122,12 @@ async def accept(
         return ServiceError.FRIEND_REQUEST_NOT_FOUND
 
     # Create 2 records so it's a mutual friend relationship
-    await repositories.user_relationship.create(
-        ctx,
+    await ctx.user_relationships.create(
         sender_user_id,
         recipient_user_id,
         UserRelationshipType.FRIEND,
     )
-    await repositories.user_relationship.create(
-        ctx,
+    await ctx.user_relationships.create(
         recipient_user_id,
         sender_user_id,
         UserRelationshipType.FRIEND,
@@ -142,8 +143,7 @@ async def create(
     if sender_user_id == recipient_user_id:
         return ServiceError.FRIEND_REQUEST_INVALID_TARGET_ID
 
-    exists = await repositories.friend_requests.check_request_exists(
-        ctx,
+    exists = await ctx.friend_requests.exists_from_target_and_sender(
         sender_user_id,
         recipient_user_id,
     )
@@ -151,8 +151,7 @@ async def create(
     if exists:
         return ServiceError.FRIEND_REQUEST_EXISTS
 
-    request = await repositories.friend_requests.create(
-        ctx,
+    request = await ctx.friend_requests.create(
         sender_user_id,
         recipient_user_id,
         message,
@@ -165,8 +164,7 @@ async def delete(
     sender_user_id: int,
     recipient_user_id: int,
 ) -> FriendRequest | ServiceError:
-    request = await repositories.friend_requests.from_target_and_recipient(
-        ctx,
+    request = await ctx.friend_requests.from_target_and_reciptient(
         sender_user_id,
         recipient_user_id,
     )
@@ -180,8 +178,7 @@ async def delete(
     ):
         return ServiceError.FRIEND_REQUEST_INVALID_OWNER
 
-    request = await repositories.friend_requests.update_partial(
-        ctx,
+    request = await ctx.friend_requests.update_partial(
         request.id,
         deleted=True,
     )
@@ -207,8 +204,7 @@ async def delete_multiple(
             sender_user_id = account_id
             recipient_user_id = user_id
 
-        request = await repositories.friend_requests.from_target_and_recipient(
-            ctx,
+        request = await ctx.friend_requests.from_target_and_reciptient(
             sender_user_id,
             recipient_user_id,
         )
@@ -222,4 +218,4 @@ async def delete_multiple(
         ):
             continue
 
-        await repositories.friend_requests.update_partial(ctx, request.id, deleted=True)
+        await ctx.friend_requests.update_partial(request.id, deleted=True)

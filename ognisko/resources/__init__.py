@@ -98,3 +98,7 @@ class Context(ABC):
     @property
     @abstractmethod
     def songs(self) -> SongRepository: ...
+
+    @property
+    @abstractmethod
+    def user_relationships(self) -> UserRelationshipRepository: ...

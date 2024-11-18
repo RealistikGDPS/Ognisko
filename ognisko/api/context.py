@@ -27,6 +27,8 @@ from ognisko.resources import UserCredentialRepository
 from ognisko.resources import UserRelationshipRepository
 from ognisko.resources import UserRepository
 
+from .user_replationship import UserRelationshipRepository
+
 
 class HTTPContext(Context):
     def __init__(self, request: Request) -> None:
@@ -130,6 +132,11 @@ class HTTPContext(Context):
     @override
     def songs(self) -> SongRepository:
         return SongRepository(self.__mysql, self.__gd)
+
+    @property
+    @override
+    def user_relationships(self) -> UserRelationshipRepository:
+        return UserRelationshipRepository(self.__mysql)
 
 
 # FIXME: Proper context for pubsub handlers that does not rely on app.
@@ -237,3 +244,8 @@ class PubsubContext(Context):
     @override
     def songs(self) -> SongRepository:
         return SongRepository(self.__mysql, self.__gd)
+
+    @property
+    @override
+    def user_relationships(self) -> UserRelationshipRepository:
+        return UserRelationshipRepository(self.__mysql)

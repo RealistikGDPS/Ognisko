@@ -228,27 +228,33 @@ def init_middlewares(app: FastAPI) -> None:
             request.state.mysql = sql
             return await call_next(request)
 
-    @app.middleware("http")
-    async def enforce_user_agent(
-        request: Request,
-        call_next: RequestResponseEndpoint,
-    ) -> Response:
-        # Verifying request header for client endpoints.
-        if str(request.url).startswith(settings.OGNISKO_HTTP_URL_PREFIX):
-            # GD sends an empty User-Agent header.
-            user_agent = request.headers.get("User-Agent")
-            if user_agent != "":
-                logger.info(
-                    "Client request stopped due to invalid User-Agent header.",
-                    extra={
-                        "url": str(request.url),
-                        "uuid": request.state.uuid,
-                        "user_agent": user_agent,
-                    },
-                )
-                return Response(str(GenericResponse.FAIL))
+    if settings.OGNISKO_USE_USER_AGENT_GUARD:
+        logger.debug("Using User-Agent guard middleware.")
 
-        return await call_next(request)
+        @app.middleware("http")
+        async def enforce_user_agent(
+            request: Request,
+            call_next: RequestResponseEndpoint,
+        ) -> Response:
+            # Verifying request header for client endpoints.
+            if str(request.url).startswith(settings.OGNISKO_HTTP_URL_PREFIX):
+                # GD sends an empty User-Agent header.
+                user_agent = request.headers.get("User-Agent")
+                if user_agent != "":
+                    logger.info(
+                        "Client request stopped due to invalid User-Agent header.",
+                        extra={
+                            "url": str(request.url),
+                            "uuid": request.state.uuid,
+                            "user_agent": user_agent,
+                        },
+                    )
+                    return Response(str(GenericResponse.FAIL))
+
+            return await call_next(request)
+
+    else:
+        logger.debug("Skipping User-Agent guard middleware.")
 
     @app.middleware("http")
     async def exception_logging(

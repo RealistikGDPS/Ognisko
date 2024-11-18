@@ -120,8 +120,8 @@ class FriendRequestRepository:
     async def from_sender_user_id_paginated(
         self,
         sender_user_id: int,
-        page_size: int,
         page: int,
+        page_size: int,
         *,
         include_deleted: bool = False,
     ) -> list[FriendRequest]:
@@ -144,8 +144,8 @@ class FriendRequestRepository:
     async def from_recipient_user_id_paginated(
         self,
         recipient_user_id: int,
-        page_size: int,
         page: int,
+        page_size: int,
         *,
         include_deleted: bool = False,
     ) -> list[FriendRequest]:
@@ -169,6 +169,13 @@ class FriendRequestRepository:
         return await self._mysql.fetch_val(
             "SELECT COUNT(*) FROM friend_requests WHERE "
             "recipient_user_id = :user_id AND deleted = 0",
+            {"user_id": user_id},
+        )
+
+    async def count_outgoing_requests(self, user_id: int) -> int:
+        return await self._mysql.fetch_val(
+            "SELECT COUNT(*) FROM friend_requests WHERE "
+            "sender_user_id = :user_id AND deleted = 0",
             {"user_id": user_id},
         )
 
