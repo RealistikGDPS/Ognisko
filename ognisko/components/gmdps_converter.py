@@ -1,6 +1,7 @@
 #!/usr/bin/env python3.12
 from __future__ import annotations
 
+# This will be broken for quite some time.
 import sys
 
 # This is a hack to allow the script to be run from the root directory.
