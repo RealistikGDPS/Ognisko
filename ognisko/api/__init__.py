@@ -11,7 +11,6 @@ from fastapi.requests import Request
 from fastapi.responses import JSONResponse
 from fastapi.responses import Response
 from fastapi_limiter import FastAPILimiter
-from redis.asyncio import Redis
 from starlette.middleware.base import RequestResponseEndpoint
 
 from ognisko import logger
@@ -22,9 +21,8 @@ from ognisko.adapters.mysql import MySQLService
 from ognisko.adapters.redis import RedisClient
 from ognisko.adapters.storage import LocalStorage
 from ognisko.adapters.storage import S3Storage
-from ognisko.common.cache.memory import SimpleAsyncMemoryCache
-from ognisko.common.cache.redis import SimpleRedisCache
 from ognisko.constants.responses import GenericResponse
+from ognisko.utilities.cache.memory import SimpleAsyncMemoryCache
 
 from . import context
 from . import gd
@@ -66,6 +64,7 @@ def init_mysql(app: FastAPI) -> None:
     protocol = "mysql"
     try:
         import asyncmy  # noqa
+
         protocol = "mysql+asyncmy"
         logger.debug("Using asyncmy as the MySQL driver.")
     except ImportError:
@@ -154,36 +153,36 @@ def init_meili(app: FastAPI) -> None:
         )
 
 
-def init_s3_storage(app: FastAPI) -> None:
-    app.state.storage = S3Storage(
-        region=settings.S3_REGION,
-        endpoint=settings.S3_ENDPOINT,
-        access_key=settings.S3_ACCESS_KEY,
-        secret_key=settings.S3_SECRET_KEY,
-        bucket=settings.S3_BUCKET,
-        retries=10,
-        timeout=5,
-    )
-
-    @app.on_event("startup")
-    async def startup() -> None:
-        app.state.storage = await app.state.storage.connect()
-        logger.info(
-            "Connected to S3 storage.",
-            extra={
-                "bucket": settings.S3_BUCKET,
-                "region": settings.S3_REGION,
-            },
-        )
-
-    @app.on_event("shutdown")
-    async def shutdown() -> None:
-        await app.state.storage.disconnect()
+# def init_s3_storage(app: FastAPI) -> None:
+#     app.state.storage = S3Storage(
+#         region=settings.S3_REGION,
+#         endpoint=settings.S3_ENDPOINT,
+#         access_key=settings.S3_ACCESS_KEY,
+#         secret_key=settings.S3_SECRET_KEY,
+#         bucket=settings.S3_BUCKET,
+#         retries=10,
+#         timeout=5,
+#     )
+#
+#     @app.on_event("startup")
+#     async def startup() -> None:
+#         app.state.storage = await app.state.storage.connect()
+#         logger.info(
+#             "Connected to S3 storage.",
+#             extra={
+#                 "bucket": settings.S3_BUCKET,
+#                 "region": settings.S3_REGION,
+#             },
+#         )
+#
+#     @app.on_event("shutdown")
+#     async def shutdown() -> None:
+#         await app.state.storage.disconnect()
 
 
 def init_local_storage(app: FastAPI) -> None:
     app.state.storage = LocalStorage(
-        root=settings.INTERNAL_ognisko_DIRECTORY,
+        root=settings.OGNISKO_INTERNAL_DATA_DIRECTORY,
     )
 
     @app.on_event("startup")
@@ -278,7 +277,7 @@ def init_middlewares(app: FastAPI) -> None:
 def init_api() -> FastAPI:
     init_logging()
     app = FastAPI(
-        title="RealistikGDPS",
+        title="Ognisko Backend",
         openapi_url=None,
         docs_url=None,
     )
@@ -290,10 +289,10 @@ def init_api() -> FastAPI:
     init_meili(app)
     init_gd(app)
 
-    if settings.S3_ENABLED:
-        init_s3_storage(app)
-    else:
-        init_local_storage(app)
+    # if settings.S3_ENABLED:
+    #    init_s3_storage(app)
+    # else:
+    init_local_storage(app)
 
     init_cache(app)
 

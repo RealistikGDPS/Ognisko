@@ -8,7 +8,6 @@ from types import TracebackType
 from typing import Any
 from typing import Optional
 
-
 LOGGER = logging.getLogger("ognisko")
 
 

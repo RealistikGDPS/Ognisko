@@ -1,22 +1,22 @@
 from __future__ import annotations
 
+from collections.abc import AsyncGenerator
 from datetime import datetime
 from enum import Enum
 from enum import IntEnum
 from enum import IntFlag
 from typing import Any
-from typing import TypedDict
-from typing import NotRequired
-from typing import Unpack
 from typing import Literal
 from typing import NamedTuple
-from typing import AsyncGenerator
+from typing import NotRequired
+from typing import TypedDict
+from typing import Unpack
 
 from ognisko.adapters import AbstractMySQLService
 from ognisko.adapters import MeiliSearchClient
-from ognisko.resources._common import DatabaseModel
-from ognisko.common import modelling
 from ognisko.common import data_utils
+from ognisko.common import modelling
+from ognisko.resources._common import DatabaseModel
 from ognisko.utilities import time as time_utils
 
 
@@ -182,6 +182,7 @@ class LevelSearchType(IntEnum):
     DAILY = 21
     WEEKLY = 22
 
+
 class Level(DatabaseModel):
     id: int
     name: str
@@ -218,6 +219,7 @@ class Level(DatabaseModel):
     song_ids: list[int]
     sfx_ids: list[int]
     deleted: bool
+
 
 class _LevelUpdatePartial(TypedDict):
     name: NotRequired[str]
@@ -261,6 +263,7 @@ CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
+
 
 def _make_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
     level_dict = level_dict.copy()
@@ -330,6 +333,7 @@ class LevelSearchResults(NamedTuple):
     results: list[Level]
     total: int
 
+
 class LevelRepository:
     __slots__ = (
         "_mysql",
@@ -339,42 +343,42 @@ class LevelRepository:
     def __init__(self, mysql: AbstractMySQLService, meili: MeiliSearchClient) -> None:
         self._mysql = mysql
         self._meili = meili.index("levels")
-    
+
     async def create(
-            self,
-            name: str,
-            user_id: int,
-            description: str = "",
-            custom_song_id: int | None = None,
-            official_song_id: int | None = 1,
-            version: int = 1,
-            length: LevelLength = LevelLength.TINY,
-            two_player: bool = False,
-            publicity: LevelPublicity = LevelPublicity.PUBLIC,
-            render_str: str = "",
-            game_version: int = 22,
-            binary_version: int = 34,
-            upload_ts: datetime | None = None,
-            update_ts: datetime | None = None,
-            original_id: int | None = None,
-            downloads: int = 0,
-            likes: int = 0,
-            stars: int = 0,
-            difficulty: LevelDifficulty = LevelDifficulty.NA,
-            demon_difficulty: LevelDemonDifficulty | None = None,
-            coins: int = 0,
-            coins_verified: bool = False,
-            requested_stars: int = 0,
-            feature_order: int = 0,
-            search_flags: LevelSearchFlag = LevelSearchFlag.NONE,
-            low_detail_mode: bool = False,
-            object_count: int = 0,
-            building_time: int = 0,
-            update_locked: bool = False,
-            song_ids: list[int] | None = None,
-            sfx_ids: list[int] | None = None,
-            deleted: bool = False,
-            level_id: int | None = None,
+        self,
+        name: str,
+        user_id: int,
+        description: str = "",
+        custom_song_id: int | None = None,
+        official_song_id: int | None = 1,
+        version: int = 1,
+        length: LevelLength = LevelLength.TINY,
+        two_player: bool = False,
+        publicity: LevelPublicity = LevelPublicity.PUBLIC,
+        render_str: str = "",
+        game_version: int = 22,
+        binary_version: int = 34,
+        upload_ts: datetime | None = None,
+        update_ts: datetime | None = None,
+        original_id: int | None = None,
+        downloads: int = 0,
+        likes: int = 0,
+        stars: int = 0,
+        difficulty: LevelDifficulty = LevelDifficulty.NA,
+        demon_difficulty: LevelDemonDifficulty | None = None,
+        coins: int = 0,
+        coins_verified: bool = False,
+        requested_stars: int = 0,
+        feature_order: int = 0,
+        search_flags: LevelSearchFlag = LevelSearchFlag.NONE,
+        low_detail_mode: bool = False,
+        object_count: int = 0,
+        building_time: int = 0,
+        update_locked: bool = False,
+        song_ids: list[int] | None = None,
+        sfx_ids: list[int] | None = None,
+        deleted: bool = False,
+        level_id: int | None = None,
     ) -> Level:
         if upload_ts is None:
             upload_ts = datetime.now()
@@ -432,7 +436,6 @@ class LevelRepository:
         meili_dict = _make_meili_dict(level.model_dump())
         await self._meili.add_documents([meili_dict])
         return level
-    
 
     async def from_id(self, level_id: int) -> Level | None:
         level_dict = await self._mysql.fetch_one(
@@ -444,7 +447,6 @@ class LevelRepository:
             return None
 
         return Level(**level_dict)
-    
 
     async def multiple_from_id(self, level_ids: list[int]) -> list[Level]:
         if not level_ids:
@@ -457,11 +459,11 @@ class LevelRepository:
         levels = sorted(levels, key=lambda level: level_ids.index(level["id"]))
 
         return [Level(**level) for level in levels]
-    
+
     async def update_partial(
-            self,
-            level_id: int,
-            **kwargs: Unpack[_LevelUpdatePartial],
+        self,
+        level_id: int,
+        **kwargs: Unpack[_LevelUpdatePartial],
     ) -> Level | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
         changed_rows = await self._mysql.execute(
@@ -471,50 +473,49 @@ class LevelRepository:
 
         if not changed_rows:
             return None
-        
+
         changed_fields["id"] = level_id
         changed_fields = _make_meili_dict(changed_fields)
         await self._meili.update_documents([changed_fields])
 
         return await self.from_id(level_id)
-    
 
     async def search(
-            self,
-            query: str | None = None,
-            *,
-            page: int = 0,
-            page_size: int = 10,
-            required_lengths: list[LevelLength] | None = None,
-            required_difficulties: list[LevelDifficulty] | None = None,
-            required_demon_difficulties: list[LevelDemonDifficulty] | None = None,
-            song_id: int | None = None,
-            custom_song_id: int | None = None,
-            rated_only: bool | None = None,
-            two_player_only: bool | None = None,
-            excluded_user_ids: list[int] | None = None,
-            required_user_ids: list[int] | None = None,
-            required_level_ids: list[int] | None = None,
-            excluded_level_ids: list[int] | None = None,
-            order_by: Literal["downloads", "likes", "stars"] = "downloads",
-    )-> LevelSearchResults:
+        self,
+        query: str | None = None,
+        *,
+        page: int = 0,
+        page_size: int = 10,
+        required_lengths: list[LevelLength] | None = None,
+        required_difficulties: list[LevelDifficulty] | None = None,
+        required_demon_difficulties: list[LevelDemonDifficulty] | None = None,
+        song_id: int | None = None,
+        custom_song_id: int | None = None,
+        rated_only: bool | None = None,
+        two_player_only: bool | None = None,
+        excluded_user_ids: list[int] | None = None,
+        required_user_ids: list[int] | None = None,
+        required_level_ids: list[int] | None = None,
+        excluded_level_ids: list[int] | None = None,
+        order_by: Literal["downloads", "likes", "stars"] = "downloads",
+    ) -> LevelSearchResults:
         sort = []
         filters = [
             "deleted = 0",
             # TODO: More unlisted logic, such as friends only.
-            f"publicity = {LevelPublicity.PUBLIC.value}"
+            f"publicity = {LevelPublicity.PUBLIC.value}",
         ]
 
         if required_lengths is not None:
-            required_lengths = data_utils.enum_int_list(required_lengths) # type: ignore
+            required_lengths = data_utils.enum_int_list(required_lengths)  # type: ignore
             filters.append(f"length IN {required_lengths}")
 
         if required_difficulties is not None:
-            required_difficulties = data_utils.enum_int_list(required_difficulties) # type: ignore
+            required_difficulties = data_utils.enum_int_list(required_difficulties)  # type: ignore
             filters.append(f"difficulty IN {required_difficulties}")
 
         if required_demon_difficulties is not None:
-            required_demon_difficulties = data_utils.enum_int_list(required_demon_difficulties) # type: ignore
+            required_demon_difficulties = data_utils.enum_int_list(required_demon_difficulties)  # type: ignore
             filters.append(f"demon_difficulty IN {required_demon_difficulties}")
 
         # FIXME: THIS IS OBV SO WRONG IHREGIUEHRGIUERH
@@ -532,7 +533,7 @@ class LevelRepository:
 
         if two_player_only is not None:
             filters.append(f"two_player = {int(two_player_only)}")
-        
+
         if excluded_user_ids is not None:
             filters.append(f"user_id NOT IN {excluded_user_ids}")
 
@@ -551,17 +552,20 @@ class LevelRepository:
             query,
             offset=page * page_size,
             limit=page_size,
-            filter=" AND ".join(filters), # ???
+            filter=" AND ".join(filters),  # ???
             sort=sort,
         )
 
         levels = [Level(**_from_meili_dict(level)) for level in levels_res.hits]
-        return LevelSearchResults(results=levels, total=levels_res.estimated_total_hits or 0)
-    
+        return LevelSearchResults(
+            results=levels,
+            total=levels_res.estimated_total_hits or 0,
+        )
+
     async def iterate_all(
-            self,
-            *,
-            include_deleted: bool = False,
+        self,
+        *,
+        include_deleted: bool = False,
     ) -> AsyncGenerator[Level, None]:
         condition = ""
         if not include_deleted:
@@ -572,20 +576,23 @@ class LevelRepository:
         ):
             yield Level(**level_dict)
 
-
     async def count_all(self) -> int:
         return await self._mysql.fetch_val("SELECT COUNT(*) FROM levels")
-    
+
     async def from_name_and_user_id(
-            self,
-            name: str,
-            user_id: int,
-            *,
-            include_deleted: bool = False,
-        ) -> Level | None:
+        self,
+        name: str,
+        user_id: int,
+        *,
+        include_deleted: bool = False,
+    ) -> Level | None:
         level_dict = await self._mysql.fetch_one(
-            "SELECT * FROM levels WHERE name = :name AND user_id = :user_id"
-            " AND deleted = 0" if not include_deleted else "",
+            (
+                "SELECT * FROM levels WHERE name = :name AND user_id = :user_id"
+                " AND deleted = 0"
+                if not include_deleted
+                else ""
+            ),
             {"name": name, "user_id": user_id},
         )
 
@@ -593,26 +600,26 @@ class LevelRepository:
             return None
 
         return Level(**level_dict)
-    
 
     async def from_name(
-            self,
-            name: str,
-            *,
-            include_deleted: bool = False,
-        ) -> Level | None:
+        self,
+        name: str,
+        *,
+        include_deleted: bool = False,
+    ) -> Level | None:
         levels = await self._mysql.fetch_one(
-            "SELECT * FROM levels WHERE name = :name"
-            " AND deleted = 0" if not include_deleted else ""
-            " LIMIT 1",
+            (
+                "SELECT * FROM levels WHERE name = :name" " AND deleted = 0"
+                if not include_deleted
+                else "" " LIMIT 1"
+            ),
             {"name": name},
         )
 
         if not levels:
             return None
-        
+
         return Level(**levels)
-    
 
     # TODO: Move LOL
     # A function primarily used for some recommendation algorithms that returns a list of levels
@@ -650,4 +657,3 @@ class LevelRepository:
         )
 
         return [x["id"] for x in values]
-        
