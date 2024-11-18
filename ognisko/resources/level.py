@@ -466,13 +466,10 @@ class LevelRepository:
         **kwargs: Unpack[_LevelUpdatePartial],
     ) -> Level | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
-        changed_rows = await self._mysql.execute(
+        await self._mysql.execute(
             modelling.update_from_partial_dict("levels", level_id, changed_fields),
             changed_fields,
         )
-
-        if not changed_rows:
-            return None
 
         changed_fields["id"] = level_id
         changed_fields = _make_meili_dict(changed_fields)
