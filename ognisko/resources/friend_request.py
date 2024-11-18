@@ -3,6 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import NotRequired
 from typing import TypedDict
+from typing import Unpack
 
 from ognisko.adapters import AbstractMySQLService
 from ognisko.common import modelling
@@ -221,7 +222,7 @@ class FriendRequestRepository:
     async def update_partial(
         self,
         request_id: int,
-        **kwargs: _FriendRequestUpdatePartial,
+        **kwargs: Unpack[_FriendRequestUpdatePartial],
     ) -> FriendRequest | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
 
