@@ -3,6 +3,12 @@ from __future__ import annotations
 from abc import ABC
 from abc import abstractmethod
 
+from ognisko.adapters.boomlings import GeometryDashClient
+from ognisko.adapters.meilisearch import MeiliSearchClient
+from ognisko.adapters.mysql import AbstractMySQLService
+from ognisko.adapters.redis import RedisClient
+from ognisko.adapters.storage import AbstractStorage
+
 from .daily_chest import DailyChest
 from .daily_chest import DailyChestRepository
 from .daily_chest import DailyChestRewardType
@@ -39,66 +45,93 @@ from .user_replationship import UserRelationshipType
 
 
 class Context(ABC):
+    # Abstract properties
     @property
     @abstractmethod
-    def save_data(self) -> SaveDataRepository: ...
+    def _mysql(self) -> AbstractMySQLService: ...
 
     @property
     @abstractmethod
-    def users(self) -> UserRepository: ...
+    def _redis(self) -> RedisClient: ...
 
     @property
     @abstractmethod
-    def level_data(self) -> LevelDataRepository: ...
+    def _meili(self) -> MeiliSearchClient: ...
 
     @property
     @abstractmethod
-    def relationships(self) -> UserRelationshipRepository: ...
+    def _storage(self) -> AbstractStorage: ...
 
     @property
     @abstractmethod
-    def credentials(self) -> UserCredentialRepository: ...
+    def _gd(self) -> GeometryDashClient: ...
+
+    #
+    @property
+    def save_data(self) -> SaveDataRepository:
+        return SaveDataRepository(self._storage)
 
     @property
-    @abstractmethod
-    def daily_chests(self) -> DailyChestRepository: ...
+    def users(self) -> UserRepository:
+        return UserRepository(
+            self._mysql,
+            self._meili,
+        )
 
     @property
-    @abstractmethod
-    def leaderboards(self) -> LeaderboardRepository: ...
+    def level_data(self) -> LevelDataRepository:
+        return LevelDataRepository(
+            self._storage,
+        )
 
     @property
-    @abstractmethod
-    def messages(self) -> MessageRepository: ...
+    def relationships(self) -> UserRelationshipRepository:
+        return UserRelationshipRepository(self._mysql)
 
     @property
-    @abstractmethod
-    def user_comments(self) -> UserCommentRepository: ...
+    def credentials(self) -> UserCredentialRepository:
+        return UserCredentialRepository(self._mysql)
 
     @property
-    @abstractmethod
-    def likes(self) -> LikeRepository: ...
+    def daily_chests(self) -> DailyChestRepository:
+        return DailyChestRepository(self._mysql)
 
     @property
-    @abstractmethod
-    def friend_requests(self) -> FriendRequestRepository: ...
+    def leaderboards(self) -> LeaderboardRepository:
+        return LeaderboardRepository(self._redis)
 
     @property
-    @abstractmethod
-    def level_comments(self) -> LevelCommentRepository: ...
+    def messages(self) -> MessageRepository:
+        return MessageRepository(self._mysql)
 
     @property
-    @abstractmethod
-    def level_schedules(self) -> LevelScheduleRepository: ...
+    def user_comments(self) -> UserCommentRepository:
+        return UserCommentRepository(self._mysql)
 
     @property
-    @abstractmethod
-    def levels(self) -> LevelRepository: ...
+    def likes(self) -> LikeRepository:
+        return LikeRepository(self._mysql)
 
     @property
-    @abstractmethod
-    def songs(self) -> SongRepository: ...
+    def friend_requests(self) -> FriendRequestRepository:
+        return FriendRequestRepository(self._mysql)
 
     @property
-    @abstractmethod
-    def user_relationships(self) -> UserRelationshipRepository: ...
+    def level_comments(self) -> LevelCommentRepository:
+        return LevelCommentRepository(self._mysql)
+
+    @property
+    def level_schedules(self) -> LevelScheduleRepository:
+        return LevelScheduleRepository(self._mysql)
+
+    @property
+    def levels(self) -> LevelRepository:
+        return LevelRepository(self._mysql, self._meili)
+
+    @property
+    def songs(self) -> SongRepository:
+        return SongRepository(self._mysql, self._gd)
+
+    @property
+    def user_relationships(self) -> UserRelationshipRepository:
+        return UserRelationshipRepository(self._mysql)
