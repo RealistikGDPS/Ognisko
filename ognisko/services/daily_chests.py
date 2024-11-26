@@ -4,14 +4,13 @@ from datetime import datetime
 from datetime import timedelta
 from typing import NamedTuple
 
-from ognisko import repositories
 from ognisko.common import gd_logic
-from ognisko.common.context import Context
-from ognisko.constants.daily_chests import DailyChestRewardType
-from ognisko.constants.daily_chests import DailyChestType
-from ognisko.constants.daily_chests import DailyChestView
-from ognisko.constants.errors import ServiceError
-from ognisko.models.daily_chest import DailyChest
+from ognisko.resources import Context
+from ognisko.resources import DailyChest
+from ognisko.resources import DailyChestRewardType
+from ognisko.resources import DailyChestType
+from ognisko.resources import DailyChestView
+from ognisko.services._common import ServiceError
 
 
 class DailyChestInformation(NamedTuple):

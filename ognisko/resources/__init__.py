@@ -13,6 +13,7 @@ from .daily_chest import DailyChest
 from .daily_chest import DailyChestRepository
 from .daily_chest import DailyChestRewardType
 from .daily_chest import DailyChestType
+from .daily_chest import DailyChestView
 from .friend_request import FriendRequest
 from .friend_request import FriendRequestRepository
 from .leaderboard import LeaderboardRepository
@@ -66,7 +67,7 @@ class Context(ABC):
     @abstractmethod
     def _gd(self) -> GeometryDashClient: ...
 
-    #
+    # Rest
     @property
     def save_data(self) -> SaveDataRepository:
         return SaveDataRepository(self._storage)
