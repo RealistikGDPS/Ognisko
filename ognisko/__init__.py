@@ -7,4 +7,5 @@ from . import constants
 from . import helpers
 from . import resources
 from . import services
+from . import services_v2
 from . import utilities
