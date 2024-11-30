@@ -18,7 +18,7 @@ class MessageDirection(StrEnum):
     RECEIVED = "received"
 
 
-class Message(DatabaseModel):
+class UserMessageModel(DatabaseModel):
     id: int
     sender_user_id: int
     recipient_user_id: int
@@ -41,7 +41,7 @@ class MessageRepository:
     def __init__(self, mysql: AbstractMySQLService) -> None:
         self._mysql = mysql
 
-    async def from_id(self, message_id: int) -> Message | None:
+    async def from_id(self, message_id: int) -> UserMessageModel | None:
         message_db = await self._mysql.fetch_one(
             "SELECT * FROM messages WHERE id = :message_id",
             {
@@ -52,7 +52,7 @@ class MessageRepository:
         if message_db is None:
             return None
 
-        return Message(**message_db)
+        return UserMessageModel(**message_db)
 
     async def from_recipient_user_id_paginated(
         self,
@@ -61,7 +61,7 @@ class MessageRepository:
         page_size: int,
         *,
         include_deleted: bool = False,
-    ) -> list[Message]:
+    ) -> list[UserMessageModel]:
         condition = ""
         if not include_deleted:
             condition = "AND deleted = 0 AND recipient_deleted = 0"
@@ -76,7 +76,7 @@ class MessageRepository:
             },
         )
 
-        return [Message(**message_db) async for message_db in messages_db]
+        return [UserMessageModel(**message_db) async for message_db in messages_db]
 
     async def from_sender_user_id_paginated(
         self,
@@ -85,7 +85,7 @@ class MessageRepository:
         page_size: int,
         *,
         include_deleted: bool = False,
-    ) -> list[Message]:
+    ) -> list[UserMessageModel]:
         condition = ""
         if not include_deleted:
             condition = "AND deleted = 0 AND sender_deleted = 0"
@@ -100,7 +100,7 @@ class MessageRepository:
             },
         )
 
-        return [Message(**message_db) async for message_db in messages_db]
+        return [UserMessageModel(**message_db) async for message_db in messages_db]
 
     async def count_from_recipient_user_id(
         self,
@@ -208,7 +208,7 @@ class MessageRepository:
         self,
         message_id: int,
         **kwargs: Unpack[_MessageUpdatePartial],
-    ) -> Message | None:
+    ) -> UserMessageModel | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
 
         await self._mysql.execute(

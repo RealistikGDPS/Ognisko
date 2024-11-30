@@ -15,7 +15,7 @@ class SongSource(IntEnum):
     CUSTOM = 2
 
 
-class Song(DatabaseModel):
+class CustomSongModel(DatabaseModel):
     id: int
     name: str
     author_id: int
@@ -27,7 +27,7 @@ class Song(DatabaseModel):
     blocked: bool
 
 
-ALL_FIELDS = modelling.get_model_fields(Song)
+ALL_FIELDS = modelling.get_model_fields(CustomSongModel)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
 
@@ -46,7 +46,7 @@ class SongRepository:
         song_id: int,
         *,
         allow_blocked: bool = False,
-    ) -> Song | None:
+    ) -> CustomSongModel | None:
         song_db = await self._mysql.fetch_one(
             f"SELECT * FROM songs id = :song_id AND " "blocked IN :blocked",
             {
@@ -58,14 +58,14 @@ class SongRepository:
         if song_db is None:
             return None
 
-        return Song(**song_db)
+        return CustomSongModel(**song_db)
 
     async def __multiple_from_db(
         self,
         song_ids: list[int],
         *,
         allow_blocked: bool = False,
-    ) -> list[Song]:
+    ) -> list[CustomSongModel]:
         songs_db = self._mysql.iterate(
             f"SELECT * FROM songs WHERE id IN :song_ids " "AND blocked IN :blocked",
             {
@@ -74,15 +74,15 @@ class SongRepository:
             },
         )
 
-        return [Song(**song_db) async for song_db in songs_db]
+        return [CustomSongModel(**song_db) async for song_db in songs_db]
 
-    async def __from_boomlings(self, song_id: int) -> Song | None:
+    async def __from_boomlings(self, song_id: int) -> CustomSongModel | None:
         song_boomlings = await self._geometry_dash.song_from_id(song_id)
 
         if isinstance(song_boomlings, GDRequestStatus):
             return None
 
-        return Song(
+        return CustomSongModel(
             id=song_boomlings.id,
             name=song_boomlings.name,
             author_id=song_boomlings.author_id,
@@ -94,7 +94,7 @@ class SongRepository:
             blocked=False,
         )
 
-    async def __insert_model(self, song_model: Song) -> int:
+    async def __insert_model(self, song_model: CustomSongModel) -> int:
         return await self._mysql.execute(
             f"INSERT INTO songs ({_ALL_FIELDS_COMMA}) VALUES ({_ALL_FIELDS_COLON})",
             song_model.model_dump(),
@@ -112,8 +112,8 @@ class SongRepository:
         blocked: bool = False,
         *,
         song_id: int | None = None,
-    ) -> Song:
-        song = Song(
+    ) -> CustomSongModel:
+        song = CustomSongModel(
             id=0,
             name=name,
             author_id=author_id,
@@ -138,7 +138,7 @@ class SongRepository:
         song_id: int,
         *,
         allow_blocked: bool = False,
-    ) -> Song | None:
+    ) -> CustomSongModel | None:
         song_db = await self.__from_db(song_id, allow_blocked=allow_blocked)
 
         if song_db is not None:
@@ -155,7 +155,7 @@ class SongRepository:
         song_ids: list[int],
         *,
         allow_blocked: bool = False,
-    ) -> list[Song]:
+    ) -> list[CustomSongModel]:
         songs_db = await self.__multiple_from_db(song_ids, allow_blocked=allow_blocked)
 
         # All found within the database.

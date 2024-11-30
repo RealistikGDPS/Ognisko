@@ -16,7 +16,7 @@ class UserRelationshipType(IntEnum):
     BLOCKED = 1
 
 
-class UserRelationship(DatabaseModel):
+class UserRelationshipModel(DatabaseModel):
     id: int
     relationship_type: UserRelationshipType
     user_id: int
@@ -27,7 +27,7 @@ class UserRelationship(DatabaseModel):
 
 DEFAULT_PAGE_SIZE = 10
 
-ALL_FIELDS = modelling.get_model_fields(UserRelationship)
+ALL_FIELDS = modelling.get_model_fields(UserRelationshipModel)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 
@@ -52,7 +52,7 @@ class UserRelationshipRepository:
         relationship_id: int,
         *,
         include_deleted: bool = False,
-    ) -> UserRelationship | None:
+    ) -> UserRelationshipModel | None:
         condition = "AND NOT deleted" if not include_deleted else ""
 
         relationship_db = await self._mysql.fetch_one(
@@ -64,7 +64,7 @@ class UserRelationshipRepository:
         if not relationship_db:
             return None
 
-        return UserRelationship(**relationship_db)
+        return UserRelationshipModel(**relationship_db)
 
     async def create(
         self,
@@ -73,11 +73,11 @@ class UserRelationshipRepository:
         relationship_type: UserRelationshipType,
         post_ts: datetime | None = None,
         seen_ts: datetime | None = None,
-    ) -> UserRelationship:
+    ) -> UserRelationshipModel:
         if post_ts is None:
             post_ts = datetime.now()
 
-        relationship = UserRelationship(
+        relationship = UserRelationshipModel(
             id=0,
             relationship_type=relationship_type,
             user_id=user_id,
@@ -100,7 +100,7 @@ class UserRelationshipRepository:
         relationship_type: UserRelationshipType,
         *,
         include_deleted: bool = False,
-    ) -> list[UserRelationship]:
+    ) -> list[UserRelationshipModel]:
         condition = "AND NOT deleted" if not include_deleted else ""
 
         relationships_db = self._mysql.iterate(
@@ -111,7 +111,7 @@ class UserRelationshipRepository:
         )
 
         return [
-            UserRelationship(**relationship_row)
+            UserRelationshipModel(**relationship_row)
             async for relationship_row in relationships_db
         ]
 
@@ -123,7 +123,7 @@ class UserRelationshipRepository:
         page: int = 0,
         page_size: int = DEFAULT_PAGE_SIZE,
         include_deleted: bool = False,
-    ) -> list[UserRelationship]:
+    ) -> list[UserRelationshipModel]:
         condition = "AND NOT deleted" if not include_deleted else ""
 
         relationships_db = self._mysql.iterate(
@@ -139,7 +139,7 @@ class UserRelationshipRepository:
         )
 
         return [
-            UserRelationship(**relationship_row)
+            UserRelationshipModel(**relationship_row)
             async for relationship_row in relationships_db
         ]
 
@@ -149,7 +149,7 @@ class UserRelationshipRepository:
         user_id: int,
         *,
         include_deleted: bool = False,
-    ) -> list[UserRelationship]:
+    ) -> list[UserRelationshipModel]:
         return await self.from_user_id(
             user_id,
             UserRelationshipType.BLOCKED,
@@ -163,7 +163,7 @@ class UserRelationshipRepository:
         page: int = 0,
         page_size: int = DEFAULT_PAGE_SIZE,
         include_deleted: bool = False,
-    ) -> list[UserRelationship]:
+    ) -> list[UserRelationshipModel]:
         return await self.from_user_id_paginated(
             user_id,
             UserRelationshipType.BLOCKED,
@@ -177,7 +177,7 @@ class UserRelationshipRepository:
         user_id: int,
         *,
         include_deleted: bool = False,
-    ) -> list[UserRelationship]:
+    ) -> list[UserRelationshipModel]:
         return await self.from_user_id(
             user_id,
             UserRelationshipType.FRIEND,
@@ -191,7 +191,7 @@ class UserRelationshipRepository:
         page: int = 0,
         page_size: int = DEFAULT_PAGE_SIZE,
         include_deleted: bool = False,
-    ) -> list[UserRelationship]:
+    ) -> list[UserRelationshipModel]:
         return await self.from_user_id_paginated(
             user_id,
             UserRelationshipType.FRIEND,
@@ -206,7 +206,7 @@ class UserRelationshipRepository:
         target_user_id: int,
         *,
         include_deleted: bool = False,
-    ) -> UserRelationship | None:
+    ) -> UserRelationshipModel | None:
         condition = "AND NOT deleted" if not include_deleted else ""
 
         result_db = await self._mysql.fetch_one(
@@ -219,7 +219,7 @@ class UserRelationshipRepository:
         if result_db is None:
             return None
 
-        return UserRelationship(**result_db)
+        return UserRelationshipModel(**result_db)
 
     async def count_user_relationships(
         self,
@@ -255,7 +255,7 @@ class UserRelationshipRepository:
         self,
         relationship_id: int,
         **kwargs: Unpack[_UserRelationshipUpdatePartial],
-    ) -> UserRelationship | None:
+    ) -> UserRelationshipModel | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
 
         await self._mysql.execute(

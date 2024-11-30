@@ -10,7 +10,7 @@ from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
 
 
-class FriendRequest(DatabaseModel):
+class FriendRequestModel(DatabaseModel):
     id: int
     sender_user_id: int
     recipient_user_id: int
@@ -26,7 +26,7 @@ class _FriendRequestUpdatePartial(TypedDict):
     deleted: NotRequired[bool]
 
 
-ALL_FIELDS = modelling.get_model_fields(FriendRequest)
+ALL_FIELDS = modelling.get_model_fields(FriendRequestModel)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
@@ -44,7 +44,7 @@ class FriendRequestRepository:
     def __init__(self, mysql: AbstractMySQLService) -> None:
         self._mysql = mysql
 
-    async def from_id(self, request_id: int) -> FriendRequest | None:
+    async def from_id(self, request_id: int) -> FriendRequestModel | None:
         friend_request_db = await self._mysql.fetch_one(
             f"SELECT * FROM friend_requests WHERE id = :request_id",
             {"request_id": request_id},
@@ -53,7 +53,7 @@ class FriendRequestRepository:
         if friend_request_db is None:
             return None
 
-        return FriendRequest(**friend_request_db)
+        return FriendRequestModel(**friend_request_db)
 
     async def from_target_and_reciptient(
         self,
@@ -61,7 +61,7 @@ class FriendRequestRepository:
         recipient_user_id: int,
         *,
         include_deleted: bool = False,
-    ) -> FriendRequest | None:
+    ) -> FriendRequestModel | None:
         friend_request_db = await self._mysql.fetch_one(
             f"SELECT * FROM friend_requests WHERE sender_user_id = :sender_user_id"
             " AND recipient_user_id = :recipient_user_id AND deleted IN :include_deleted",
@@ -75,14 +75,14 @@ class FriendRequestRepository:
         if friend_request_db is None:
             return None
 
-        return FriendRequest(**friend_request_db)
+        return FriendRequestModel(**friend_request_db)
 
     async def from_sender_user_id(
         self,
         sender_user_id: int,
         *,
         include_deleted: bool = False,
-    ) -> list[FriendRequest]:
+    ) -> list[FriendRequestModel]:
         friend_requests_db = await self._mysql.fetch_all(
             f"SELECT * FROM friend_requests WHERE sender_user_id = :sender_user_id"
             " AND deleted IN :include_deleted",
@@ -93,7 +93,7 @@ class FriendRequestRepository:
         )
 
         return [
-            FriendRequest(**friend_request_db)
+            FriendRequestModel(**friend_request_db)
             for friend_request_db in friend_requests_db
         ]
 
@@ -102,7 +102,7 @@ class FriendRequestRepository:
         recipient_user_id: int,
         *,
         include_deleted: bool = False,
-    ) -> list[FriendRequest]:
+    ) -> list[FriendRequestModel]:
         friend_requests_db = await self._mysql.fetch_all(
             f"SELECT * FROM friend_requests WHERE recipient_user_id = :recipient_user_id"
             " AND deleted IN :include_deleted",
@@ -113,7 +113,7 @@ class FriendRequestRepository:
         )
 
         return [
-            FriendRequest(**friend_request_db)
+            FriendRequestModel(**friend_request_db)
             for friend_request_db in friend_requests_db
         ]
 
@@ -124,7 +124,7 @@ class FriendRequestRepository:
         page_size: int,
         *,
         include_deleted: bool = False,
-    ) -> list[FriendRequest]:
+    ) -> list[FriendRequestModel]:
         friend_requests_db = await self._mysql.fetch_all(
             f"SELECT * FROM friend_requests WHERE sender_user_id = :sender_user_id"
             " AND deleted IN :include_deleted LIMIT :limit OFFSET :offset",
@@ -137,7 +137,7 @@ class FriendRequestRepository:
         )
 
         return [
-            FriendRequest(**friend_request_db)
+            FriendRequestModel(**friend_request_db)
             for friend_request_db in friend_requests_db
         ]
 
@@ -148,7 +148,7 @@ class FriendRequestRepository:
         page_size: int,
         *,
         include_deleted: bool = False,
-    ) -> list[FriendRequest]:
+    ) -> list[FriendRequestModel]:
         friend_requests_db = await self._mysql.fetch_all(
             f"SELECT * FROM friend_requests WHERE recipient_user_id = :recipient_user_id"
             " AND deleted IN :include_deleted LIMIT :limit OFFSET :offset",
@@ -161,7 +161,7 @@ class FriendRequestRepository:
         )
 
         return [
-            FriendRequest(**friend_request_db)
+            FriendRequestModel(**friend_request_db)
             for friend_request_db in friend_requests_db
         ]
 
@@ -205,11 +205,11 @@ class FriendRequestRepository:
         message: str,
         post_ts: datetime | None = None,
         seen_ts: datetime | None = None,
-    ) -> FriendRequest:
+    ) -> FriendRequestModel:
         if post_ts is None:
             post_ts = datetime.now()
 
-        friend_request = FriendRequest(
+        friend_request = FriendRequestModel(
             id=0,
             sender_user_id=sender_user_id,
             recipient_user_id=recipient_user_id,
@@ -230,7 +230,7 @@ class FriendRequestRepository:
         self,
         request_id: int,
         **kwargs: Unpack[_FriendRequestUpdatePartial],
-    ) -> FriendRequest | None:
+    ) -> FriendRequestModel | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
 
         await self._mysql.execute(

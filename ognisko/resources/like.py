@@ -13,7 +13,7 @@ class LikeType(IntEnum):
     USER_COMMENT = 3
 
 
-class Like(DatabaseModel):
+class LikeInteractionModel(DatabaseModel):
     id: int
     target_type: LikeType
     target_id: int
@@ -21,7 +21,7 @@ class Like(DatabaseModel):
     value: int
 
 
-ALL_FIELDS = modelling.get_model_fields(Like)
+ALL_FIELDS = modelling.get_model_fields(LikeInteractionModel)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
@@ -38,7 +38,7 @@ class LikeRepository:
     def __init__(self, mysql: AbstractMySQLService) -> None:
         self._mysql = mysql
 
-    async def from_id(self, like_id: int) -> Like | None:
+    async def from_id(self, like_id: int) -> LikeInteractionModel | None:
         like_db = await self._mysql.fetch_one(
             "SELECT * FROM user_likes WHERE id = :like_id",
             {
@@ -49,7 +49,7 @@ class LikeRepository:
         if like_db is None:
             return None
 
-        return Like(**like_db)
+        return LikeInteractionModel(**like_db)
 
     async def create(
         self,
@@ -57,8 +57,8 @@ class LikeRepository:
         target_id: int,
         user_id: int,
         value: int,
-    ) -> Like:
-        like = Like(
+    ) -> LikeInteractionModel:
+        like = LikeInteractionModel(
             id=0,
             target_type=target_type,
             target_id=target_id,

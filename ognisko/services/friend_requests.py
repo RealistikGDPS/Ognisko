@@ -4,15 +4,15 @@ from datetime import datetime
 from typing import NamedTuple
 
 from ognisko.resources import Context
-from ognisko.resources import FriendRequest
-from ognisko.resources import User
+from ognisko.resources import FriendRequestModel
+from ognisko.resources import UserModel
 from ognisko.resources import UserRelationshipType
 from ognisko.services._common import ServiceError
 
 
 class FriendRequestResponse(NamedTuple):
-    request: FriendRequest
-    user: User
+    request: FriendRequestModel
+    user: UserModel
 
 
 class PaginatedFriendRequestResponse(NamedTuple):
@@ -72,7 +72,7 @@ async def mark_as_seen(
     ctx: Context,
     user_id: int,
     request_id: int,
-) -> FriendRequest | ServiceError:
+) -> FriendRequestModel | ServiceError:
     request = await ctx.friend_requests.from_id(request_id)
 
     if request is None:
@@ -139,7 +139,7 @@ async def create(
     sender_user_id: int,
     recipient_user_id: int,
     message: str,
-) -> FriendRequest | ServiceError:
+) -> FriendRequestModel | ServiceError:
     if sender_user_id == recipient_user_id:
         return ServiceError.FRIEND_REQUEST_INVALID_TARGET_ID
 
@@ -163,7 +163,7 @@ async def delete(
     ctx: Context,
     sender_user_id: int,
     recipient_user_id: int,
-) -> FriendRequest | ServiceError:
+) -> FriendRequestModel | ServiceError:
     request = await ctx.friend_requests.from_target_and_reciptient(
         sender_user_id,
         recipient_user_id,

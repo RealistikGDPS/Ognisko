@@ -10,7 +10,7 @@ from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
 
 
-class LevelComment(DatabaseModel):
+class LevelCommentModel(DatabaseModel):
     id: int
     user_id: int
     level_id: int
@@ -36,7 +36,7 @@ class LevelCommentSorting(StrEnum):
     MOST_LIKED = "most_liked"
 
 
-ALL_FIELDS = modelling.get_model_fields(LevelComment)
+ALL_FIELDS = modelling.get_model_fields(LevelCommentModel)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
@@ -54,7 +54,7 @@ class LevelCommentRepository:
     def __init__(self, mysql: AbstractMySQLService) -> None:
         self._mysql = mysql
 
-    async def from_id(self, comment_id: int) -> LevelComment | None:
+    async def from_id(self, comment_id: int) -> LevelCommentModel | None:
         comment_db = await self._mysql.fetch_one(
             f"SELECT * FROM level_comments WHERE id = :comment_id",
             {"comment_id": comment_id},
@@ -63,7 +63,7 @@ class LevelCommentRepository:
         if comment_db is None:
             return None
 
-        return LevelComment(**comment_db)
+        return LevelCommentModel(**comment_db)
 
     async def from_level_id_paginated(
         self,
@@ -73,7 +73,7 @@ class LevelCommentRepository:
         *,
         sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
         include_deleted: bool = False,
-    ) -> list[LevelComment]:
+    ) -> list[LevelCommentModel]:
         ordering = "post_ts DESC"
         if sorting == LevelCommentSorting.MOST_LIKED:
             ordering = "likes DESC"
@@ -92,7 +92,7 @@ class LevelCommentRepository:
             },
         )
 
-        return [LevelComment(**comment_db) for comment_db in comments_db]
+        return [LevelCommentModel(**comment_db) for comment_db in comments_db]
 
     async def from_user_id_paginated(
         self,
@@ -102,7 +102,7 @@ class LevelCommentRepository:
         *,
         sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
         include_deleted: bool = False,
-    ) -> list[LevelComment]:
+    ) -> list[LevelCommentModel]:
         ordering = "post_ts DESC"
         if sorting == LevelCommentSorting.MOST_LIKED:
             ordering = "likes DESC"
@@ -121,7 +121,7 @@ class LevelCommentRepository:
             },
         )
 
-        return [LevelComment(**comment_db) for comment_db in comments_db]
+        return [LevelCommentModel(**comment_db) for comment_db in comments_db]
 
     async def count_from_level_id(self, level_id: int) -> int:
         return await self._mysql.fetch_val(
@@ -144,11 +144,11 @@ class LevelCommentRepository:
         content: str,
         percent: int,
         post_ts: datetime | None = None,
-    ) -> LevelComment:
+    ) -> LevelCommentModel:
         if post_ts is None:
             post_ts = datetime.now()
 
-        comment = LevelComment(
+        comment = LevelCommentModel(
             id=0,
             user_id=user_id,
             level_id=level_id,

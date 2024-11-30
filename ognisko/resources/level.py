@@ -183,7 +183,7 @@ class LevelSearchType(IntEnum):
     WEEKLY = 22
 
 
-class Level(DatabaseModel):
+class CustomLevelModel(DatabaseModel):
     id: int
     name: str
     user_id: int
@@ -256,7 +256,7 @@ class _LevelUpdatePartial(TypedDict):
     deleted: NotRequired[bool]
 
 
-ALL_FIELDS = modelling.get_model_fields(Level)
+ALL_FIELDS = modelling.get_model_fields(CustomLevelModel)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 
@@ -330,7 +330,7 @@ def _from_meili_dict(level_dict: dict[str, Any]) -> dict[str, Any]:
 
 
 class LevelSearchResults(NamedTuple):
-    results: list[Level]
+    results: list[CustomLevelModel]
     total: int
 
 
@@ -379,7 +379,7 @@ class LevelRepository:
         sfx_ids: list[int] | None = None,
         deleted: bool = False,
         level_id: int | None = None,
-    ) -> Level:
+    ) -> CustomLevelModel:
         if upload_ts is None:
             upload_ts = datetime.now()
         if update_ts is None:
@@ -390,7 +390,7 @@ class LevelRepository:
         if song_ids is None:
             song_ids = []
 
-        level = Level(
+        level = CustomLevelModel(
             id=0,
             name=name,
             user_id=user_id,
@@ -437,7 +437,7 @@ class LevelRepository:
         await self._meili.add_documents([meili_dict])
         return level
 
-    async def from_id(self, level_id: int) -> Level | None:
+    async def from_id(self, level_id: int) -> CustomLevelModel | None:
         level_dict = await self._mysql.fetch_one(
             f"SELECT {_ALL_FIELDS_COMMA} FROM levels WHERE id = :level_id",
             {"level_id": level_id},
@@ -446,9 +446,9 @@ class LevelRepository:
         if not level_dict:
             return None
 
-        return Level(**level_dict)
+        return CustomLevelModel(**level_dict)
 
-    async def multiple_from_id(self, level_ids: list[int]) -> list[Level]:
+    async def multiple_from_id(self, level_ids: list[int]) -> list[CustomLevelModel]:
         if not level_ids:
             return []
 
@@ -458,13 +458,13 @@ class LevelRepository:
         )
         levels = sorted(levels, key=lambda level: level_ids.index(level["id"]))
 
-        return [Level(**level) for level in levels]
+        return [CustomLevelModel(**level) for level in levels]
 
     async def update_partial(
         self,
         level_id: int,
         **kwargs: Unpack[_LevelUpdatePartial],
-    ) -> Level | None:
+    ) -> CustomLevelModel | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
         await self._mysql.execute(
             modelling.update_from_partial_dict("levels", level_id, changed_fields),
@@ -553,7 +553,9 @@ class LevelRepository:
             sort=sort,
         )
 
-        levels = [Level(**_from_meili_dict(level)) for level in levels_res.hits]
+        levels = [
+            CustomLevelModel(**_from_meili_dict(level)) for level in levels_res.hits
+        ]
         return LevelSearchResults(
             results=levels,
             total=levels_res.estimated_total_hits or 0,
@@ -563,7 +565,7 @@ class LevelRepository:
         self,
         *,
         include_deleted: bool = False,
-    ) -> AsyncGenerator[Level, None]:
+    ) -> AsyncGenerator[CustomLevelModel, None]:
         condition = ""
         if not include_deleted:
             condition = "WHERE deleted = 0"
@@ -571,7 +573,7 @@ class LevelRepository:
         async for level_dict in self._mysql.iterate(
             f"SELECT * FROM levels {condition}",
         ):
-            yield Level(**level_dict)
+            yield CustomLevelModel(**level_dict)
 
     async def count_all(self) -> int:
         return await self._mysql.fetch_val("SELECT COUNT(*) FROM levels")
@@ -582,7 +584,7 @@ class LevelRepository:
         user_id: int,
         *,
         include_deleted: bool = False,
-    ) -> Level | None:
+    ) -> CustomLevelModel | None:
         level_dict = await self._mysql.fetch_one(
             (
                 "SELECT * FROM levels WHERE name = :name AND user_id = :user_id"
@@ -596,14 +598,14 @@ class LevelRepository:
         if not level_dict:
             return None
 
-        return Level(**level_dict)
+        return CustomLevelModel(**level_dict)
 
     async def from_name(
         self,
         name: str,
         *,
         include_deleted: bool = False,
-    ) -> Level | None:
+    ) -> CustomLevelModel | None:
         levels = await self._mysql.fetch_one(
             (
                 "SELECT * FROM levels WHERE name = :name" " AND deleted = 0"
@@ -616,7 +618,7 @@ class LevelRepository:
         if not levels:
             return None
 
-        return Level(**levels)
+        return CustomLevelModel(**levels)
 
     # TODO: Move LOL
     # A function primarily used for some recommendation algorithms that returns a list of levels

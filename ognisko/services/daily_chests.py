@@ -6,7 +6,7 @@ from typing import NamedTuple
 
 from ognisko.common import gd_logic
 from ognisko.resources import Context
-from ognisko.resources import DailyChest
+from ognisko.resources import DailyChestModel
 from ognisko.resources import DailyChestRewardType
 from ognisko.resources import DailyChestType
 from ognisko.resources import DailyChestView
@@ -20,7 +20,7 @@ class DailyChestInformation(NamedTuple):
     small_chest_count: int
     large_chest_count: int
 
-    chest: DailyChest | None
+    chest: DailyChestModel | None
 
 
 SMALL_CHEST_TIME = timedelta(hours=2)

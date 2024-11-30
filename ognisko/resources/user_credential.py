@@ -12,14 +12,14 @@ class CredentialVersion(IntEnum):
     GJP2_BCRYPT = 2  # 2.2 + GJP2
 
 
-class UserCredential(DatabaseModel):
+class UserCredentialModel(DatabaseModel):
     id: int
     user_id: int
     version: CredentialVersion
     value: str
 
 
-ALL_FIELDS = modelling.get_model_fields(UserCredential)
+ALL_FIELDS = modelling.get_model_fields(UserCredentialModel)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 
@@ -40,8 +40,8 @@ class UserCredentialRepository:
         user_id: int,
         credential_version: CredentialVersion,
         value: str,
-    ) -> UserCredential:
-        credential = UserCredential(
+    ) -> UserCredentialModel:
+        credential = UserCredentialModel(
             id=0,
             user_id=user_id,
             version=credential_version,
@@ -58,7 +58,7 @@ class UserCredentialRepository:
     async def from_user_id(
         self,
         user_id: int,
-    ) -> UserCredential | None:
+    ) -> UserCredentialModel | None:
         res = await self._mysql.fetch_one(
             f"SELECT {_ALL_FIELDS_COMMA} FROM user_credentials WHERE user_id = :user_id "
             "ORDER BY id DESC LIMIT 1",
@@ -68,7 +68,7 @@ class UserCredentialRepository:
         if not res:
             return None
 
-        return UserCredential(**res)
+        return UserCredentialModel(**res)
 
     async def delete_from_user_id(self, user_id: int) -> None:
         await self._mysql.execute(

@@ -133,7 +133,7 @@ DEFAULT_PRIVILEGES = (
 """A set of default privileges to be assigned to users upon registration."""
 
 
-class User(DatabaseModel):
+class UserModel(DatabaseModel):
     id: int
     username: str
     email: str
@@ -175,10 +175,7 @@ class User(DatabaseModel):
     diamonds: int
 
 
-# In case we want to move to a less direct model approach later.
-type UserModel = User
-
-ALL_FIELDS = modelling.get_model_fields(User)
+ALL_FIELDS = modelling.get_model_fields(UserModel)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 
@@ -256,7 +253,7 @@ def _model_from_meili_dict(user_dict: dict[str, Any]) -> UserModel:
 
     del user_dict["is_public"]
 
-    return User(**user_dict)
+    return UserModel(**user_dict)
 
 
 class UserRepository:
@@ -268,7 +265,7 @@ class UserRepository:
         self._mysql = mysql
         self._meili = meili.index("users")
 
-    async def from_id(self, user_id: int) -> User | None:
+    async def from_id(self, user_id: int) -> UserModel | None:
         user_db = await self._mysql.fetch_one(
             f"SELECT {_ALL_FIELDS_COMMA} FROM users WHERE id = :id",
             {"id": user_id},
@@ -277,9 +274,9 @@ class UserRepository:
         if user_db is None:
             return None
 
-        return User(**user_db)
+        return UserModel(**user_db)
 
-    async def multiple_from_id(self, user_ids: list[int]) -> list[User]:
+    async def multiple_from_id(self, user_ids: list[int]) -> list[UserModel]:
         if not user_ids:
             return []
 
@@ -288,9 +285,9 @@ class UserRepository:
             {"ids": tuple(user_ids)},
         )
 
-        return [User(**user_row) async for user_row in users_db]
+        return [UserModel(**user_row) async for user_row in users_db]
 
-    async def __update_meili(self, model: User) -> None:
+    async def __update_meili(self, model: UserModel) -> None:
         user_dict = _meili_dict_from_model(model)
         await self._meili.add_documents([user_dict])
 
@@ -332,7 +329,7 @@ class UserRepository:
         diamonds: int = 0,
         user_id: int | None = 0,
         comment_colour: Colour = Colour.default(),
-    ) -> User:
+    ) -> UserModel:
         if register_ts is None:
             register_ts = datetime.now()
 
@@ -340,7 +337,7 @@ class UserRepository:
         if user_id is None:
             user_id = 0
 
-        user = User(
+        user = UserModel(
             id=user_id,
             username=username,
             email=email,
@@ -396,7 +393,7 @@ class UserRepository:
         self,
         user_id: int,
         **kwargs: Unpack[_UserUpdatePartial],
-    ) -> User | None:
+    ) -> UserModel | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
 
         await self._mysql.execute(
@@ -411,7 +408,7 @@ class UserRepository:
         await self._meili.update_documents([meili_dict])
         return await self.from_id(user_id)
 
-    async def from_username(self, username: str) -> User | None:
+    async def from_username(self, username: str) -> UserModel | None:
         user_id = await self._mysql.fetch_val(
             "SELECT id FROM users WHERE username = :username",
             {"username": username},
@@ -422,11 +419,11 @@ class UserRepository:
 
         return await self.from_id(user_id)
 
-    async def all(self) -> AsyncGenerator[User, None]:
+    async def all(self) -> AsyncGenerator[UserModel, None]:
         async for user_db in self._mysql.iterate(
             f"SELECT {_ALL_FIELDS_COMMA} FROM users",
         ):
-            yield User(**user_db)
+            yield UserModel(**user_db)
 
     # Search related.
     async def search(
@@ -436,7 +433,7 @@ class UserRepository:
         page: int = 0,
         page_size: int = DEFAULT_PAGE_SIZE,
         include_hidden: bool = False,
-    ) -> SearchResults[User]:
+    ) -> SearchResults[UserModel]:
         filters = []
         if not include_hidden:
             filters.append("is_public = true")

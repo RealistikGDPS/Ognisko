@@ -10,7 +10,7 @@ from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
 
 
-class UserComment(DatabaseModel):
+class UserProfileCommentModel(DatabaseModel):
     id: int
     user_id: int
     content: str
@@ -27,7 +27,7 @@ class _UserCommentUpdatePartial(TypedDict):
     deleted: NotRequired[bool]
 
 
-ALL_FIELDS = modelling.get_model_fields(UserComment)
+ALL_FIELDS = modelling.get_model_fields(UserProfileCommentModel)
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
 _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
 
@@ -38,7 +38,7 @@ class UserCommentRepository:
     def __init__(self, mysql: AbstractMySQLService) -> None:
         self._mysql = mysql
 
-    async def from_id(self, comment_id: int) -> UserComment | None:
+    async def from_id(self, comment_id: int) -> UserProfileCommentModel | None:
         comment_db = await self._mysql.fetch_one(
             "SELECT * FROM user_comments WHERE id = :comment_id",
             {
@@ -49,14 +49,14 @@ class UserCommentRepository:
         if comment_db is None:
             return None
 
-        return UserComment(**comment_db)
+        return UserProfileCommentModel(**comment_db)
 
     async def from_user_id(
         self,
         user_id: int,
         *,
         include_deleted: bool = False,
-    ) -> list[UserComment]:
+    ) -> list[UserProfileCommentModel]:
         comments_db = self._mysql.iterate(
             "SELECT * FROM user_comments WHERE user_id = :user_id "
             "AND deleted IN :deleted",
@@ -66,7 +66,9 @@ class UserCommentRepository:
             },
         )
 
-        return [UserComment(**comment_db) async for comment_db in comments_db]
+        return [
+            UserProfileCommentModel(**comment_db) async for comment_db in comments_db
+        ]
 
     async def from_user_id_paginated(
         self,
@@ -75,7 +77,7 @@ class UserCommentRepository:
         page: int,
         page_size: int,
         include_deleted: bool = False,
-    ) -> list[UserComment]:
+    ) -> list[UserProfileCommentModel]:
         condition = ""
         if not include_deleted:
             condition = "AND NOT deleted"
@@ -90,7 +92,7 @@ class UserCommentRepository:
             },
         )
 
-        return [UserComment(**comment_db) for comment_db in comments_db]
+        return [UserProfileCommentModel(**comment_db) for comment_db in comments_db]
 
     async def count_from_user_id(
         self,
@@ -118,8 +120,8 @@ class UserCommentRepository:
         deleted: bool = False,
         *,
         comment_id: int | None = None,
-    ) -> UserComment:
-        model = UserComment(
+    ) -> UserProfileCommentModel:
+        model = UserProfileCommentModel(
             id=0,
             user_id=user_id,
             content=content,
@@ -142,7 +144,7 @@ class UserCommentRepository:
         self,
         comment_id: int,
         **kwargs: Unpack[_UserCommentUpdatePartial],
-    ) -> UserComment | None:
+    ) -> UserProfileCommentModel | None:
         changed_fields = modelling.unpack_enum_types(kwargs)
 
         await self._mysql.execute(

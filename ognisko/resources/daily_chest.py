@@ -42,7 +42,7 @@ class DailyChestRewardType(IntEnum):
     DEMON_KEY = 7
 
 
-class DailyChest(DatabaseModel):
+class DailyChestModel(DatabaseModel):
     id: int
     user_id: int
     type: DailyChestType
@@ -57,7 +57,7 @@ class DailyChest(DatabaseModel):
     claimed_ts: datetime
 
 
-ALL_FIELDS = modelling.get_model_fields(DailyChest)
+ALL_FIELDS = modelling.get_model_fields(DailyChestModel)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 
@@ -75,7 +75,7 @@ class DailyChestRepository:
     def __init__(self, mysql: AbstractMySQLService) -> None:
         self._mysql = mysql
 
-    async def from_id(self, chest_id: int) -> DailyChest | None:
+    async def from_id(self, chest_id: int) -> DailyChestModel | None:
         chest_db = await self._mysql.fetch_one(
             "SELECT * FROM daily_chests WHERE id = :chest_id",
             {"chest_id": chest_id},
@@ -84,13 +84,13 @@ class DailyChestRepository:
         if chest_db is None:
             return None
 
-        return DailyChest(**chest_db)
+        return DailyChestModel(**chest_db)
 
     async def from_user_id_and_type_latest(
         self,
         user_id: int,
         chest_type: DailyChestType,
-    ) -> DailyChest | None:
+    ) -> DailyChestModel | None:
         chest_db = await self._mysql.fetch_one(
             "SELECT * FROM daily_chests WHERE user_id = :user_id AND "
             "type = :chest_type ORDER BY claimed_ts DESC LIMIT 1",
@@ -100,7 +100,7 @@ class DailyChestRepository:
         if chest_db is None:
             return None
 
-        return DailyChest(**chest_db)
+        return DailyChestModel(**chest_db)
 
     async def create(
         self,
@@ -116,11 +116,11 @@ class DailyChestRepository:
         lava_shards: int = 0,
         demon_keys: int = 0,
         claimed_ts: datetime | None = None,
-    ) -> DailyChest:
+    ) -> DailyChestModel:
         if claimed_ts is None:
             claimed_ts = datetime.now()
 
-        model = DailyChest(
+        model = DailyChestModel(
             id=0,
             user_id=user_id,
             type=chest_type,

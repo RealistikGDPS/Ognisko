@@ -9,7 +9,7 @@ from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
 
 
-class LevelSchedule(DatabaseModel):
+class LevelScheduleModel(DatabaseModel):
     id: int
     type: LevelScheduleType
     level_id: int
@@ -23,7 +23,7 @@ class LevelScheduleType(IntEnum):
     WEEKLY = 1
 
 
-ALL_FIELDS = modelling.get_model_fields(LevelSchedule)
+ALL_FIELDS = modelling.get_model_fields(LevelScheduleModel)
 CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
 
 _ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
@@ -41,7 +41,7 @@ class LevelScheduleRepository:
     def __init__(self, mysql: AbstractMySQLService) -> None:
         self._mysql = mysql
 
-    async def from_id(self, schedule_id: int) -> LevelSchedule | None:
+    async def from_id(self, schedule_id: int) -> LevelScheduleModel | None:
         schedule_db = await self._mysql.fetch_one(
             f"SELECT * FROM level_schedule WHERE id = :schedule_id",
             {"schedule_id": schedule_id},
@@ -50,7 +50,7 @@ class LevelScheduleRepository:
         if schedule_db is None:
             return None
 
-        return LevelSchedule(**schedule_db)
+        return LevelScheduleModel(**schedule_db)
 
     async def create(
         self,
@@ -60,7 +60,7 @@ class LevelScheduleRepository:
         end_time: datetime | None = None,
         scheduled_by_id: int | None = None,
         schedule_id: int = 0,
-    ) -> LevelSchedule:
+    ) -> LevelScheduleModel:
 
         if start_time is None:
             start_time = datetime.now()
@@ -71,7 +71,7 @@ class LevelScheduleRepository:
         else:
             end_time = start_time + timedelta(days=1)
 
-        schedule = LevelSchedule(
+        schedule = LevelScheduleModel(
             id=schedule_id,
             type=schedule_type,
             level_id=level_id,
@@ -87,7 +87,10 @@ class LevelScheduleRepository:
 
         return schedule
 
-    async def current(self, schedule_type: LevelScheduleType) -> LevelSchedule | None:
+    async def current(
+        self,
+        schedule_type: LevelScheduleType,
+    ) -> LevelScheduleModel | None:
         schedule_db = await self._mysql.fetch_one(
             "SELECT * FROM level_schedule WHERE type = :schedule_type "
             "AND start_time <= NOW() AND end_time >= NOW()",
@@ -97,9 +100,9 @@ class LevelScheduleRepository:
         if schedule_db is None:
             return None
 
-        return LevelSchedule(**schedule_db)
+        return LevelScheduleModel(**schedule_db)
 
-    async def next(self, schedule_type: LevelScheduleType) -> LevelSchedule | None:
+    async def next(self, schedule_type: LevelScheduleType) -> LevelScheduleModel | None:
         schedule_db = await self._mysql.fetch_one(
             "SELECT * FROM level_schedule WHERE type = :schedule_type "
             "AND start_time > NOW() ORDER BY start_time ASC LIMIT 1",
@@ -109,9 +112,12 @@ class LevelScheduleRepository:
         if schedule_db is None:
             return None
 
-        return LevelSchedule(**schedule_db)
+        return LevelScheduleModel(**schedule_db)
 
-    async def previous(self, schedule_type: LevelScheduleType) -> LevelSchedule | None:
+    async def previous(
+        self,
+        schedule_type: LevelScheduleType,
+    ) -> LevelScheduleModel | None:
         schedule_db = await self._mysql.fetch_one(
             "SELECT * FROM level_schedule WHERE type = :schedule_type "
             "AND end_time < NOW() ORDER BY end_time DESC LIMIT 1",
@@ -121,17 +127,17 @@ class LevelScheduleRepository:
         if schedule_db is None:
             return None
 
-        return LevelSchedule(**schedule_db)
+        return LevelScheduleModel(**schedule_db)
 
     async def last_n(
         self,
         schedule_type: LevelScheduleType,
         n: int,
-    ) -> list[LevelSchedule]:
+    ) -> list[LevelScheduleModel]:
         schedules_db = await self._mysql.fetch_all(
             "SELECT * FROM level_schedule WHERE type = :schedule_type "
             "ORDER BY start_time DESC LIMIT :n",
             {"schedule_type": schedule_type.value, "n": n},
         )
 
-        return [LevelSchedule(**schedule_db) for schedule_db in schedules_db]
+        return [LevelScheduleModel(**schedule_db) for schedule_db in schedules_db]
