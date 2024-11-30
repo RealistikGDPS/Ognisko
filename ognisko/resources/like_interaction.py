@@ -32,7 +32,7 @@ _CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
 )
 
 
-class LikeRepository:
+class LikeInteractionRepository:
     __slots__ = ("_mysql",)
 
     def __init__(self, mysql: AbstractMySQLService) -> None:

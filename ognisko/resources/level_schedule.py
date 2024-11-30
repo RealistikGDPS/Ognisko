@@ -2,11 +2,11 @@ from __future__ import annotations
 
 from datetime import datetime
 from datetime import timedelta
-from enum import IntEnum
 
 from ognisko.adapters import AbstractMySQLService
 from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
+from ognisko.utilities.enum import StrEnum
 
 
 class LevelScheduleModel(DatabaseModel):
@@ -18,9 +18,9 @@ class LevelScheduleModel(DatabaseModel):
     scheduled_by_id: int | None
 
 
-class LevelScheduleType(IntEnum):
-    DAILY = 0
-    WEEKLY = 1
+class LevelScheduleType(StrEnum):
+    DAILY = "daily"
+    WEEKLY = "weekly"
 
 
 ALL_FIELDS = modelling.get_model_fields(LevelScheduleModel)

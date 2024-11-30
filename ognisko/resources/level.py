@@ -2,9 +2,6 @@ from __future__ import annotations
 
 from collections.abc import AsyncGenerator
 from datetime import datetime
-from enum import Enum
-from enum import IntEnum
-from enum import IntFlag
 from typing import Any
 from typing import Literal
 from typing import NamedTuple
@@ -18,82 +15,18 @@ from ognisko.common import data_utils
 from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
 from ognisko.utilities import time as time_utils
+from ognisko.utilities.enum import StrEnum
 
 
-class LevelSearchFlag(IntFlag):
-    NONE = 0
-    EPIC = 1 << 0
-    AWARDED = 1 << 1
-    MAGIC = 1 << 2
-    LEGENDARY = 1 << 3
-    MYTHICAL = 1 << 4
-
-    def as_feature(self) -> LevelFeature:
-        if self & LevelSearchFlag.MYTHICAL:
-            return LevelFeature.MYTHICAL
-
-        if self & LevelSearchFlag.LEGENDARY:
-            return LevelFeature.LEGENDARY
-
-        if self & LevelSearchFlag.EPIC:
-            return LevelFeature.EPIC
-
-        return LevelFeature.NONE
+class LevelFeature(StrEnum):
+    NONE = "none"
+    FEATURE = "feature"
+    EPIC = "epic"
+    LEGENDARY = "legendary"
+    MYTHICAL = "mythical"
 
 
-class LevelFeature(IntEnum):
-    NONE = 0
-    FEATURE = 1
-    EPIC = 2
-    LEGENDARY = 3
-    MYTHICAL = 4
-
-    def as_search_flag(self) -> LevelSearchFlag:
-        return _LEVEL_FEATURE_MAP[self]
-
-
-_LEVEL_FEATURE_MAP = {
-    LevelFeature.NONE: LevelSearchFlag.NONE,
-    LevelFeature.FEATURE: LevelSearchFlag.NONE,
-    LevelFeature.EPIC: LevelSearchFlag.EPIC,
-    LevelFeature.LEGENDARY: LevelSearchFlag.EPIC | LevelSearchFlag.LEGENDARY,
-    LevelFeature.MYTHICAL: LevelSearchFlag.EPIC
-    | LevelSearchFlag.LEGENDARY
-    | LevelSearchFlag.MYTHICAL,
-}
-
-
-class LevelDifficulty(IntEnum):
-    NA = 0
-    EASY = 10
-    NORMAL = 20
-    HARD = 30
-    HARDER = 40
-    INSANE = 50
-
-    @staticmethod
-    def from_stars(stars: int) -> LevelDifficulty:
-        return _DIFFICULTY_STAR_MAP.get(
-            stars,
-            LevelDifficulty.NA,
-        )
-
-
-_DIFFICULTY_STAR_MAP = {
-    2: LevelDifficulty.EASY,
-    3: LevelDifficulty.NORMAL,
-    4: LevelDifficulty.HARD,
-    5: LevelDifficulty.HARD,
-    6: LevelDifficulty.HARDER,
-    7: LevelDifficulty.HARDER,
-    8: LevelDifficulty.INSANE,
-    9: LevelDifficulty.INSANE,
-}
-
-
-class LevelDifficultyName(Enum):
-    """A string equivalent of `LevelDifficulty` enum used for validation."""
-
+class LevelDifficulty(StrEnum):
     NA = "na"
     EASY = "easy"
     NORMAL = "normal"
@@ -101,86 +34,29 @@ class LevelDifficultyName(Enum):
     HARDER = "harder"
     INSANE = "insane"
 
-    def as_difficulty(self) -> LevelDifficulty:
-        return _NAME_DIFFICULTY_MAP[self]
+
+class LevelLength(StrEnum):
+    TINY = "tiny"
+    SHORT = "short"
+    MEDIUM = "medium"
+    LONG = "long"
+    XL = "xl"
+    PLATFORMER = "platformer"
 
 
-_NAME_DIFFICULTY_MAP = {
-    LevelDifficultyName.NA: LevelDifficulty.NA,
-    LevelDifficultyName.EASY: LevelDifficulty.EASY,
-    LevelDifficultyName.NORMAL: LevelDifficulty.NORMAL,
-    LevelDifficultyName.HARD: LevelDifficulty.HARD,
-    LevelDifficultyName.HARDER: LevelDifficulty.HARDER,
-    LevelDifficultyName.INSANE: LevelDifficulty.INSANE,
-}
+class LevelDemonDifficulty(StrEnum):
+    HARD = "hard"
+    EASY = "easy"
+    MEDIUM = "medium"
+    INSANE = "insane"
+    EXTREME = "extreme"
 
 
-class LevelLength(IntEnum):
-    TINY = 0
-    SHORT = 1
-    MEDIUM = 2
-    LONG = 3
-    XL = 4
-    PLATFORMER = 5
-
-
-class LevelDemonDifficulty(IntEnum):
-    HARD = 0
-    EASY = 3
-    MEDIUM = 4
-    INSANE = 5
-    EXTREME = 6
-
-
-class LevelDemonRating(IntEnum):
-    """Demon difficulty rating used by the client to send demon ratings
-    (but not receive)."""
-
-    EASY = 1
-    MEDIUM = 2
-    HARD = 3
-    INSANE = 4
-    EXTREME = 5
-
-    def as_difficulty(self) -> LevelDemonDifficulty:
-        return _RATING_DIFFICULTY_MAP[self]
-
-
-_RATING_DIFFICULTY_MAP = {
-    LevelDemonRating.EASY: LevelDemonDifficulty.EASY,
-    LevelDemonRating.MEDIUM: LevelDemonDifficulty.MEDIUM,
-    LevelDemonRating.HARD: LevelDemonDifficulty.HARD,
-    LevelDemonRating.INSANE: LevelDemonDifficulty.INSANE,
-    LevelDemonRating.EXTREME: LevelDemonDifficulty.EXTREME,
-}
-
-
-# Ideas:
-# Listed only for friends
-class LevelPublicity(IntEnum):
-    PUBLIC = 0
-    # Levels only accessible through direct ID.
-    GLOBAL_UNLISTED = 1
-    FRIENDS_UNLISTED = 2
-
-
-class LevelSearchType(IntEnum):
-    SEARCH_QUERY = 0
-    MOST_DOWNLOADED = 1
-    MOST_LIKED = 2
-    TRENDING = 3
-    RECENT = 4
-    USER_LEVELS = 5
-    FEATURED = 6
-    MAGIC = 7
-    MODERATOR_SENT = 8
-    LEVEL_LIST = 9
-    AWARDED = 11
-    FOLLOWED = 12
-    FRIENDS = 13
-    EPIC = 16
-    DAILY = 21
-    WEEKLY = 22
+class LevelPublicity(StrEnum):
+    PUBLIC = "public"
+    GLOBAL_UNLISTED = "global_unlisted"
+    FRIENDS_UNLISTED = "friends_unlisted"
+    FRIENDS_SEARCHABLE = "friends_searchable"
 
 
 class CustomLevelModel(DatabaseModel):
@@ -211,13 +87,11 @@ class CustomLevelModel(DatabaseModel):
     coins_verified: bool
     requested_stars: int
     feature_order: int
-    search_flags: LevelSearchFlag
+    search_flags: LevelFeature
     low_detail_mode: bool
     object_count: int
     building_time: int
     update_locked: bool
-    song_ids: list[int]
-    sfx_ids: list[int]
     deleted: bool
 
 

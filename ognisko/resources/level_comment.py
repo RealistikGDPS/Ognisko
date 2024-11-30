@@ -15,9 +15,9 @@ class LevelCommentModel(DatabaseModel):
     user_id: int
     level_id: int
     content: str
-    percent: int
+    percent_achieved: int | None
     likes: int
-    post_ts: datetime
+    posted_ts: datetime
     deleted: bool
 
 
@@ -153,9 +153,9 @@ class LevelCommentRepository:
             user_id=user_id,
             level_id=level_id,
             content=content,
-            percent=percent,
+            percent_achieved=percent,
             likes=0,
-            post_ts=post_ts,
+            posted_ts=post_ts,
             deleted=False,
         )
 

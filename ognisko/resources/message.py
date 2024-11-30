@@ -11,9 +11,9 @@ from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
 
 
+# NOTE: message direction is relative to the user who is
+# making the request.
 class MessageDirection(StrEnum):
-    # NOTE: message direction is relative to the user who is
-    # making the request.
     SENT = "sent"
     RECEIVED = "received"
 

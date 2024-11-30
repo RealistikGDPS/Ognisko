@@ -15,8 +15,8 @@ class FriendRequestModel(DatabaseModel):
     sender_user_id: int
     recipient_user_id: int
     message: str
-    post_ts: datetime
-    seen_ts: datetime | None
+    posted_at: datetime
+    seen_at: datetime | None
 
 
 class _FriendRequestUpdatePartial(TypedDict):
@@ -214,8 +214,8 @@ class FriendRequestRepository:
             sender_user_id=sender_user_id,
             recipient_user_id=recipient_user_id,
             message=message,
-            post_ts=post_ts,
-            seen_ts=seen_ts,
+            posted_at=post_ts,
+            seen_at=seen_ts,
         )
 
         friend_request.id = await self._mysql.execute(

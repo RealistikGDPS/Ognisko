@@ -1,30 +1,29 @@
 from __future__ import annotations
 
-from enum import IntEnum
-
 from ognisko.adapters import AbstractMySQLService
 from ognisko.adapters import GeometryDashClient
 from ognisko.adapters.boomlings import GDRequestStatus
 from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
+from ognisko.utilities.enum import StrEnum
 
 
-class SongSource(IntEnum):
-    BOOMLINGS = 0
-    NEWGROUNDS = 1
-    CUSTOM = 2
+class SongSource(StrEnum):
+    BOOMLINGS = "boomlings"
+    NEWGROUNDS = "newgrounds"
+    CUSTOM = "custom"
 
 
 class CustomSongModel(DatabaseModel):
     id: int
     name: str
     author_id: int
-    author: str
+    author_name: str
     author_youtube: str | None
-    size: float
-    download_url: str
+    file_size: float
+    file_download_url: str
     source: SongSource
-    blocked: bool
+    is_blocked: bool
 
 
 ALL_FIELDS = modelling.get_model_fields(CustomSongModel)
@@ -86,12 +85,12 @@ class SongRepository:
             id=song_boomlings.id,
             name=song_boomlings.name,
             author_id=song_boomlings.author_id,
-            author=song_boomlings.author,
+            author_name=song_boomlings.author,
             author_youtube=song_boomlings.author_youtube,
-            size=song_boomlings.size,
-            download_url=song_boomlings.download_url,
+            file_size=song_boomlings.size,
+            file_download_url=song_boomlings.download_url,
             source=SongSource.BOOMLINGS,
-            blocked=False,
+            is_blocked=False,
         )
 
     async def __insert_model(self, song_model: CustomSongModel) -> int:
@@ -117,12 +116,12 @@ class SongRepository:
             id=0,
             name=name,
             author_id=author_id,
-            author=author,
+            author_name=author,
             author_youtube=author_youtube,
-            size=size,
-            download_url=download_url,
+            file_size=size,
+            file_download_url=download_url,
             source=source,
-            blocked=blocked,
+            is_blocked=blocked,
         )
         song_dump = song.model_dump()
         song_dump["id"] = song_id

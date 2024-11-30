@@ -25,9 +25,9 @@ from .level_data import LevelData
 from .level_data import LevelDataRepository
 from .level_schedule import LevelScheduleModel
 from .level_schedule import LevelScheduleRepository
-from .like import LikeInteractionModel
-from .like import LikeRepository
-from .like import LikeType
+from .like_interaction import LikeInteractionModel
+from .like_interaction import LikeInteractionRepository
+from .like_interaction import LikeType
 from .message import MessageRepository
 from .message import UserMessageModel
 from .save_data import SaveData
@@ -110,8 +110,8 @@ class Context(ABC):
         return UserCommentRepository(self._mysql)
 
     @property
-    def likes(self) -> LikeRepository:
-        return LikeRepository(self._mysql)
+    def likes(self) -> LikeInteractionRepository:
+        return LikeInteractionRepository(self._mysql)
 
     @property
     def friend_requests(self) -> FriendRequestRepository:

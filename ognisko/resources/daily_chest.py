@@ -6,6 +6,7 @@ from enum import IntEnum
 from ognisko.adapters import AbstractMySQLService
 from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
+from ognisko.utilities.enum import StrEnum
 
 
 class DailyChestView(IntEnum):
@@ -18,28 +19,28 @@ class DailyChestView(IntEnum):
         return self in (DailyChestView.CLAIM_SMALL, DailyChestView.CLAIM_LARGE)
 
 
-class DailyChestType(IntEnum):
-    SMALL = 0
-    LARGE = 1
+class DailyChestType(StrEnum):
+    SMALL = "small"
+    LARGE = "large"
 
 
-class DailyChestShardType(IntEnum):
-    FIRE = 0
-    ICE = 1
-    POISON = 2
-    SHADOW = 3
-    LAVA = 4
+class DailyChestShardType(StrEnum):
+    FIRE = "fire"
+    ICE = "ice"
+    POISON = "poison"
+    SHADOW = "shadow"
+    LAVA = "lava"
 
 
-class DailyChestRewardType(IntEnum):
-    MANA = 0
-    DIAMONDS = 1
-    FIRE_SHARD = 2
-    ICE_SHARD = 3
-    POISON_SHARD = 4
-    SHADOW_SHARD = 5
-    LAVA_SHARD = 6
-    DEMON_KEY = 7
+class DailyChestRewardType(StrEnum):
+    MANA = "mana"
+    DIAMONDS = "diamonds"
+    FIRE_SHARD = "fire_shard"
+    ICE_SHARD = "ice_shard"
+    POISON_SHARD = "poison_shard"
+    SHADOW_SHARD = "shadow_shard"
+    LAVA_SHARD = "lava_shard"
+    DEMON_KEY = "demon_key"
 
 
 class DailyChestModel(DatabaseModel):
@@ -54,7 +55,8 @@ class DailyChestModel(DatabaseModel):
     shadow_shards: int
     lava_shards: int
     demon_keys: int
-    claimed_ts: datetime
+
+    claimed_at: datetime
 
 
 ALL_FIELDS = modelling.get_model_fields(DailyChestModel)
@@ -132,7 +134,7 @@ class DailyChestRepository:
             shadow_shards=shadow_shards,
             lava_shards=lava_shards,
             demon_keys=demon_keys,
-            claimed_ts=claimed_ts,
+            claimed_at=claimed_ts,
         )
         model.id = await self._mysql.execute(
             f"INSERT INTO daily_chests ({_CUSTOMISABLE_FIELDS_COMMA}) "
