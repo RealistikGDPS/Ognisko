@@ -9,6 +9,8 @@ from ognisko.adapters.mysql import AbstractMySQLService
 from ognisko.adapters.redis import RedisClient
 from ognisko.adapters.storage import AbstractStorage
 
+from .custom_song import CustomSongModel
+from .custom_song import SongRepository
 from .daily_chest import DailyChestModel
 from .daily_chest import DailyChestRepository
 from .daily_chest import DailyChestRewardType
@@ -32,8 +34,6 @@ from .message import MessageRepository
 from .message import UserMessageModel
 from .save_data import SaveData
 from .save_data import SaveDataRepository
-from .song import CustomSongModel
-from .song import SongRepository
 from .user import UserModel
 from .user import UserRepository
 from .user_comment import UserCommentRepository

@@ -1,6 +1,3 @@
-# NOTE: This class exists due to Databases 0.6.0 breaking type annotations.
-# NOTE: The usage of `_mapping` is required as accessing a row will raise a
-# silent `DeprecationWarning`, leading to a lot of wasted time.
 from __future__ import annotations
 
 from abc import ABC
@@ -13,41 +10,47 @@ from databases import Database
 from databases import DatabaseURL
 from databases.core import Connection
 from databases.core import Transaction
+from sqlalchemy.sql import ClauseElement
 
-MySQLValue = Any
-MySQLRow = Mapping[str, MySQLValue]
-MySQLValues = dict[str, MySQLValue]
+type MySQLValue = Any
+type MySQLRow = Mapping[str, MySQLValue]
+type MySQLValues = dict[str, MySQLValue]
+type QueryType = str | ClauseElement
 
 
 class AbstractMySQLService(ABC):
     @abstractmethod
     async def fetch_one(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> MySQLRow | None: ...
 
     @abstractmethod
     async def fetch_all(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> list[MySQLRow]: ...
 
     @abstractmethod
     async def fetch_val(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> Any: ...
 
     @abstractmethod
-    async def execute(self, query: str, values: MySQLValues | None = None) -> Any: ...
+    async def execute(
+        self,
+        query: QueryType,
+        values: MySQLValues | None = None,
+    ) -> Any: ...
 
     @abstractmethod
     def iterate(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> AsyncGenerator[MySQLRow, None]: ...
 
@@ -64,7 +67,7 @@ class MySQLService(AbstractMySQLService):
 
     async def fetch_one(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> MySQLRow | None:
         res = await self._pool.fetch_one(query, values)  # type: ignore
@@ -72,7 +75,7 @@ class MySQLService(AbstractMySQLService):
 
     async def fetch_all(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> list[MySQLRow]:
         res = await self._pool.fetch_all(query, values)  # type: ignore
@@ -80,18 +83,18 @@ class MySQLService(AbstractMySQLService):
 
     async def fetch_val(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> Any:
         res = await self._pool.fetch_val(query, values)  # type: ignore
         return res
 
-    async def execute(self, query: str, values: MySQLValues | None = None) -> Any:
+    async def execute(self, query: QueryType, values: MySQLValues | None = None) -> Any:
         return await self._pool.execute(query, values)  # type: ignore
 
     def iterate(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> AsyncGenerator[MySQLRow, None]:
         return self._pool.iterate(query, values)  # type: ignore
@@ -124,7 +127,7 @@ class MySQLTransaction(AbstractMySQLService):
 
     async def fetch_one(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> MySQLRow | None:
         res = await self._connection.fetch_one(query, values)  # type: ignore
@@ -132,7 +135,7 @@ class MySQLTransaction(AbstractMySQLService):
 
     async def fetch_all(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> list[MySQLRow]:
         res = await self._connection.fetch_all(query, values)  # type: ignore
@@ -140,18 +143,18 @@ class MySQLTransaction(AbstractMySQLService):
 
     async def fetch_val(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> Any:
         res = await self._connection.fetch_val(query, values)  # type: ignore
         return res
 
-    async def execute(self, query: str, values: MySQLValues | None = None) -> Any:
+    async def execute(self, query: QueryType, values: MySQLValues | None = None) -> Any:
         return await self._connection.execute(query, values)  # type: ignore
 
     def iterate(
         self,
-        query: str,
+        query: QueryType,
         values: MySQLValues | None = None,
     ) -> AsyncGenerator[MySQLRow, None]:
         return self._connection.iterate(query, values)  # type: ignore

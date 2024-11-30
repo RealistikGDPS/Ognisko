@@ -11,6 +11,7 @@ orjson == 3.10.11
 python-dotenv == 1.0.1
 python-multipart
 redis == 5.0.8
+sqlalchemy
 types-aiobotocore[s3] == 2.5.2
 uvicorn == 0.30.6
 uvloop == 0.21.0; sys_platform != "win32"

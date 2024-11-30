@@ -23,7 +23,7 @@ class UserPrivacySetting(StrEnum):
     PRIVATE = "private"
 
 
-class UserPrivilegeLevel(StrEnum):
+class UserDisplayBadge(StrEnum):
     """Enum for determining whether a user should be displayed as a
     moderator, elder moderator, or neither.
     """
@@ -38,13 +38,10 @@ class UserModel(DatabaseModel):
     username: str
     email: str
 
+    displayed_badge: UserDisplayBadge
     message_privacy: UserPrivacySetting
     friend_privacy: UserPrivacySetting
     comment_privacy: UserPrivacySetting
-
-    youtube_name: str | None
-    twitter_name: str | None
-    twitch_name: str | None
 
     registered_at: datetime
     comment_colour: Colour
