@@ -2,21 +2,15 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from pydantic import BaseModel
-from pydantic import ConfigDict
+from sqlmodel import SQLModel
 
 from ognisko.utilities.colour import Colour
 
 
-class DatabaseModel(BaseModel):
-    """An expansion of Pydantic's `BaseModel` froviding extended functionality
-    for RealistikGDPS."""
+class DatabaseModel(SQLModel):
+    """The base model for all SQLAlchemy models in Ognisko."""
 
-    model_config = ConfigDict(
-        json_encoders={
-            Colour: lambda c: c.as_format_str(),
-        },
-    )
+    ...
 
 
 class SearchResults[T](NamedTuple):

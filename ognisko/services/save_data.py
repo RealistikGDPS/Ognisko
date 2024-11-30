@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from ognisko import repositories
-from ognisko.common.context import Context
-from ognisko.constants.errors import ServiceError
+from ognisko.resources import Context
+from ognisko.services._common import ServiceError
+from ognisko.resources import SaveData
 
 
-async def get(ctx: Context, user_id: int) -> str | ServiceError:
+async def get(ctx: Context, user_id: int) -> SaveData | ServiceError:
     """NOTE: This is memory expensive, with saves reasonably exceeding 200MB."""
-    data = await repositories.save_data.from_user_id(ctx, user_id)
+    data = await ctx.save_data.from_user_id(user_id)
 
     if data is None:
         return ServiceError.SAVE_DATA_NOT_FOUND
@@ -29,6 +29,6 @@ async def save(
     # which I currently don't want to do.
     data += f";{game_version};{binary_version};a;a"
 
-    await repositories.save_data.create(ctx, user_id, data)
+    await ctx.save_data.create(user_id, data)
 
     return None

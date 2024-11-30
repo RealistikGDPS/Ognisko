@@ -20,7 +20,7 @@ class SaveDataRepository:
     def __init__(self, storage: AbstractStorage) -> None:
         self._storage = storage
 
-    async def from_user_id(self, user_id: str) -> SaveData | None:
+    async def from_user_id(self, user_id: int) -> SaveData | None:
         res = await self._storage.load(f"saves/{user_id}")
         if res is not None:
             return SaveData(res.decode())
