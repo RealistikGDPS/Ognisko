@@ -5,7 +5,7 @@ from abc import abstractmethod
 
 from ognisko.adapters.boomlings import GeometryDashClient
 from ognisko.adapters.meilisearch import MeiliSearchClient
-from ognisko.adapters.mysql import AbstractMySQLService
+from ognisko.adapters.mysql import MySQLConnection
 from ognisko.adapters.redis import RedisClient
 from ognisko.adapters.storage import AbstractStorage
 
@@ -49,7 +49,7 @@ class Context(ABC):
     # Abstract properties
     @property
     @abstractmethod
-    def _mysql(self) -> AbstractMySQLService: ...
+    def _mysql(self) -> MySQLConnection: ...
 
     @property
     @abstractmethod
