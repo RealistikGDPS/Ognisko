@@ -28,7 +28,7 @@ if TYPE_CHECKING:
     from redis.asyncio import Redis
 
     from ognisko.adapters.boomlings import GeometryDashClient
-    from ognisko.adapters.mysql import AbstractMySQLService
+    from ognisko.adapters.mysql import ImplementsQueryableConnection
     from ognisko.adapters.storage import AbstractStorage
     from ognisko.common.cache.base import AbstractAsyncCache
     from ognisko.models.user import User
@@ -222,7 +222,7 @@ class CommandContext(Context):
 
     # Implementation of context requirements
     @property
-    def mysql(self) -> AbstractMySQLService:
+    def mysql(self) -> ImplementsQueryableConnection:
         return self._base_context.mysql
 
     @property

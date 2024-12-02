@@ -7,7 +7,7 @@ from fastapi import Request
 
 from ognisko.adapters.boomlings import GeometryDashClient
 from ognisko.adapters.meilisearch import MeiliSearchClient
-from ognisko.adapters.mysql import AbstractMySQLService
+from ognisko.adapters.mysql import ImplementsQueryableConnection
 from ognisko.adapters.redis import RedisClient
 from ognisko.adapters.storage import AbstractStorage
 from ognisko.resources import Context
@@ -19,7 +19,7 @@ class HTTPContext(Context):
 
     @property
     @override
-    def _mysql(self) -> AbstractMySQLService:
+    def _mysql(self) -> ImplementsQueryableConnection:
         return self.request.app.state.mysql
 
     @property
@@ -52,7 +52,7 @@ class PubsubContext(Context):
 
     @property
     @override
-    def _mysql(self) -> AbstractMySQLService:
+    def _mysql(self) -> ImplementsQueryableConnection:
         return self.state.mysql
 
     @property

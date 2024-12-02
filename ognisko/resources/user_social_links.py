@@ -3,10 +3,10 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Sequence
 
-from sqlmodel import Field, SQLModel, UniqueConstraint, Index, select, delete
-from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy import delete
 
 from ognisko.utilities.enum import StrEnum
+from ognisko.resources._common import DatabaseModel
 
 
 class SocialLinkType(StrEnum):
@@ -15,7 +15,7 @@ class SocialLinkType(StrEnum):
     DISCORD = "discord"
 
 
-class UserSocialLinkBase(SQLModel):
+class UserSocialLinkBase(DatabaseModel):
     user_id: int
     link_type: SocialLinkType
     link: str
@@ -57,17 +57,16 @@ class UserSocialLinkRepository:
         return result.all()
     
     async def create(self, data: UserSocialLinkCreateModel) -> UserSocialLinkModel:
-        link = UserSocialLinkModel(**data.dict())
+        link = UserSocialLinkModel(**data.model_dump())
         self._session.add(link)
 
         return link
     
 
-    async def delete_from_id(self, id: int) -> None:
-        res = await self.from_id(id)
-
-        if res is not None:
-            await self._session.delete(res)
+    async def delete_from_id(self, link_id: int) -> None:
+        await self._session.exec(
+            delete(UserSocialLinkModel).where(UserSocialLinkModel.id == link_id)
+        )
 
 
     async def from_user_id_and_type(self, user_id: int, link_type: SocialLinkType) -> UserSocialLinkModel | None:
