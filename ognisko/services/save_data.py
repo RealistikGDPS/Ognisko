@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from ognisko.resources import Context
-from ognisko.services._common import ServiceError
 from ognisko.resources import SaveData
+from ognisko.services._common import ServiceError
 
 
 async def get(ctx: Context, user_id: int) -> SaveData | ServiceError:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from .boomlings import GeometryDashClient
 from .meilisearch import MeiliSearchClient
-from .mysql import MySQLConnection
+from .mysql import ImplementsMySQL
 from .redis import RedisClient
 from .redis import RedisPubsubRouter
 from .storage import AbstractStorage
