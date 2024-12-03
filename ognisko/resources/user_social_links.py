@@ -45,12 +45,8 @@ class UserSocialLinkRepository:
 
     async def from_user_id(self, user_id: int) -> list[UserSocialLinkModel]:
         return (
-            await self._mysql.select(
-                UserSocialLinkModel,
-            )
-            .where(
-                UserSocialLinkModel.user_id == user_id,
-            )
+            await self._mysql.select(UserSocialLinkModel)
+            .where(UserSocialLinkModel.user_id == user_id)
             .fetch_all()
         )
 

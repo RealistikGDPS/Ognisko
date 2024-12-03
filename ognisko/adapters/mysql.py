@@ -85,6 +85,7 @@ class _SelectWrapper[T: BaseModel](_CompilableStatementWrapper[Select[tuple[T]]]
         self._connection = connection
 
     def where(self, *clauses: ColumnExpressionArgument[bool]) -> Self:
+        """In cases where multiple clauses are passed, they are joined by `AND`."""
         self._query = self._query.where(*clauses)
         return self
 
