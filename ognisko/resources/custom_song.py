@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from ognisko.adapters import ImplementsMySQL
 from ognisko.adapters import GeometryDashClient
+from ognisko.adapters import ImplementsMySQL
 from ognisko.adapters.boomlings import GDRequestStatus
 from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel

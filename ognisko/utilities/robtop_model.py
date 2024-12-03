@@ -1,11 +1,12 @@
 from __future__ import annotations
 
+from collections.abc import Callable
 from typing import Any
-from typing import Callable
 
 from pydantic import BaseModel
-from pydantic import Field
 from pydantic import ConfigDict
+from pydantic import Field
+
 
 def dumps(
     obj: dict[str, Any],
@@ -38,21 +39,22 @@ def loads[
 def Key(default=..., *, index: int = 0):
     return Field(default=default, alias=str(index))
 
+
 class RobTopModel(BaseModel):
     """A Pydantic model that can be serialised to and from a RobTop string.
-    
+
     Example usage:
     ```python
-    
     class UserObject(RobTopModel):
         id: int = Key(index=1)
         name: str = Key(index=2)
         age: int = Key(index=4)
 
+
     user = UserObject.from_robtop("2:Grzegorz Brzęczyszczykiewicz:4:21:1:3")
-    print(user.id)      # 3
-    print(user.name)    # Grzegorz Brzęczyszczykiewicz
-    print(user.age)     # 21
+    print(user.id)  # 3
+    print(user.name)  # Grzegorz Brzęczyszczykiewicz
+    print(user.age)  # 21
     ```
     """
 
@@ -65,10 +67,9 @@ class RobTopModel(BaseModel):
         data_dictionary = loads(data, deliminer, key_cast=str, value_cast=str)
 
         return RobTopModel(**data_dictionary)
-    
+
     def to_robtop(self, deliminer: str = ":") -> str:
         return dumps(
             self.model_dump(by_alias=True),
             deliminer=deliminer,
         )
-

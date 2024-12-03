@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from typing import NamedTuple
-from typing import TypedDict
 
 from sqlalchemy import Base
 from sqlalchemy import Column
