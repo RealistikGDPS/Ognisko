@@ -5,7 +5,7 @@ from typing import NotRequired
 from typing import TypedDict
 from typing import Unpack
 
-from ognisko.adapters import AbstractMySQLService
+from ognisko.adapters import ImplementsMySQL
 from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
@@ -38,7 +38,7 @@ class _MessageUpdatePartial(TypedDict):
 class MessageRepository:
     __slots__ = ("_mysql",)
 
-    def __init__(self, mysql: AbstractMySQLService) -> None:
+    def __init__(self, mysql: ImplementsMySQL) -> None:
         self._mysql = mysql
 
     async def from_id(self, message_id: int) -> UserMessageModel | None:

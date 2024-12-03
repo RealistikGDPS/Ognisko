@@ -9,7 +9,7 @@ from typing import NotRequired
 from typing import TypedDict
 from typing import Unpack
 
-from ognisko.adapters import AbstractMySQLService
+from ognisko.adapters import ImplementsMySQL
 from ognisko.adapters import MeiliSearchClient
 from ognisko.common import data_utils
 from ognisko.common import modelling
@@ -214,7 +214,7 @@ class LevelRepository:
         "_meili",
     )
 
-    def __init__(self, mysql: AbstractMySQLService, meili: MeiliSearchClient) -> None:
+    def __init__(self, mysql: ImplementsMySQL, meili: MeiliSearchClient) -> None:
         self._mysql = mysql
         self._meili = meili.index("levels")
 

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from ognisko.adapters import AbstractMySQLService
+from ognisko.adapters import ImplementsMySQL
 from ognisko.adapters import GeometryDashClient
 from ognisko.adapters.boomlings import GDRequestStatus
 from ognisko.common import modelling
@@ -34,7 +34,7 @@ _ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
 class SongRepository:
     def __init__(
         self,
-        mysql: AbstractMySQLService,
+        mysql: ImplementsMySQL,
         geometry_dash: GeometryDashClient,
     ) -> None:
         self._mysql = mysql

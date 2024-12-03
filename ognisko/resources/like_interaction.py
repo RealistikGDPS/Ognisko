@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from enum import IntEnum
 
-from ognisko.adapters import AbstractMySQLService
+from ognisko.adapters import ImplementsMySQL
 from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
 
@@ -35,7 +35,7 @@ _CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
 class LikeInteractionRepository:
     __slots__ = ("_mysql",)
 
-    def __init__(self, mysql: AbstractMySQLService) -> None:
+    def __init__(self, mysql: ImplementsMySQL) -> None:
         self._mysql = mysql
 
     async def from_id(self, like_id: int) -> LikeInteractionModel | None:

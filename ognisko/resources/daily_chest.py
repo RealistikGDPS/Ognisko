@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from enum import IntEnum
 
-from ognisko.adapters import AbstractMySQLService
+from ognisko.adapters import ImplementsMySQL
 from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
@@ -74,7 +74,7 @@ _CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
 class DailyChestRepository:
     __slots__ = ("_mysql",)
 
-    def __init__(self, mysql: AbstractMySQLService) -> None:
+    def __init__(self, mysql: ImplementsMySQL) -> None:
         self._mysql = mysql
 
     async def from_id(self, chest_id: int) -> DailyChestModel | None:
