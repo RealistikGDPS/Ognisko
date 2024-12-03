@@ -157,10 +157,11 @@ class _InsertWrapper[T: BaseModel](_CompilableStatementWrapper[Insert[tuple[T]]]
         self._query = insert(model)
         self._connection = connection
 
-    async def execute(self) -> None:
+    async def execute(self) -> int:
+        """Returns the ID of the inserted row."""
         query, args = self._compile()
 
-        await self._connection.execute(query, args)
+        return await self._connection.execute(query, args)
 
     # TODO: Type kwargs properly.
     def values(self, **kwargs: MySQLValues) -> Self:

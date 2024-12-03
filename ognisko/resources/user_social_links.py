@@ -3,10 +3,11 @@ from __future__ import annotations
 from collections.abc import Sequence
 from datetime import datetime
 
-from sqlalchemy import delete
+from sqlalchemy import Column, Integer, String, Index, Enum
 
 from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
+from ognisko.adapters import ImplementsMySQL
 
 
 class SocialLinkType(StrEnum):
@@ -15,61 +16,49 @@ class SocialLinkType(StrEnum):
     DISCORD = "discord"
 
 
-class UserSocialLinkBase(DatabaseModel):
-    user_id: int
-    link_type: SocialLinkType
-    link: str
+class UserSocialLinkModel(DatabaseModel):
+    __tablename__ = "user_social_links"
 
-
-class UserSocialLinkModel(UserSocialLinkBase, table=True):
-    __tablename__: str = (
-        "user_social_links"  # str is required or else pylance will be angerey
-    )
-
-    id: int = Field(primary_key=True)
-    linked_at: datetime = Field(default_factory=datetime.now)
+    user_id = Column(Integer, nullable=False)
+    link_type = Column(Enum(SocialLinkType), nullable=False)
+    link = Column(String(255), nullable=False)
 
     __table_args__ = (
-        UniqueConstraint("user_id", "link_type"),
-        Index("user_id"),
+        Index("idx_user_id_link_type", "user_id", "link_type", unique=True),
+        Index("idx_user_id", "user_id"),
     )
+
 
 
 class UserSocialLinkRepository:
-    __slots__ = ("_session",)
+    __slots__ = ("_mysql",)
 
-    def __init__(self, session: AsyncSession) -> None:
-        self._session = session
+    def __init__(self, mysql: ImplementsMySQL) -> None:
+        self._mysql = mysql
 
     async def from_id(self, id: int) -> UserSocialLinkModel | None:
-        return await self._session.get(UserSocialLinkModel, id)
+        return await self._mysql.select(UserSocialLinkModel).where(UserSocialLinkModel.id == id).fetch_one()
 
-    async def from_user_id(self, user_id: int) -> Sequence[UserSocialLinkModel]:
-        result = await self._session.exec(
-            select(UserSocialLinkModel).where(UserSocialLinkModel.user_id == user_id),
-        )
-        return result.all()
+    async def from_user_id(self, user_id: int) -> list[UserSocialLinkModel]:
+        return await self._mysql.select(
+            UserSocialLinkModel,
+        ).where(
+            UserSocialLinkModel.user_id == user_id,
+        ).fetch_all()
 
-    async def create(self, data: UserSocialLinkCreateModel) -> UserSocialLinkModel:
-        link = UserSocialLinkModel(**data.model_dump())
-        self._session.add(link)
-
-        return link
+    async def create(self, **kwargs) -> UserSocialLinkModel:
+        link_id = await self._mysql.insert(UserSocialLinkModel).values(**kwargs).execute()
+        return await self.from_id(link_id)
 
     async def delete_from_id(self, link_id: int) -> None:
-        await self._session.exec(
-            delete(UserSocialLinkModel).where(UserSocialLinkModel.id == link_id),
-        )
+        await self._mysql.delete(UserSocialLinkModel).where(UserSocialLinkModel.id == link_id).execute()
 
     async def from_user_id_and_type(
         self,
         user_id: int,
         link_type: SocialLinkType,
     ) -> UserSocialLinkModel | None:
-        query = await self._session.exec(
-            select(UserSocialLinkModel).where(
-                (UserSocialLinkModel.user_id == user_id)
-                & (UserSocialLinkModel.link_type == link_type),
-            ),
-        )
-        return query.first()
+        return await self._mysql.select(UserSocialLinkModel).where(
+            UserSocialLinkModel.user_id == user_id,
+            UserSocialLinkModel.link_type == link_type,
+        ).fetch_one()

@@ -14,12 +14,6 @@ class DatabaseModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
 
-class PartialUpdateBase(TypedDict, total=False):
-    id: int
-
-    ...
-
-
 """
 class BaseRepository[
     Model: DatabaseModel,
