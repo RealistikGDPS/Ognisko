@@ -3,8 +3,11 @@ from __future__ import annotations
 from typing import NamedTuple
 
 from sqlalchemy import Base
+from sqlalchemy import BinaryExpression
 from sqlalchemy import Column
 from sqlalchemy import Integer
+
+from ognisko.adapters import ImplementsMySQL
 
 
 class DatabaseModel(Base):
@@ -13,52 +16,94 @@ class DatabaseModel(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
 
 
-"""
 class BaseRepository[
     Model: DatabaseModel,
-    PartialUpdate: PartialUpdateBase,
-    CreateModel: DatabaseModel = Model,
-    UpdateModel: DatabaseModel = Model,
 ]:
     __slots__ = (
-        "_session",
+        "_mysql",
+        "_model",
     )
 
-    def __init__(self, session: ImplementsMySQL) -> None:
-        self._session = session
+    def __init__(self, mysql: ImplementsMySQL, model: type[Model]) -> None:
+        self._mysql = mysql
+        self._model = model
 
+    async def from_id(self, resource_id: int) -> Model | None:
+        return (
+            await self._mysql.select(self._model)
+            .where(self._model.id == resource_id)
+            .fetch_one()
+        )
 
-    @property
-    @cached(cache={})
-    def __innter_type(self) -> type[Model]:
+    async def from_multiple_ids(
+        self,
+        resource_ids: list[int],
+        *,
+        ensure_sequence: bool = False,
+    ) -> list[Model]:
+        """Fetches multiple resources given a list of their IDs.
+        The order is not guaranteed unless ensure_sequence is set to True."""
+        results = (
+            await self._mysql.select(self._model)
+            .where(self._model.id.in_(resource_ids))
+            .fetch_all()
+        )
 
-        annotated = get_args(self)
-        return annotated[0]
+        if ensure_sequence:
+            results = sorted(results, key=lambda x: resource_ids.index(x.id))
 
+        return results
 
-    async def from_id(self, id: int) -> Model | None:
-        return await self._session.get(self.__innter_type, id)
+    async def create(self, *values: BinaryExpression) -> Model:
+        """Creates a new resource in the model's table. It uses the SL
+        of sqlalchemy to provide a typed argument.
 
+        Example:
+        ```py
+        instance = await repository.create(
+            Model.name << "example",
+            Model.age << 20,
+        )
+        """
+        # Generate kwargs from the values
+        kwargs = {}
+        for value in values:
+            key = value.left.key
+            value = value.right.value
 
-    async def create(self, model: CreateModel) -> Model:
-        new_model = self.__innter_type(**model.model_dump())
-        self._session.add(new_model)
+            kwargs[key] = value
 
-        return await self.from_id(new_model.id) # type: ignore
+        resource_id = await self._mysql.insert(self._model).values(**kwargs).execute()
+        return await self.from_id(resource_id)  # type: ignore
 
+    async def update_partial(
+        self,
+        resource_id: int,
+        *values: BinaryExpression,
+    ) -> Model | None:
+        """Updates a resource in the model's table. It uses the SL
+        of sqlalchemy to provide a typed argument.
 
-    async def update(self, id: int, **kwargs: Unpack[PartialUpdate]) -> Model:
-        model = await self.from_id(id)
+        Example:
+        ```py
+        instance = await repository.update_partial(
+            1,
+            Model.name == "example",
+            Model.age == 20,
+        )
+        """
+        # Generate kwargs from the values
+        kwargs = {}
+        for value in values:
+            key = value.left.key
+            value = value.right.value
 
-        for key, value in kwargs.items():
-            setattr(model, key, value)
+            kwargs[key] = value
 
-
-        await self._session.
-
-        return model
-
-"""
+        await self._mysql.update(self._model).where(
+            self._model.id == resource_id,
+        ).values(**kwargs).execute()
+        return await self.from_id(resource_id)
 
 
 class SearchResults[T](NamedTuple):
