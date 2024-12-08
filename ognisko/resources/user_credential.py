@@ -1,83 +1,56 @@
 from __future__ import annotations
 
-from enum import IntEnum
+from sqlalchemy import Column
+from sqlalchemy import Enum
+from sqlalchemy import Index
+from sqlalchemy import Integer
+from sqlalchemy import String
 
 from ognisko.adapters import ImplementsMySQL
-from ognisko.common import modelling
+from ognisko.resources._common import BaseRepository
 from ognisko.resources._common import DatabaseModel
+from ognisko.utilities.enum import StrEnum
 
 
-class CredentialVersion(IntEnum):
-    PLAIN_BCRYPT = 1
-    GJP2_BCRYPT = 2  # 2.2 + GJP2
+class CredentialVersion(StrEnum):
+    PLAIN_BCRYPT = "PLAIN_BCRYPT"
+    GJP2_BCRYPT = "GJP2_BCRYPT"  # 2.2 + GJP2
 
 
 class UserCredentialModel(DatabaseModel):
-    id: int
-    user_id: int
-    version: CredentialVersion
-    value: str
+    user_id = Column(Integer, nullable=False)
+    version = Column(Enum(CredentialVersion), nullable=False)
+    value = Column(String, nullable=False)
+
+    __table_args__ = (
+        Index("idx_user_id", "user_id"),
+        Index("idx_user_id_version", "user_id", "version", unique=True),
+    )
 
 
-ALL_FIELDS = modelling.get_model_fields(UserCredentialModel)
-CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
-
-
-_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
-_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
-    CUSTOMISABLE_FIELDS,
-)
-
-
-class UserCredentialRepository:
+class UserCredentialRepository(BaseRepository[UserCredentialModel]):
     def __init__(self, mysql: ImplementsMySQL) -> None:
-        self._mysql = mysql
-
-    async def create(
-        self,
-        user_id: int,
-        credential_version: CredentialVersion,
-        value: str,
-    ) -> UserCredentialModel:
-        credential = UserCredentialModel(
-            id=0,
-            user_id=user_id,
-            version=credential_version,
-            value=value,
-        )
-
-        credential.id = await self._mysql.execute(
-            f"INSERT INTO user_credentials ({_CUSTOMISABLE_FIELDS_COMMA}) "
-            f"VALUES ({_CUSTOMISABLE_FIELDS_COLON})",
-            credential.model_dump(exclude={"id"}),
-        )
-        return credential
+        super().__init__(mysql, UserCredentialModel)
 
     async def from_user_id(
         self,
         user_id: int,
+    ) -> list[UserCredentialModel]:
+        query = self._mysql.select(UserCredentialModel).where(
+            UserCredentialModel.user_id == user_id,
+        )
+        return await query.fetch_all()
+
+    async def from_user_id_and_version(
+        self,
+        user_id: int,
+        version: CredentialVersion,
     ) -> UserCredentialModel | None:
-        res = await self._mysql.fetch_one(
-            f"SELECT {_ALL_FIELDS_COMMA} FROM user_credentials WHERE user_id = :user_id "
-            "ORDER BY id DESC LIMIT 1",
-            {"user_id": user_id},
-        )
-
-        if not res:
-            return None
-
-        return UserCredentialModel(**res)
-
-    async def delete_from_user_id(self, user_id: int) -> None:
-        await self._mysql.execute(
-            "DELETE FROM user_credentials WHERE user_id = :user_id",
-            {"user_id": user_id},
-        )
-
-    async def delete_from_id(self, credential_id: int) -> None:
-        await self._mysql.execute(
-            "DELETE FROM user_credentials WHERE id = :credential_id",
-            {"credential_id": credential_id},
+        return (
+            await self._mysql.select(UserCredentialModel)
+            .where(
+                UserCredentialModel.user_id == user_id,
+                UserCredentialModel.version == version,
+            )
+            .fetch_one()
         )

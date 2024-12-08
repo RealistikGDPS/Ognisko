@@ -5,6 +5,7 @@ from datetime import datetime
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Enum
+from sqlalchemy import Index
 from sqlalchemy import Integer
 
 from ognisko.adapters import ImplementsMySQL
@@ -24,6 +25,11 @@ class UserRelationshipModel(DatabaseModel):
     target_user_id = Column(Integer, nullable=False)
     posted_at = Column(DateTime, nullable=False, default=datetime.now)
     seen_at = Column(DateTime, nullable=True, default=None)
+
+    __table_args__ = (
+        Index("idx_user_id_target_user_id", "user_id", "target_user_id", unique=True),
+        Index("idx_user_id", "user_id"),
+    )
 
 
 DEFAULT_PAGE_SIZE = 10

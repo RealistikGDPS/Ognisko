@@ -1,6 +1,12 @@
 from __future__ import annotations
 
-from ognisko.resources._common import DatabaseModel
+from sqlalchemy import Column
+from sqlalchemy import Enum
+from sqlalchemy import Index
+from sqlalchemy import Integer
+
+from ognisko.adapters import ImplementsMySQL
+from ognisko.resources._common import BaseModelNoId
 from ognisko.utilities.enum import StrEnum
 
 
@@ -101,6 +107,53 @@ DEFAULT_PRIVILEGES = [
 """A set of default privileges to be assigned to users upon registration."""
 
 
-class UserPrivilegeAssignModel(DatabaseModel):
-    user_id: int
-    privilege: UserPrivileges
+class UserPrivilegeAssignModel(BaseModelNoId):
+    user_id = Column(Integer, nullable=False)
+    privilege = Column(Enum(UserPrivileges), nullable=False)
+
+    __table_args__ = (
+        Index("idx_user_id_privilege", "user_id", "privilege", unique=True),
+        Index("idx_user_id", "user_id"),
+    )
+
+
+# We don't use base repository to simplify access to privileges
+class UserPrivilegeRepository:
+    __slots__ = ("_mysql",)
+
+    def __init__(self, mysql: ImplementsMySQL) -> None:
+        self._mysql = mysql
+
+    async def from_user_id(self, user_id: int) -> list[UserPrivileges]:
+        query = self._mysql.select(UserPrivilegeAssignModel).where(
+            UserPrivilegeAssignModel.user_id == user_id,
+        )
+        return [UserPrivileges(row.privilege) async for row in query.iterate()]
+
+    async def assign(self, user_id: int, privilege: UserPrivileges) -> None:
+        await self._mysql.insert(UserPrivilegeAssignModel).values(
+            user_id=user_id,
+            privilege=privilege.value,
+        ).execute()
+
+    async def revoke(self, user_id: int, privilege: UserPrivileges) -> None:
+        await self._mysql.delete(UserPrivilegeAssignModel).where(
+            UserPrivilegeAssignModel.user_id == user_id,
+            UserPrivilegeAssignModel.privilege == privilege.value,
+        ).execute()
+
+    async def assign_many(self, user_id: int, *privileges: UserPrivileges) -> None:
+        # TODO: Implement a bulk insert method
+        for privilege in privileges:
+            await self.assign(user_id, privilege)
+
+    async def has_privilege(self, user_id: int, privilege: UserPrivileges) -> bool:
+        return (
+            await self._mysql.select(UserPrivilegeAssignModel)
+            .where(
+                UserPrivilegeAssignModel.user_id == user_id,
+                UserPrivilegeAssignModel.privilege == privilege.value,
+            )
+            .fetch_one()
+            is not None
+        )

@@ -148,7 +148,7 @@ class _UpdateWrapper[T: BaseModel](_CompilableStatementWrapper[Update[tuple[T]]]
         return self
 
     # TODO: Type kwargs properly.
-    def values(self, **kwargs: MySQLValue) -> Self:
+    def values(self, **kwargs: Any) -> Self:
         self._query = self._query.values(**kwargs)
         return self
 
@@ -165,7 +165,7 @@ class _InsertWrapper[T: BaseModel](_CompilableStatementWrapper[Insert[tuple[T]]]
         return await self._connection.execute(query, args)
 
     # TODO: Type kwargs properly.
-    def values(self, **kwargs: MySQLValues) -> Self:
+    def values(self, **kwargs: Any) -> Self:
         self._query = self._query.values(**kwargs)
         return self
 

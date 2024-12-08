@@ -10,7 +10,12 @@ from sqlalchemy import Integer
 from ognisko.adapters import ImplementsMySQL
 
 
-class DatabaseModel(Base):
+class BaseModelNoId(Base):
+    """The base model for all SQLAlchemy models in Ognisko. Does not
+    include an ID column."""
+
+
+class DatabaseModel(BaseModelNoId):
     """The base model for all SQLAlchemy models in Ognisko. Includes
     an ID column that autoincrements."""
 
