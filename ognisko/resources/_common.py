@@ -11,7 +11,8 @@ from ognisko.adapters import ImplementsMySQL
 
 
 class DatabaseModel(Base):
-    """The base model for all SQLAlchemy models in Ognisko."""
+    """The base model for all SQLAlchemy models in Ognisko. Includes
+    an ID column that autoincrements."""
 
     id = Column(Integer, primary_key=True, autoincrement=True)
 
@@ -50,9 +51,20 @@ class BaseRepository[
         )
 
         if ensure_sequence:
-            results = sorted(results, key=lambda x: resource_ids.index(x.id))
+            results = sorted(results, key=lambda x: resource_ids.index(x.id))  # type: ignore
 
         return results
+
+    async def delete_from_id(self, resource_id: int) -> bool:
+        """Deletes a resource from the model's table."""
+        return (
+            await self._mysql.delete(self._model)
+            .where(
+                self._model.id == resource_id,
+            )
+            .execute()
+            > 0
+        )
 
     async def create(self, *values: BinaryExpression) -> Model:
         """Creates a new resource in the model's table. It uses the SL
@@ -104,6 +116,18 @@ class BaseRepository[
             self._model.id == resource_id,
         ).values(**kwargs).execute()
         return await self.from_id(resource_id)
+
+    async def count_all(self) -> int:
+        """Counts all resources in the model's table."""
+
+        # The or 0 is necessary because fetch_val returns None if no
+        # results are found.
+        return (
+            await self._mysql.fetch_val(
+                f"SELECT COUNT(*) FROM {self._model.__tablename__}",
+            )
+            or 0
+        )
 
 
 class SearchResults[T](NamedTuple):
