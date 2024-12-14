@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import logging
 import os
 from abc import ABC
 from abc import abstractmethod
@@ -8,7 +9,7 @@ from abc import abstractmethod
 from aiobotocore.config import AioConfig
 from aiobotocore.session import get_session
 
-from ognisko import logger
+logger = logging.getLogger(__name__)
 
 
 class AbstractStorage(ABC):

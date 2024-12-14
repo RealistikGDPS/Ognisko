@@ -1,59 +1,36 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import NotRequired
-from typing import TypedDict
-from typing import Unpack
+from datetime import timezone
+
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Integer
+from sqlalchemy import String
 
 from ognisko.adapters import ImplementsMySQL
-from ognisko.common import modelling
+from ognisko.resources._common import BaseRepository
 from ognisko.resources._common import DatabaseModel
 
 
 class FriendRequestModel(DatabaseModel):
-    id: int
-    sender_user_id: int
-    recipient_user_id: int
-    message: str
-    posted_at: datetime
-    seen_at: datetime | None
+    __tablename__ = "friend_requests"
+
+    sender_user_id = Column(Integer, nullable=False)
+    recipient_user_id = Column(Integer, nullable=False)
+    message = Column(String, nullable=False)
+    posted_at = Column(
+        DateTime,
+        default=lambda: datetime.now(timezone.utc),
+        nullable=False,
+    )
+    seen_at = Column(DateTime, nullable=True)
 
 
-class _FriendRequestUpdatePartial(TypedDict):
-    sender_user_id: NotRequired[int]
-    recipient_user_id: NotRequired[int]
-    seen_ts: NotRequired[datetime]
-    deleted: NotRequired[bool]
-
-
-ALL_FIELDS = modelling.get_model_fields(FriendRequestModel)
-CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
-
-_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
-
-_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
-    CUSTOMISABLE_FIELDS,
-)
-
-
-class FriendRequestRepository:
-    __slots__ = ("_mysql",)
+class FriendRequestRepository(BaseRepository[FriendRequestModel]):
 
     def __init__(self, mysql: ImplementsMySQL) -> None:
-        self._mysql = mysql
-
-    async def from_id(self, request_id: int) -> FriendRequestModel | None:
-        friend_request_db = await self._mysql.fetch_one(
-            f"SELECT * FROM friend_requests WHERE id = :request_id",
-            {"request_id": request_id},
-        )
-
-        if friend_request_db is None:
-            return None
-
-        return FriendRequestModel(**friend_request_db)
+        super().__init__(mysql, FriendRequestModel)
 
     async def from_target_and_reciptient(
         self,
@@ -62,20 +39,14 @@ class FriendRequestRepository:
         *,
         include_deleted: bool = False,
     ) -> FriendRequestModel | None:
-        friend_request_db = await self._mysql.fetch_one(
-            f"SELECT * FROM friend_requests WHERE sender_user_id = :sender_user_id"
-            " AND recipient_user_id = :recipient_user_id AND deleted IN :include_deleted",
-            {
-                "sender_user_id": sender_user_id,
-                "recipient_user_id": recipient_user_id,
-                "include_deleted": (0, 1) if include_deleted else (0,),
-            },
+        return (
+            await self._mysql.select(FriendRequestModel)
+            .where(
+                FriendRequestModel.sender_user_id == sender_user_id,
+                FriendRequestModel.recipient_user_id == recipient_user_id,
+            )
+            .fetch_one()
         )
-
-        if friend_request_db is None:
-            return None
-
-        return FriendRequestModel(**friend_request_db)
 
     async def from_sender_user_id(
         self,
@@ -83,19 +54,13 @@ class FriendRequestRepository:
         *,
         include_deleted: bool = False,
     ) -> list[FriendRequestModel]:
-        friend_requests_db = await self._mysql.fetch_all(
-            f"SELECT * FROM friend_requests WHERE sender_user_id = :sender_user_id"
-            " AND deleted IN :include_deleted",
-            {
-                "sender_user_id": sender_user_id,
-                "include_deleted": (0, 1) if include_deleted else (0,),
-            },
+        query = self._mysql.select(FriendRequestModel).where(
+            FriendRequestModel.sender_user_id == sender_user_id,
         )
+        if not include_deleted:
+            query = query.where(FriendRequestModel.deleted_at.is_(None))
 
-        return [
-            FriendRequestModel(**friend_request_db)
-            for friend_request_db in friend_requests_db
-        ]
+        return await query.fetch_all()
 
     async def from_recipient_user_id(
         self,
@@ -103,19 +68,13 @@ class FriendRequestRepository:
         *,
         include_deleted: bool = False,
     ) -> list[FriendRequestModel]:
-        friend_requests_db = await self._mysql.fetch_all(
-            f"SELECT * FROM friend_requests WHERE recipient_user_id = :recipient_user_id"
-            " AND deleted IN :include_deleted",
-            {
-                "recipient_user_id": recipient_user_id,
-                "include_deleted": (0, 1) if include_deleted else (0,),
-            },
+        query = self._mysql.select(FriendRequestModel).where(
+            FriendRequestModel.recipient_user_id == recipient_user_id,
         )
+        if not include_deleted:
+            query = query.where(FriendRequestModel.deleted_at.is_(None))
 
-        return [
-            FriendRequestModel(**friend_request_db)
-            for friend_request_db in friend_requests_db
-        ]
+        return await query.fetch_all()
 
     async def from_sender_user_id_paginated(
         self,
@@ -125,21 +84,12 @@ class FriendRequestRepository:
         *,
         include_deleted: bool = False,
     ) -> list[FriendRequestModel]:
-        friend_requests_db = await self._mysql.fetch_all(
-            f"SELECT * FROM friend_requests WHERE sender_user_id = :sender_user_id"
-            " AND deleted IN :include_deleted LIMIT :limit OFFSET :offset",
-            {
-                "sender_user_id": sender_user_id,
-                "include_deleted": (0, 1) if include_deleted else (0,),
-                "limit": page_size,
-                "offset": page * page_size,
-            },
+        query = self._mysql.select(FriendRequestModel).where(
+            FriendRequestModel.sender_user_id == sender_user_id,
         )
-
-        return [
-            FriendRequestModel(**friend_request_db)
-            for friend_request_db in friend_requests_db
-        ]
+        if not include_deleted:
+            query = query.where(FriendRequestModel.deleted_at.is_(None))
+        return await query.limit(page_size).offset(page * page_size).fetch_all()
 
     async def from_recipient_user_id_paginated(
         self,
@@ -149,21 +99,12 @@ class FriendRequestRepository:
         *,
         include_deleted: bool = False,
     ) -> list[FriendRequestModel]:
-        friend_requests_db = await self._mysql.fetch_all(
-            f"SELECT * FROM friend_requests WHERE recipient_user_id = :recipient_user_id"
-            " AND deleted IN :include_deleted LIMIT :limit OFFSET :offset",
-            {
-                "recipient_user_id": recipient_user_id,
-                "include_deleted": (0, 1) if include_deleted else (0,),
-                "limit": page_size,
-                "offset": page * page_size,
-            },
+        query = self._mysql.select(FriendRequestModel).where(
+            FriendRequestModel.recipient_user_id == recipient_user_id,
         )
-
-        return [
-            FriendRequestModel(**friend_request_db)
-            for friend_request_db in friend_requests_db
-        ]
+        if not include_deleted:
+            query = query.where(FriendRequestModel.deleted_at.is_(None))
+        return await query.limit(page_size).offset(page * page_size).fetch_all()
 
     async def count_incoming_requests(self, user_id: int) -> int:
         return await self._mysql.fetch_val(
@@ -197,52 +138,3 @@ class FriendRequestRepository:
                 },
             )
         ) is not None
-
-    async def create(
-        self,
-        sender_user_id: int,
-        recipient_user_id: int,
-        message: str,
-        post_ts: datetime | None = None,
-        seen_ts: datetime | None = None,
-    ) -> FriendRequestModel:
-        if post_ts is None:
-            post_ts = datetime.now()
-
-        friend_request = FriendRequestModel(
-            id=0,
-            sender_user_id=sender_user_id,
-            recipient_user_id=recipient_user_id,
-            message=message,
-            posted_at=post_ts,
-            seen_at=seen_ts,
-        )
-
-        friend_request.id = await self._mysql.execute(
-            f"INSERT INTO friend_requests ({_CUSTOMISABLE_FIELDS_COMMA}) VALUES "
-            f"({_CUSTOMISABLE_FIELDS_COLON})",
-            friend_request.model_dump(exclude={"id"}),
-        )
-
-        return friend_request
-
-    async def update_partial(
-        self,
-        request_id: int,
-        **kwargs: Unpack[_FriendRequestUpdatePartial],
-    ) -> FriendRequestModel | None:
-        changed_fields = modelling.unpack_enum_types(kwargs)
-
-        await self._mysql.execute(
-            modelling.update_from_partial_dict(
-                "friend_requests",
-                request_id,
-                changed_fields,
-            ),
-            changed_fields,
-        )
-
-        return await self.from_id(request_id)
-
-    async def count_all(self) -> int:
-        return await self._mysql.fetch_val("SELECT COUNT(*) FROM friend_requests")

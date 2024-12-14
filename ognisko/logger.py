@@ -11,33 +11,9 @@ from typing import Optional
 LOGGER = logging.getLogger("ognisko")
 
 
-def init_basic_logging(OGNISKO_LOG_LEVEL: str | int) -> None:
-    logging.basicConfig(level=OGNISKO_LOG_LEVEL)
+def init_basic_logging(log_level: str | int) -> None:
+    logging.basicConfig(level=log_level)
     hook_exception_handlers()
-
-
-def debug(*args, **kwargs) -> None:
-    return LOGGER.debug(*args, **kwargs)
-
-
-def info(*args, **kwargs) -> None:
-    return LOGGER.info(*args, **kwargs)
-
-
-def warning(*args, **kwargs) -> None:
-    return LOGGER.warning(*args, **kwargs)
-
-
-def error(*args, **kwargs) -> None:
-    return LOGGER.error(*args, **kwargs)
-
-
-def critical(*args, **kwargs) -> None:
-    return LOGGER.critical(*args, **kwargs)
-
-
-def exception(*args, **kwargs) -> None:
-    return LOGGER.exception(*args, **kwargs)
 
 
 # Hooking the exception handler to log uncaught exceptions.

@@ -27,9 +27,9 @@ from .level_data import LevelData
 from .level_data import LevelDataRepository
 from .level_schedule import LevelScheduleModel
 from .level_schedule import LevelScheduleRepository
+from .like_interaction import LikedResource
 from .like_interaction import LikeInteractionModel
 from .like_interaction import LikeInteractionRepository
-from .like_interaction import LikeType
 from .message import MessageRepository
 from .message import UserMessageModel
 from .save_data import SaveData

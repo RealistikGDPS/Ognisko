@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from enum import Enum
 from typing import Any
 from urllib.parse import unquote
@@ -7,8 +8,9 @@ from urllib.parse import unquote
 import httpx
 from pydantic import BaseModel
 
-from ognisko import logger
 from ognisko.common import gd_obj
+
+logger = logging.getLogger(__name__)
 
 
 class GDRequestStatus(str, Enum):
@@ -219,7 +221,7 @@ class GeometryDashClient:
 
         if isinstance(song_info, GDRequestStatus):
             if song_info.is_severe_error:
-                logger.warning(
+                logger.error(
                     "Fetching song from the official servers failed with error.",
                     extra={
                         "song_id": song_id,

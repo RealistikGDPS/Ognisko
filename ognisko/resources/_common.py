@@ -2,9 +2,11 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
+from pydantic import BaseModel
 from sqlalchemy import Base
 from sqlalchemy import BinaryExpression
 from sqlalchemy import Column
+from sqlalchemy import ColumnElement
 from sqlalchemy import Integer
 
 from ognisko.adapters import ImplementsMySQL
@@ -20,6 +22,12 @@ class DatabaseModel(BaseModelNoId):
     an ID column that autoincrements."""
 
     id = Column(Integer, primary_key=True, autoincrement=True)
+
+
+class LegacyDatabaseModel(BaseModel):
+    """The base model for all Pydantic based repositories in Ognisko."""
+
+    ...
 
 
 class BaseRepository[
@@ -71,7 +79,7 @@ class BaseRepository[
             > 0
         )
 
-    async def create(self, *values: BinaryExpression) -> Model:
+    async def create(self, *values: ColumnElement) -> Model:
         """Creates a new resource in the model's table. It uses the SL
         of sqlalchemy to provide a typed argument.
 

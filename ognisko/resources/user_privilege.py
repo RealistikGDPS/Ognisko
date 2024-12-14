@@ -108,6 +108,8 @@ DEFAULT_PRIVILEGES = [
 
 
 class UserPrivilegeAssignModel(BaseModelNoId):
+    __tablename__ = "user_privilege_assign"
+
     user_id = Column(Integer, nullable=False)
     privilege = Column(Enum(UserPrivileges), nullable=False)
 

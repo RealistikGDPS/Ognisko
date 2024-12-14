@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 import urllib.parse
 import uuid
 
@@ -13,7 +14,7 @@ from fastapi.responses import Response
 from fastapi_limiter import FastAPILimiter
 from starlette.middleware.base import RequestResponseEndpoint
 
-from ognisko import logger
+import ognisko.logger
 from ognisko import settings
 from ognisko.adapters import MeiliSearchClient
 from ognisko.adapters.boomlings import GeometryDashClient
@@ -28,9 +29,11 @@ from . import context
 from . import gd
 from . import pubsub
 
+logger = logging.getLogger(__name__)
+
 
 def init_logging() -> None:
-    logger.init_basic_logging(settings.OGNISKO_LOG_LEVEL)
+    ognisko.logger.init_basic_logging(settings.OGNISKO_LOG_LEVEL)
 
 
 def init_events(app: FastAPI) -> None:

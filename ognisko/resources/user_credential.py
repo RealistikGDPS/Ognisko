@@ -18,6 +18,8 @@ class CredentialVersion(StrEnum):
 
 
 class UserCredentialModel(DatabaseModel):
+    __tablename__ = "user_credentials"
+
     user_id = Column(Integer, nullable=False)
     version = Column(Enum(CredentialVersion), nullable=False)
     value = Column(String, nullable=False)

@@ -1,18 +1,8 @@
 #!/usr/bin/env python3.12
 from __future__ import annotations
 
-import sys
-
 from ognisko.api import init_api
+from ognisko.utilities import loop
 
-if sys.platform != "win32":
-    import uvloop
-
-    uvloop.install()
-else:
-    import winloop
-
-    winloop.install()
-
-
+loop.install_optimal_loop()
 asgi_app = init_api()

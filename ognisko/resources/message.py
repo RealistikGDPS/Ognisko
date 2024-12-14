@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from datetime import datetime
-from typing import NotRequired
-from typing import TypedDict
-from typing import Unpack
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Integer
+from sqlalchemy import String
 
 from ognisko.adapters import ImplementsMySQL
-from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
 
@@ -19,20 +18,14 @@ class MessageDirection(StrEnum):
 
 
 class UserMessageModel(DatabaseModel):
-    id: int
-    sender_user_id: int
-    recipient_user_id: int
-    subject: str
-    content: str
-    post_ts: datetime
-    seen_ts: datetime | None
-
-
-class _MessageUpdatePartial(TypedDict):
-    seen_ts: NotRequired[datetime]
-    sender_deleted: NotRequired[bool]
-    recipient_deleted: NotRequired[bool]
-    deleted: NotRequired[bool]
+    sender_user_id = Column(Integer, nullable=False)
+    recipient_user_id = Column(Integer, nullable=False)
+    subject = Column(String, nullable=False)
+    content = Column(String, nullable=False)
+    posted_at = Column(DateTime, nullable=False)
+    seen_at = Column(DateTime, nullable=True)
+    deleted_at = Column(DateTime, nullable=True, default=None)
+    sender_deleted_at = Column(DateTime, nullable=True, default=None)
 
 
 class MessageRepository:
@@ -179,43 +172,3 @@ class MessageRepository:
         )
 
         return message_count
-
-    async def create(
-        self,
-        sender_user_id: int,
-        recipient_user_id: int,
-        subject: str,
-        content: str,
-        deleted: bool = False,
-        sender_deleted: bool = False,
-    ) -> int:
-        message_id = await self._mysql.execute(
-            "INSERT INTO messages (sender_user_id, recipient_user_id, subject, content, deleted, sender_deleted) "
-            "VALUES (:sender_user_id, :recipient_user_id, :subject, :content, :deleted, :sender_deleted)",
-            {
-                "sender_user_id": sender_user_id,
-                "recipient_user_id": recipient_user_id,
-                "subject": subject,
-                "content": content,
-                "deleted": deleted,
-                "sender_deleted": sender_deleted,
-            },
-        )
-
-        return message_id
-
-    async def update_partial(
-        self,
-        message_id: int,
-        **kwargs: Unpack[_MessageUpdatePartial],
-    ) -> UserMessageModel | None:
-        changed_fields = modelling.unpack_enum_types(kwargs)
-
-        await self._mysql.execute(
-            modelling.update_from_partial_dict("messages", message_id, changed_fields),
-            changed_fields,
-        )
-        return await self.from_id(message_id)
-
-    async def count_all(self) -> int:
-        return (await self._mysql.fetch_val("SELECT COUNT(*) FROM messages")) or 0

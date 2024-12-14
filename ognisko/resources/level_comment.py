@@ -1,51 +1,30 @@
 from __future__ import annotations
 
 from datetime import datetime
-from typing import NotRequired
-from typing import TypedDict
+
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Integer
+from sqlalchemy import String
 
 from ognisko.adapters import ImplementsMySQL
-from ognisko.common import modelling
 from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
 
 
 class LevelCommentModel(DatabaseModel):
-    id: int
-    user_id: int
-    level_id: int
-    content: str
-    percent_achieved: int | None
-    likes: int
-    posted_ts: datetime
-    deleted: bool
-
-
-class _LevelCommentUpdatePartial(TypedDict):
-    user_id: NotRequired[int]
-    level_id: NotRequired[int]
-    content: NotRequired[str]
-    percent: NotRequired[int]
-    likes: NotRequired[int]
-    post_ts: NotRequired[datetime]
-    deleted: NotRequired[bool]
+    user_id = Column(Integer, nullable=False)
+    level_id = Column(Integer, nullable=False)
+    content = Column(String, nullable=False)
+    percent_achieved = Column(Integer, nullable=True)
+    likes = Column(Integer, nullable=False, default=0)
+    posted_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+    deleted_at = Column(DateTime, nullable=True)
 
 
 class LevelCommentSorting(StrEnum):
     NEWEST = "newest"
     MOST_LIKED = "most_liked"
-
-
-ALL_FIELDS = modelling.get_model_fields(LevelCommentModel)
-CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
-
-_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
-
-_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
-    CUSTOMISABLE_FIELDS,
-)
 
 
 class LevelCommentRepository:

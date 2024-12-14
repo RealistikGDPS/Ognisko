@@ -20,6 +20,8 @@ class UserRelationshipType(StrEnum):
 
 
 class UserRelationshipModel(DatabaseModel):
+    __tablename__ = "user_relationships"
+
     relationship_type = Column(Enum(UserRelationshipType), nullable=False)
     user_id = Column(Integer, nullable=False)
     target_user_id = Column(Integer, nullable=False)

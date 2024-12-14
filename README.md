@@ -11,23 +11,8 @@ handling requests directly from the Geometry Dash client and returning responses
 
 This is **just** the backend. For more functionality, consult the full [deployment](https://github.com/RealistikGDPS/deployment).
 
-### Included Functionality
-- [x] User registration
-- [x] User profiles
-- [x] User save data
-- [x] Level upload
-- [x] Level search
-  - [x] String search
-  - [ ] All filters
-- [x] Level comments
-- [x] Daily levels
-- [x] User messages
-- [x] Friend requests
-- [x] Commands
-  - [x] Basic cron jobs
-  - [x] Moving levels
-- [x] Daily/Weekly levels
-- [x] Daily chests
-- [x] Custom songs
-- [ ] Map packs
-- [ ] Level leaderboards
+
+## Requirements
+While Docker should handle all of this, in cases where you are running this standalone, here are the requirements:
+### Software and Hardware
+- Python 3.12 (we are leveraging new language features).
