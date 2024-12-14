@@ -47,4 +47,4 @@ class UserProfileCommentRepository(BaseRepository[UserProfileCommentModel]):
         if not include_deleted:
             query = query.where(UserProfileCommentModel.deleted.is_(False))
 
-        return await query.fetch_all()
+        return await query.paginate(page, page_size)

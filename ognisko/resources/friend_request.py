@@ -39,14 +39,15 @@ class FriendRequestRepository(BaseRepository[FriendRequestModel]):
         *,
         include_deleted: bool = False,
     ) -> FriendRequestModel | None:
-        return (
-            await self._mysql.select(FriendRequestModel)
-            .where(
-                FriendRequestModel.sender_user_id == sender_user_id,
-                FriendRequestModel.recipient_user_id == recipient_user_id,
-            )
-            .fetch_one()
+        query = self._mysql.select(FriendRequestModel).where(
+            FriendRequestModel.sender_user_id == sender_user_id,
+            FriendRequestModel.recipient_user_id == recipient_user_id,
         )
+
+        if not include_deleted:
+            query = query.where(FriendRequestModel.deleted_at.is_(None))
+
+        return await query.fetch_one()
 
     async def from_sender_user_id(
         self,
@@ -89,7 +90,7 @@ class FriendRequestRepository(BaseRepository[FriendRequestModel]):
         )
         if not include_deleted:
             query = query.where(FriendRequestModel.deleted_at.is_(None))
-        return await query.limit(page_size).offset(page * page_size).fetch_all()
+        return await query.paginate(page, page_size)
 
     async def from_recipient_user_id_paginated(
         self,
@@ -104,7 +105,7 @@ class FriendRequestRepository(BaseRepository[FriendRequestModel]):
         )
         if not include_deleted:
             query = query.where(FriendRequestModel.deleted_at.is_(None))
-        return await query.limit(page_size).offset(page * page_size).fetch_all()
+        return await query.paginate(page, page_size)
 
     async def count_incoming_requests(self, user_id: int) -> int:
         return await self._mysql.fetch_val(

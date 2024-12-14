@@ -62,7 +62,7 @@ class LevelCommentRepository(BaseRepository[LevelCommentModel]):
 
         _sort_query_by_sorting(query, sorting)
 
-        return await query.limit(page_size).offset(page * page_size).fetch_all()
+        return await query.paginate(page, page_size)
 
     async def from_user_id_paginated(
         self,
@@ -82,7 +82,7 @@ class LevelCommentRepository(BaseRepository[LevelCommentModel]):
 
         _sort_query_by_sorting(query, sorting)
 
-        return await query.limit(page_size).offset(page * page_size).fetch_all()
+        return await query.paginate(page, page_size)
 
     async def count_from_level_id(self, level_id: int) -> int:
         return await self._mysql.fetch_val(
