@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from sqlalchemy import Column
 from sqlalchemy import Enum
-from sqlalchemy import Index
 from sqlalchemy import Integer
 from sqlalchemy import String
 
@@ -23,11 +22,6 @@ class UserCredentialModel(DatabaseModel):
     user_id = Column(Integer, nullable=False)
     version = Column(Enum(CredentialVersion), nullable=False)
     value = Column(String, nullable=False)
-
-    __table_args__ = (
-        Index("idx_user_id", "user_id"),
-        Index("idx_user_id_version", "user_id", "version", unique=True),
-    )
 
 
 class UserCredentialRepository(BaseRepository[UserCredentialModel]):

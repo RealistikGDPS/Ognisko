@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from sqlalchemy import Column
 from sqlalchemy import Enum
-from sqlalchemy import Index
 from sqlalchemy import Integer
 
 from ognisko.adapters import ImplementsMySQL
@@ -112,11 +111,6 @@ class UserPrivilegeAssignModel(BaseModelNoId):
 
     user_id = Column(Integer, nullable=False)
     privilege = Column(Enum(UserPrivileges), nullable=False)
-
-    __table_args__ = (
-        Index("idx_user_id_privilege", "user_id", "privilege", unique=True),
-        Index("idx_user_id", "user_id"),
-    )
 
 
 # We don't use base repository to simplify access to privileges

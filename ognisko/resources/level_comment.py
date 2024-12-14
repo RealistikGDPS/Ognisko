@@ -8,6 +8,8 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 
 from ognisko.adapters import ImplementsMySQL
+from ognisko.adapters.mysql import _SelectWrapper
+from ognisko.resources._common import BaseRepository
 from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
 
@@ -27,22 +29,21 @@ class LevelCommentSorting(StrEnum):
     MOST_LIKED = "most_liked"
 
 
-class LevelCommentRepository:
+def _sort_query_by_sorting(
+    query: _SelectWrapper,
+    sorting: LevelCommentSorting,
+) -> _SelectWrapper:
+    if sorting == LevelCommentSorting.MOST_LIKED:
+        return query.order_by(LevelCommentModel.likes.desc())
+
+    return query.order_by(LevelCommentModel.posted_at.desc())
+
+
+class LevelCommentRepository(BaseRepository[LevelCommentModel]):
     __slots__ = ("_mysql",)
 
     def __init__(self, mysql: ImplementsMySQL) -> None:
         self._mysql = mysql
-
-    async def from_id(self, comment_id: int) -> LevelCommentModel | None:
-        comment_db = await self._mysql.fetch_one(
-            f"SELECT * FROM level_comments WHERE id = :comment_id",
-            {"comment_id": comment_id},
-        )
-
-        if comment_db is None:
-            return None
-
-        return LevelCommentModel(**comment_db)
 
     async def from_level_id_paginated(
         self,
@@ -53,25 +54,15 @@ class LevelCommentRepository:
         sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
         include_deleted: bool = False,
     ) -> list[LevelCommentModel]:
-        ordering = "post_ts DESC"
-        if sorting == LevelCommentSorting.MOST_LIKED:
-            ordering = "likes DESC"
-        elif sorting == LevelCommentSorting.NEWEST:
-            ordering = "post_ts DESC"
-
-        comments_db = await self._mysql.fetch_all(
-            f"SELECT * FROM level_comments WHERE level_id = :level_id "
-            f"AND deleted IN :deleted ORDER BY {ordering} LIMIT :page_size "
-            "OFFSET :offset",
-            {
-                "level_id": level_id,
-                "page_size": page_size,
-                "offset": page * page_size,
-                "deleted": (0, 1) if include_deleted else (0,),
-            },
+        query = self._mysql.select(LevelCommentModel).where(
+            LevelCommentModel.level_id == level_id,
         )
+        if not include_deleted:
+            query = query.where(LevelCommentModel.deleted_at.is_(None))
 
-        return [LevelCommentModel(**comment_db) for comment_db in comments_db]
+        _sort_query_by_sorting(query, sorting)
+
+        return await query.limit(page_size).offset(page * page_size).fetch_all()
 
     async def from_user_id_paginated(
         self,
@@ -82,25 +73,16 @@ class LevelCommentRepository:
         sorting: LevelCommentSorting = LevelCommentSorting.NEWEST,
         include_deleted: bool = False,
     ) -> list[LevelCommentModel]:
-        ordering = "post_ts DESC"
-        if sorting == LevelCommentSorting.MOST_LIKED:
-            ordering = "likes DESC"
-        elif sorting == LevelCommentSorting.NEWEST:
-            ordering = "post_ts DESC"
-
-        comments_db = await self._mysql.fetch_all(
-            f"SELECT * FROM level_comments WHERE user_id = :user_id "
-            f"AND deleted IN :deleted ORDER BY {ordering} LIMIT :page_size "
-            "OFFSET :offset",
-            {
-                "user_id": user_id,
-                "page_size": page_size,
-                "offset": page * page_size,
-                "deleted": (0, 1) if include_deleted else (0,),
-            },
+        query = self._mysql.select(LevelCommentModel).where(
+            LevelCommentModel.user_id == user_id,
         )
 
-        return [LevelCommentModel(**comment_db) for comment_db in comments_db]
+        if not include_deleted:
+            query = query.where(LevelCommentModel.deleted_at.is_(None))
+
+        _sort_query_by_sorting(query, sorting)
+
+        return await query.limit(page_size).offset(page * page_size).fetch_all()
 
     async def count_from_level_id(self, level_id: int) -> int:
         return await self._mysql.fetch_val(
@@ -115,33 +97,3 @@ class LevelCommentRepository:
             "AND deleted = 0",
             {"user_id": user_id},
         )
-
-    async def create(
-        self,
-        user_id: int,
-        level_id: int,
-        content: str,
-        percent: int,
-        post_ts: datetime | None = None,
-    ) -> LevelCommentModel:
-        if post_ts is None:
-            post_ts = datetime.now()
-
-        comment = LevelCommentModel(
-            id=0,
-            user_id=user_id,
-            level_id=level_id,
-            content=content,
-            percent_achieved=percent,
-            likes=0,
-            posted_ts=post_ts,
-            deleted=False,
-        )
-
-        comment.id = await self._mysql.execute(
-            f"INSERT INTO level_comments ({_CUSTOMISABLE_FIELDS_COMMA}) "
-            f"VALUES ({_CUSTOMISABLE_FIELDS_COLON})",
-            comment.model_dump(exclude={"id"}),
-        )
-
-        return comment

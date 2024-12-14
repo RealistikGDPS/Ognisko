@@ -5,7 +5,6 @@ from datetime import datetime
 from sqlalchemy import Column
 from sqlalchemy import DateTime
 from sqlalchemy import Enum
-from sqlalchemy import Integer
 from sqlalchemy import String
 
 from ognisko.adapters import ImplementsMySQL
@@ -25,7 +24,6 @@ class UserDisplayBadge(StrEnum):
     moderator, elder moderator, or neither.
     """
 
-    NONE = "none"
     MODERATOR = "moderator"
     ELDER_MODERATOR = "elder_moderator"
 
@@ -33,14 +31,12 @@ class UserDisplayBadge(StrEnum):
 class UserModel(DatabaseModel):
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, autoincrement=True)
     username = Column(String(50), nullable=False, unique=True)
     email = Column(String(100), nullable=False, unique=True)
 
     displayed_badge = Column(
         Enum(UserDisplayBadge),
-        nullable=False,
-        default=UserDisplayBadge.NONE,
+        nullable=True,
     )
     message_privacy = Column(
         Enum(UserPrivacySetting),

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 from sqlalchemy import Column
 from sqlalchemy import Enum
-from sqlalchemy import Index
 from sqlalchemy import Integer
 from sqlalchemy import String
 
@@ -24,11 +23,6 @@ class UserSocialLinkModel(DatabaseModel):
     user_id = Column(Integer, nullable=False)
     link_type = Column(Enum(SocialLinkType), nullable=False)
     link = Column(String(255), nullable=False)
-
-    __table_args__ = (
-        Index("idx_user_id_link_type", "user_id", "link_type", unique=True),
-        Index("idx_user_id", "user_id"),
-    )
 
 
 class UserSocialLinkRepository(BaseRepository[UserSocialLinkModel]):
