@@ -12,7 +12,7 @@ class LevelData:
     def __init__(self, data: str) -> None:
         self._data = data
 
-    def data(self) -> str:
+    def as_str(self) -> str:
         return self._data
 
 

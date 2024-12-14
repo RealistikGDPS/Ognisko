@@ -115,6 +115,10 @@ class _SelectWrapper[T: BaseModel](_CompilableStatementWrapper[Select[tuple[T]]]
             # TODO: I am sus about the type here.
             yield row  # type: ignore
 
+    async def paginate(self, page: int, page_size: int) -> list[T]:
+        self._query = self._query.limit(page_size).offset(page * page_size)
+        return await self.fetch_all()
+
 
 class _DeleteWrapper[T: BaseModel](_CompilableStatementWrapper[Delete[tuple[T]]]):
     def __init__(self, model: type[T], connection: _MySQLQueryableProtocol) -> None:

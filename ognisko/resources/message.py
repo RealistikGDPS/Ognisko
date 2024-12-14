@@ -6,6 +6,7 @@ from sqlalchemy import Integer
 from sqlalchemy import String
 
 from ognisko.adapters import ImplementsMySQL
+from ognisko.resources._common import BaseRepository
 from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
 
@@ -18,6 +19,8 @@ class MessageDirection(StrEnum):
 
 
 class UserMessageModel(DatabaseModel):
+    __tablename__ = "messages"
+
     sender_user_id = Column(Integer, nullable=False)
     recipient_user_id = Column(Integer, nullable=False)
     subject = Column(String, nullable=False)
@@ -28,24 +31,9 @@ class UserMessageModel(DatabaseModel):
     sender_deleted_at = Column(DateTime, nullable=True, default=None)
 
 
-class MessageRepository:
-    __slots__ = ("_mysql",)
-
+class MessageRepository(BaseRepository[UserMessageModel]):
     def __init__(self, mysql: ImplementsMySQL) -> None:
-        self._mysql = mysql
-
-    async def from_id(self, message_id: int) -> UserMessageModel | None:
-        message_db = await self._mysql.fetch_one(
-            "SELECT * FROM messages WHERE id = :message_id",
-            {
-                "message_id": message_id,
-            },
-        )
-
-        if message_db is None:
-            return None
-
-        return UserMessageModel(**message_db)
+        super().__init__(mysql, UserMessageModel)
 
     async def from_recipient_user_id_paginated(
         self,
@@ -55,21 +43,14 @@ class MessageRepository:
         *,
         include_deleted: bool = False,
     ) -> list[UserMessageModel]:
-        condition = ""
-        if not include_deleted:
-            condition = "AND deleted = 0 AND recipient_deleted = 0"
-
-        messages_db = self._mysql.iterate(
-            f"SELECT * FROM messages WHERE recipient_user_id = :recipient_user_id {condition} "
-            "ORDER BY post_ts DESC LIMIT :limit OFFSET :offset",
-            {
-                "recipient_user_id": recipient_user_id,
-                "limit": page_size,
-                "offset": page * page_size,
-            },
+        query = self._mysql.select(UserMessageModel).where(
+            UserMessageModel.recipient_user_id == recipient_user_id,
         )
 
-        return [UserMessageModel(**message_db) async for message_db in messages_db]
+        if not include_deleted:
+            query = query.where(UserMessageModel.deleted_at.is_(None))
+
+        return await query.paginate(page, page_size)
 
     async def from_sender_user_id_paginated(
         self,
@@ -79,21 +60,15 @@ class MessageRepository:
         *,
         include_deleted: bool = False,
     ) -> list[UserMessageModel]:
-        condition = ""
-        if not include_deleted:
-            condition = "AND deleted = 0 AND sender_deleted = 0"
-
-        messages_db = self._mysql.iterate(
-            f"SELECT * FROM messages WHERE sender_user_id = :sender_user_id {condition} "
-            "ORDER BY post_ts DESC LIMIT :limit OFFSET :offset",
-            {
-                "sender_user_id": sender_user_id,
-                "limit": page_size,
-                "offset": page * page_size,
-            },
+        query = self._mysql.select(UserMessageModel).where(
+            UserMessageModel.sender_user_id == sender_user_id,
         )
+        if not include_deleted:
+            query = query.where(
+                UserMessageModel.sender_deleted_at.is_(None),
+            )
 
-        return [UserMessageModel(**message_db) async for message_db in messages_db]
+        return await query.paginate(page, page_size)
 
     async def count_from_recipient_user_id(
         self,
