@@ -3,8 +3,13 @@ from __future__ import annotations
 from datetime import datetime
 from enum import IntEnum
 
+from sqlalchemy import Column
+from sqlalchemy import DateTime
+from sqlalchemy import Enum
+from sqlalchemy import Integer
+
 from ognisko.adapters import ImplementsMySQL
-from ognisko.common import modelling
+from ognisko.resources._common import BaseRepository
 from ognisko.resources._common import DatabaseModel
 from ognisko.utilities.enum import StrEnum
 
@@ -19,7 +24,7 @@ class DailyChestView(IntEnum):
         return self in (DailyChestView.CLAIM_SMALL, DailyChestView.CLAIM_LARGE)
 
 
-class DailyChestType(StrEnum):
+class DailyChestTier(StrEnum):
     SMALL = "small"
     LARGE = "large"
 
@@ -44,104 +49,41 @@ class DailyChestRewardType(StrEnum):
 
 
 class DailyChestModel(DatabaseModel):
-    id: int
-    user_id: int
-    type: DailyChestType
-    mana: int
-    diamonds: int
-    fire_shards: int
-    ice_shards: int
-    poison_shards: int
-    shadow_shards: int
-    lava_shards: int
-    demon_keys: int
+    __tablename__ = "daily_chests"
 
-    claimed_at: datetime
+    user_id = Column(Integer, nullable=False)
+    tier = Column(Enum(DailyChestTier), nullable=False)
 
+    mana_count = Column(Integer, nullable=False)
+    diamond_count = Column(Integer, nullable=False)
+    fire_shard_count = Column(Integer, nullable=False)
+    ice_shard_count = Column(Integer, nullable=False)
+    poison_shard_count = Column(Integer, nullable=False)
+    shadow_shard_count = Column(Integer, nullable=False)
+    lava_shard_count = Column(Integer, nullable=False)
+    demon_key_count = Column(Integer, nullable=False)
 
-ALL_FIELDS = modelling.get_model_fields(DailyChestModel)
-CUSTOMISABLE_FIELDS = modelling.remove_id_field(ALL_FIELDS)
+    claimed_at = Column(DateTime, nullable=False, default=datetime.utcnow)
 
 
-_ALL_FIELDS_COMMA = modelling.comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COMMA = modelling.comma_separated(CUSTOMISABLE_FIELDS)
-_ALL_FIELDS_COLON = modelling.colon_prefixed_comma_separated(ALL_FIELDS)
-_CUSTOMISABLE_FIELDS_COLON = modelling.colon_prefixed_comma_separated(
-    CUSTOMISABLE_FIELDS,
-)
-
-
-class DailyChestRepository:
-    __slots__ = ("_mysql",)
-
+class DailyChestRepository(BaseRepository[DailyChestModel]):
     def __init__(self, mysql: ImplementsMySQL) -> None:
-        self._mysql = mysql
-
-    async def from_id(self, chest_id: int) -> DailyChestModel | None:
-        chest_db = await self._mysql.fetch_one(
-            "SELECT * FROM daily_chests WHERE id = :chest_id",
-            {"chest_id": chest_id},
-        )
-
-        if chest_db is None:
-            return None
-
-        return DailyChestModel(**chest_db)
+        super().__init__(mysql, DailyChestModel)
 
     async def from_user_id_and_type_latest(
         self,
         user_id: int,
-        chest_type: DailyChestType,
+        chest_type: DailyChestTier,
     ) -> DailyChestModel | None:
-        chest_db = await self._mysql.fetch_one(
-            "SELECT * FROM daily_chests WHERE user_id = :user_id AND "
-            "type = :chest_type ORDER BY claimed_ts DESC LIMIT 1",
-            {"user_id": user_id, "chest_type": chest_type.value},
+        return (
+            await self._mysql.select(DailyChestModel)
+            .where(
+                DailyChestModel.user_id == user_id,
+                DailyChestModel.tier == chest_type,
+            )
+            .order_by(DailyChestModel.claimed_at.desc())
+            .fetch_one()
         )
-
-        if chest_db is None:
-            return None
-
-        return DailyChestModel(**chest_db)
-
-    async def create(
-        self,
-        user_id: int,
-        chest_type: DailyChestType,
-        *,
-        mana: int = 0,
-        diamonds: int = 0,
-        fire_shards: int = 0,
-        ice_shards: int = 0,
-        poison_shards: int = 0,
-        shadow_shards: int = 0,
-        lava_shards: int = 0,
-        demon_keys: int = 0,
-        claimed_ts: datetime | None = None,
-    ) -> DailyChestModel:
-        if claimed_ts is None:
-            claimed_ts = datetime.now()
-
-        model = DailyChestModel(
-            id=0,
-            user_id=user_id,
-            type=chest_type,
-            mana=mana,
-            diamonds=diamonds,
-            fire_shards=fire_shards,
-            ice_shards=ice_shards,
-            poison_shards=poison_shards,
-            shadow_shards=shadow_shards,
-            lava_shards=lava_shards,
-            demon_keys=demon_keys,
-            claimed_at=claimed_ts,
-        )
-        model.id = await self._mysql.execute(
-            f"INSERT INTO daily_chests ({_CUSTOMISABLE_FIELDS_COMMA}) "
-            f"VALUES ({_CUSTOMISABLE_FIELDS_COLON})",
-            model.model_dump(exclude={"id"}),
-        )
-        return model
 
     async def sum_mana_from_user_id(
         self,
@@ -158,7 +100,7 @@ class DailyChestRepository:
     async def count_of_type(
         self,
         user_id: int,
-        chest_type: DailyChestType,
+        chest_type: DailyChestTier,
     ) -> int:
         return (
             await self._mysql.fetch_val(

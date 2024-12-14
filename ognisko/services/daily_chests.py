@@ -8,7 +8,7 @@ from ognisko.common import gd_logic
 from ognisko.resources import Context
 from ognisko.resources import DailyChestModel
 from ognisko.resources import DailyChestRewardType
-from ognisko.resources import DailyChestType
+from ognisko.resources import DailyChestTier
 from ognisko.resources import DailyChestView
 from ognisko.services._common import ServiceError
 
@@ -37,23 +37,23 @@ async def view(
     last_small_chest = await repositories.daily_chest.from_user_id_and_type_latest(
         ctx,
         user_id,
-        DailyChestType.SMALL,
+        DailyChestTier.SMALL,
     )
     last_large_chest = await repositories.daily_chest.from_user_id_and_type_latest(
         ctx,
         user_id,
-        DailyChestType.LARGE,
+        DailyChestTier.LARGE,
     )
 
     small_chest_count = await repositories.daily_chest.count_of_type(
         ctx,
         user_id,
-        DailyChestType.SMALL,
+        DailyChestTier.SMALL,
     )
     large_chest_count = await repositories.daily_chest.count_of_type(
         ctx,
         user_id,
-        DailyChestType.LARGE,
+        DailyChestTier.LARGE,
     )
 
     # Calculate the delays.
@@ -100,7 +100,7 @@ async def view(
             return ServiceError.DAILY_CHESTS_ALREADY_CLAIMED
 
         loot_table = gd_logic.get_large_chest
-        chest_type = DailyChestType.LARGE
+        chest_type = DailyChestTier.LARGE
         large_chest_count += 1
         large_chest_time_remaining = LARGE_CHEST_TIME
 
@@ -109,7 +109,7 @@ async def view(
             return ServiceError.DAILY_CHESTS_ALREADY_CLAIMED
 
         loot_table = gd_logic.get_small_chest
-        chest_type = DailyChestType.SMALL
+        chest_type = DailyChestTier.SMALL
         small_chest_count += 1
         small_chest_time_remaining = SMALL_CHEST_TIME
 

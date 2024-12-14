@@ -14,7 +14,7 @@ from .custom_song import SongRepository
 from .daily_chest import DailyChestModel
 from .daily_chest import DailyChestRepository
 from .daily_chest import DailyChestRewardType
-from .daily_chest import DailyChestType
+from .daily_chest import DailyChestTier
 from .daily_chest import DailyChestView
 from .friend_request import FriendRequestModel
 from .friend_request import FriendRequestRepository
