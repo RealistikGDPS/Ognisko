@@ -4,7 +4,7 @@ ENV PYTHONUNBUFFERED=1
 
 # Python Dependencies
 COPY requirements/main.txt .
-RUN pip install -r main.txt
+RUN pip install -r main.txt --no-cache-dir
 
 # Copy the pre-requisites
 COPY ./tests /app/tests
@@ -14,8 +14,5 @@ COPY ./scripts /app/scripts
 # Copy the application
 COPY ./ognisko /app/ognisko
 WORKDIR /app
-
-# Run the application
-EXPOSE 80
 
 ENTRYPOINT ["/app/scripts/bootstrap.sh"]
