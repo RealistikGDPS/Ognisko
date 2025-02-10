@@ -4,7 +4,8 @@ from datetime import datetime
 from datetime import timedelta
 from typing import NamedTuple
 
-from ognisko.common import gd_logic
+from ognisko.helpers.chest import generate_large_chest
+from ognisko.helpers.chest import generate_small_chest
 from ognisko.resources import Context
 from ognisko.resources import DailyChestModel
 from ognisko.resources import DailyChestRewardType
@@ -34,24 +35,20 @@ async def view(
     user_id: int,
     view: DailyChestView,
 ) -> DailyChestInformation | ServiceError:
-    last_small_chest = await repositories.daily_chest.from_user_id_and_type_latest(
-        ctx,
+    last_small_chest = await ctx.daily_chests.from_user_id_and_type_latest(
         user_id,
         DailyChestTier.SMALL,
     )
-    last_large_chest = await repositories.daily_chest.from_user_id_and_type_latest(
-        ctx,
+    last_large_chest = await ctx.daily_chests.from_user_id_and_type_latest(
         user_id,
         DailyChestTier.LARGE,
     )
 
-    small_chest_count = await repositories.daily_chest.count_of_type(
-        ctx,
+    small_chest_count = await ctx.daily_chests.count_of_type(
         user_id,
         DailyChestTier.SMALL,
     )
-    large_chest_count = await repositories.daily_chest.count_of_type(
-        ctx,
+    large_chest_count = await ctx.daily_chests.count_of_type(
         user_id,
         DailyChestTier.LARGE,
     )
@@ -60,7 +57,7 @@ async def view(
     current_ts = datetime.now()
     if last_small_chest:
         small_chest_time_remaining = SMALL_CHEST_TIME - (
-            current_ts - last_small_chest.claimed_ts
+            current_ts - last_small_chest.claimed_at
         )
         if small_chest_time_remaining < timedelta():
             small_chest_time_remaining = timedelta()
@@ -69,7 +66,7 @@ async def view(
 
     if last_large_chest:
         large_chest_time_remaining = LARGE_CHEST_TIME - (
-            current_ts - last_large_chest.claimed_ts
+            current_ts - last_large_chest.claimed_at
         )
         if large_chest_time_remaining < timedelta():
             large_chest_time_remaining = timedelta()
@@ -99,7 +96,7 @@ async def view(
         if large_chest_time_remaining > timedelta():
             return ServiceError.DAILY_CHESTS_ALREADY_CLAIMED
 
-        loot_table = gd_logic.get_large_chest
+        loot_table = generate_large_chest
         chest_type = DailyChestTier.LARGE
         large_chest_count += 1
         large_chest_time_remaining = LARGE_CHEST_TIME
@@ -108,7 +105,7 @@ async def view(
         if small_chest_time_remaining > timedelta():
             return ServiceError.DAILY_CHESTS_ALREADY_CLAIMED
 
-        loot_table = gd_logic.get_small_chest
+        loot_table = generate_small_chest
         chest_type = DailyChestTier.SMALL
         small_chest_count += 1
         small_chest_time_remaining = SMALL_CHEST_TIME
@@ -135,7 +132,7 @@ async def view(
                 demon_keys += reward.amount
 
     # Award a key for every 500 mana the player gets.
-    total_mana = await repositories.daily_chest.sum_reward_mana(ctx, user_id)
+    total_mana = await ctx.daily_chests.sum_mana_from_user_id(user_id)
     total_keys = total_mana // 500
 
     new_total_keys = (total_mana + mana) // 500
@@ -144,18 +141,18 @@ async def view(
         demon_keys += new_total_keys - total_keys
 
     # Chest logging
-    chest = await repositories.daily_chest.create(
-        ctx,
-        user_id=user_id,
-        chest_type=chest_type,
-        mana=mana,
-        diamonds=diamonds,
-        fire_shards=fire_shards,
-        ice_shards=ice_shards,
-        poison_shards=poison_shards,
-        shadow_shards=shadow_shards,
-        lava_shards=lava_shards,
-        demon_keys=demon_keys,
+    chest = await ctx.daily_chests.create(
+        DailyChestModel.user_id << user_id,
+        DailyChestModel.tier << chest_type,
+        DailyChestModel.mana_count << mana,
+        DailyChestModel.diamond_count << diamonds,
+        DailyChestModel.fire_shard_count << fire_shards,
+        DailyChestModel.ice_shard_count << ice_shards,
+        DailyChestModel.poison_shard_count << poison_shards,
+        DailyChestModel.shadow_shard_count << shadow_shards,
+        DailyChestModel.lava_shard_count << lava_shards,
+        DailyChestModel.demon_key_count << demon_keys,
+        DailyChestModel.claimed_at << datetime.now(),
     )
 
     return DailyChestInformation(
